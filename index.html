@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+
+*{ box-sizing:border-box; margin:0; padding:0; }
+
+body{
+  background:#1a2a1a;
+  color:#eee;
+  font-family:sans-serif;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:10px;
+  transition:background 0.8s;
+}
+
+/* ===== 全体レイアウト ===== */
+#root{
+  display:flex;
+  gap:10px;
+  width:100%;
+  max-width:1200px;
+}
+
+/* ===== 左：カードプレビュー ===== */
+#sidePreview{
+  width:300px; /* ★200px→300px */
+  flex-shrink:0;
+  position:sticky;
+  top:10px;
+  align-self:flex-start;
+}
+
+#sidePreview img{
+  width:300px; /* ★200px→300px */
+  border-radius:8px;
+  box-shadow:0 0 12px #000;
+}
+
+/* ===== 中央：プレイマット ===== */
+#mat{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-width:0;
+}
+
+/* ===== 右：ログパネル ===== */
+#logPanel{
+  width:260px; /* ★190px→260px */
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  position:sticky;
+  top:10px;
+  align-self:flex-start;
+}
+
+#logTitle{
+  font-size:13px;
+  font-weight:bold;
+  color:#ffe066;
+  padding:4px 0;
+  border-bottom:1px solid #444;
+  margin-bottom:4px;
+}
+
+#logBox{
+  background:rgba(0,0,0,0.45);
+  border:1px solid #333;
+  border-radius:8px;
+  padding:8px;
+  font-size:12px;
+  color:#ccc;
+  line-height:1.6;
+  min-height:200px;
+  max-height:60vh;
+  overflow-y:auto;
+}
+
+#logBox .logLine{
+  padding:2px 0;
+  border-bottom:1px solid #2a2a2a;
+}
+
+#allLogBtn{
+  background:#333;
+  color:#ccc;
+  border:1px solid #555;
+  border-radius:6px;
+  padding:6px;
+  font-size:12px;
+  cursor:pointer;
+  text-align:center;
+}
+#allLogBtn:hover{ background:#555; }
+
+/* ===== 捨て場モーダル ===== */
+#graveModal{
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.75);
+  z-index:1000;
+  justify-content:center;
+  align-items:center;
+}
+#graveModal.open{ display:flex; }
+
+#graveModalInner{
+  background:#1e1e2e;
+  border:1px solid #555;
+  border-radius:10px;
+  padding:20px;
+  width:60%;
+  max-width:700px;
+  min-width:320px;
+  max-height:80vh;
+  overflow-y:auto;
+  position:relative;
+}
+
+#graveModalInner h3{
+  color:#ffe066;
+  margin-bottom:12px;
+  font-size:15px;
+}
+
+#graveModalCards{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+#graveModalCards img{
+  width:64px;
+  border-radius:5px;
+  box-shadow:0 2px 6px #000;
+  cursor:pointer;
+  transition:transform 0.15s;
+}
+#graveModalCards img:hover{
+  transform:translateY(-4px);
+}
+
+/* 捨て場プレビュー（モーダル内右上） */
+#gravePreview{
+  position:fixed;
+  top:50%;
+  left:20px;
+  transform:translateY(-50%);
+  z-index:1100;
+  pointer-events:none;
+  display:none;
+}
+#gravePreview img{
+  width:300px;
+  border-radius:8px;
+  box-shadow:0 0 16px #000;
+}
+
+/* ===== 全ログモーダル ===== */
+#logModal{
+  display:none;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.75);
+  z-index:1000;
+  justify-content:center;
+  align-items:center;
+}
+#logModal.open{ display:flex; }
+
+#logModalInner{
+  background:#1e2e1e;
+  border:1px solid #444;
+  border-radius:10px;
+  padding:20px;
+  width:90%;
+  max-width:600px;
+  max-height:80vh;
+  overflow-y:auto;
+  font-size:13px;
+  color:#ccc;
+  line-height:1.8;
+}
+
+#logModalInner h3{
+  color:#ffe066;
+  margin-bottom:12px;
+}
+
+#logModalClose{
+  margin-top:12px;
+  background:#444;
+  color:#eee;
+  border:1px solid #666;
+  border-radius:6px;
+  padding:6px 20px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+/* ===== ヘッダー ===== */
+#header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+#header button{
+  background:#444;
+  color:#eee;
+  border:1px solid #666;
+  border-radius:6px;
+  padding:6px 14px;
+  cursor:pointer;
+  font-size:14px;
+}
+#header button:hover{ background:#666; }
+
+#turn{ font-size:16px; font-weight:bold; color:#ffe066; }
+#winner{ font-size:18px; font-weight:bold; color:#ff6666; }
+
+/* ===== 情報バー ===== */
+.infoBar{
+  background:rgba(0,0,0,0.4);
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:13px;
+  display:flex;
+  gap:16px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.life{ color:#ff6666; font-weight:bold; font-size:15px; }
+.energy{ color:#66ccff; font-weight:bold; }
+.deckCount{ color:#aaa; }
+.graveBtn{
+  background:rgba(255,255,255,0.1);
+  border:1px solid #666;
+  border-radius:4px;
+  color:#ccc;
+  padding:2px 8px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+/* ===== フィールド ===== */
+.field{
+  background:var(--field-bg, rgba(0,80,0,0.35));
+  border:2px solid var(--field-border, #2d6a2d);
+  border-radius:10px;
+  min-height:130px;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  transition:background 0.8s, border-color 0.8s;
+}
+
+#enemyField{
+  background:var(--enemy-field-bg, rgba(80,0,0,0.25));
+  border-color:var(--enemy-field-border, #6a2d2d);
+}
+
+/* ===== 直接攻撃ゾーン ===== */
+#enemyPlayerZone{
+  background:rgba(80,0,0,0.2);
+  border:2px dashed #884444;
+  border-radius:8px;
+  height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#cc8888;
+  font-size:13px;
+  cursor:pointer;
+  transition:background 0.2s;
+}
+#enemyPlayerZone:hover,
+#enemyPlayerZone.dragover{
+  background:rgba(180,0,0,0.35);
+  border-color:#cc4444;
+}
+
+/* ===== 手札エリア ===== */
+#handArea{
+  background:rgba(0,0,0,0.3);
+  border:2px solid #2d4a2d;
+  border-radius:10px;
+  min-height:110px;
+  padding:8px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  flex-wrap:wrap;
+}
+
+/* ===== カード ===== */
+.card{
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  transition:transform 0.15s;
+}
+.card:hover{ transform:translateY(-6px); }
+.card img{
+  width:72px;
+  border-radius:5px;
+  box-shadow:0 2px 6px #000;
+}
+.card .stat{
+  font-size:11px;
+  color:#ffe066;
+  margin-top:2px;
+  background:rgba(0,0,0,0.6);
+  border-radius:3px;
+  padding:1px 4px;
+}
+.card.selected img{
+  outline:3px solid #ff4444;
+  border-radius:5px;
+}
+
+/* ===== ターン終了ボタン ===== */
+#endTurnBtn{
+  background:#2a6a2a;
+  color:#eee;
+  border:2px solid #4a9a4a;
+  border-radius:8px;
+  padding:10px 28px;
+  font-size:15px;
+  cursor:pointer;
+  transition:background 0.2s;
+}
+#endTurnBtn:hover{ background:#3a8a3a; }
+
+/* ===== スマホ ===== */
+@media(max-width:700px){
+  #sidePreview{ display:none; }
+  #logPanel{ display:none; }
+  .card img{ width:56px; }
+}
+
+@keyframes attackUp {
+  0%  { transform:translateY(0); }
+  45% { transform:translateY(-90px); }
+  100%{ transform:translateY(0); }
+}
+.attacking-up{ animation:attackUp 0.35s ease-in-out forwards; }
+
+@keyframes popIn {
+  0%{ transform:translate(-50%,-50%) scale(0.3); opacity:0; }
+  60%{ transform:translate(-50%,-50%) scale(1.1); opacity:1; }
+  100%{ transform:translate(-50%,-50%) scale(1); opacity:1; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- 勝敗画像オーバーレイ -->
+<div id="resultOverlay" onclick="closeResult()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:2000;justify-content:center;align-items:center;cursor:pointer;">
+  <img id="resultImg" src="" style="max-width:60%;max-height:60%;">
+</div>
+
+<!-- 捨て場カードプレビュー -->
+<div id="gravePreview"></div>
+
+<!-- 捨て場モーダル -->
+<div id="graveModal">
+  <div id="graveModalInner">
+    <h3 id="graveModalTitle">🪦 捨て場</h3>
+    <div id="graveModalCards"></div>
+    <br>
+    <button onclick="closeGraveModal()" style="background:#444;color:#eee;border:1px solid #666;border-radius:6px;padding:6px 20px;cursor:pointer;font-size:13px;">閉じる</button>
+  </div>
+</div>
+
+<!-- 全ログモーダル -->
+<div id="logModal">
+  <div id="logModalInner">
+    <h3>📜 ゲームログ（全履歴）</h3>
+    <div id="logModalContent"></div>
+    <br>
+    <button id="logModalClose" onclick="closeLogModal()">閉じる</button>
+  </div>
+</div>
+
+<div id="root">
+
+  <!-- 左：カードプレビュー -->
+  <div id="sidePreview">
+    <div id="preview"></div>
+  </div>
+
+  <!-- 中央：プレイマット -->
+  <div id="mat">
+
+    <div id="header">
+      <button onclick="selectPlayer(1)">P1参加</button>
+      <select id="deckSelectP1" style="background:#222;color:#eee;border:1px solid #666;border-radius:4px;padding:2px 4px;max-width:130px;">
+        <option value="-1">デッキ選択</option>
+      </select>
+      <button onclick="selectPlayer(2)">P2参加</button>
+      <select id="deckSelectP2" style="background:#222;color:#eee;border:1px solid #666;border-radius:4px;padding:2px 4px;max-width:130px;">
+        <option value="-1">デッキ選択</option>
+      </select>
+      <span id="playerStatus"></span>
+      <button onclick="reset()" style="background:#664400;border-color:#aa6600;">ゲーム開始</button>
+      <span id="turn"></span>
+      <span id="winner"></span>
+    </div>
+
+    <!-- 相手情報 -->
+    <div class="infoBar">
+      <span class="life" id="enemyLife">ライフ: -</span>
+      <span class="energy" id="enemyEnergy">エネルギー: -</span>
+      <span class="deckCount" id="enemyDeck">デッキ: -</span>
+      <span id="enemyHandDisplay"></span>
+      <button class="graveBtn" onclick="showEnemyGrave()">相手捨て場</button>
+    </div>
+
+    <!-- 直接攻撃ゾーン -->
+    <div id="enemyPlayerZone">⚔ ここをタップ / ドロップで直接攻撃</div>
+
+    <!-- 相手フィールド -->
+    <div class="field" id="enemyField"></div>
+
+    <!-- 自分フィールド -->
+    <div class="field" id="myField"></div>
+
+    <!-- 自分情報 -->
+    <div class="infoBar">
+      <span class="life" id="myLife">ライフ: -</span>
+      <span class="energy" id="myEnergy">エネルギー: -</span>
+      <span class="deckCount" id="myDeck">デッキ: -</span>
+      <button class="graveBtn" onclick="showMyGrave()">自分捨て場</button>
+      <button id="endTurnBtn" onclick="endTurn()">ターン終了</button>
+      <button id="surrenderBtn" onclick="surrender()" style="background:#6a1a1a;color:#eee;border:2px solid #aa3333;border-radius:8px;padding:10px 18px;font-size:15px;cursor:pointer;">🏳 降参</button>
+    </div>
+
+    <!-- 手札 -->
+    <div id="handArea"></div>
+
+  </div><!-- /mat -->
+
+  <!-- 右：ログパネル -->
+  <div id="logPanel">
+    <div id="logTitle">📋 前の相手ターンのログ</div>
+    <div id="logBox"></div>
+    <button id="allLogBtn" onclick="openLogModal()">📜 全ログを見る</button>
+  </div>
+
+</div><!-- /root -->
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+
+const socket=io();
+
+// ★BGM
+const BGM=new Audio("sounds/bgm.mp3");
+BGM.volume=0.12;
+const BGM_WIN=new Audio("sounds/勝利.mp3");
+BGM_WIN.volume=0.8;
+const BGM_LOSE=new Audio("sounds/敗北.mp3");
+BGM_LOSE.volume=0.8;
+let bgmStarted=false;
+let resultShown=false;
+
+// ②シームレスループ用：Web Audio APIを使う
+let bgmContext=null;
+let bgmSource=null;
+let bgmBuffer=null;
+
+async function startBGM(){
+  if(bgmStarted) return;
+  bgmStarted=true;
+  try{
+    bgmContext=new (window.AudioContext||window.webkitAudioContext)();
+    // ★バッファが残っていれば再利用、なければ再取得
+    if(!bgmBuffer){
+      const res=await fetch("sounds/bgm.mp3");
+      const arrayBuf=await res.arrayBuffer();
+      bgmBuffer=await bgmContext.decodeAudioData(arrayBuf);
+    } else {
+      // 既存バッファを新しいcontextでデコードし直す
+      const res=await fetch("sounds/bgm.mp3");
+      const arrayBuf=await res.arrayBuffer();
+      bgmBuffer=await bgmContext.decodeAudioData(arrayBuf);
+    }
+    playBGMLoop();
+  }catch(e){
+    BGM.loop=true;
+    BGM.volume=0.12;
+    BGM.play().catch(()=>{});
+  }
+}
+
+function playBGMLoop(){
+  if(!bgmContext||!bgmBuffer) return;
+  bgmSource=bgmContext.createBufferSource();
+  bgmSource.buffer=bgmBuffer;
+  bgmSource.loop=true;
+  bgmSource.loopStart=0;
+  bgmSource.loopEnd=bgmBuffer.duration; // バッファの正確な終端を指定
+  const gainNode=bgmContext.createGain();
+  gainNode.gain.value=0.12;
+  bgmSource.connect(gainNode);
+  gainNode.connect(bgmContext.destination);
+  bgmSource.start(0);
+}
+
+// ★効果音
+const SE={
+  spell:    new Audio("sounds/spell.mp3"),
+  effect:   new Audio("sounds/effect.mp3"),
+  draw:     new Audio("sounds/draw.mp3"),
+  summon:   new Audio("sounds/summon.mp3"),
+  atk:{
+    fire:    new Audio("sounds/attack_fire.mp3"),
+    water:   new Audio("sounds/attack_water.mp3"),
+    thunder: new Audio("sounds/attack_thunder.mp3"),
+    forest:  new Audio("sounds/attack_forest.mp3"),
+    dark:    new Audio("sounds/attack_dark.mp3"),
+    poison:  new Audio("sounds/attack_poison.mp3"),
+    steel:   new Audio("sounds/attack_steel.mp3"),
+    neutral: new Audio("sounds/attack_fire.mp3")
+  }
+};
+// 効果音は大きめ
+Object.values(SE).forEach(v=>{ if(v instanceof Audio) v.volume=1.0; });
+Object.values(SE.atk).forEach(v=>{ v.volume=1.0; });
+SE.draw.volume=0.9;
+SE.summon.volume=1.0;
+
+function playSE(se){
+  if(!se) return;
+  se.currentTime=0;
+  se.play().catch(()=>{});
+}
+
+loadDeckOptions(); // デッキ選択肢をロード
+// ※ loadDeckOptions はページ開いた時点で定義済みである必要があるため後で定義するが、
+// 呼び出しはここではなく、関数定義の直後に移動しても構いません
+
+let draggedCard=null;
+let draggedUnitIndex=null;
+let draggedUnitName=null;
+let selectedUnitIndex=null;
+let selectedUnitName=null;
+let myGraveData=[];
+let enemyGraveData=[];
+let allLogsData=[];
+let lastDisplayedLogs=[];
+// ★音検知用
+let prevMyDeckCount=null;
+let prevEnemyDeckCount=null;
+let prevMyBoardCount=null;
+let prevEnemyBoardCount=null;
+let prevAllLogsLen=0;
+let pendingAttackerIndex=null;
+
+function clearSelection(){
+  selectedUnitIndex=null;
+  selectedUnitName=null;
+  document.querySelectorAll("#myField .card").forEach(el=>el.classList.remove("selected"));
+}
+
+// ★属性カラーマップ
+const attrColors={
+  fire:   {body:"#2a1010", fieldBg:"rgba(180,40,0,0.25)",  fieldBorder:"#8a3a2a", enemyBg:"rgba(120,0,0,0.25)",  enemyBorder:"#6a2020"},
+  water:  {body:"#0e1a2a", fieldBg:"rgba(0,60,150,0.25)",  fieldBorder:"#2a4a8a", enemyBg:"rgba(0,30,100,0.25)", enemyBorder:"#1a3060"},
+  thunder:{body:"#1a1a10", fieldBg:"rgba(150,130,0,0.25)", fieldBorder:"#7a7020", enemyBg:"rgba(100,80,0,0.25)", enemyBorder:"#605010"},
+  forest: {body:"#0e1e0e", fieldBg:"rgba(0,100,0,0.30)",   fieldBorder:"#2a6a2a", enemyBg:"rgba(0,60,0,0.25)",  enemyBorder:"#1a4a1a"},
+  dark:   {body:"#12091a", fieldBg:"rgba(60,0,100,0.28)",  fieldBorder:"#4a2a7a", enemyBg:"rgba(40,0,70,0.25)", enemyBorder:"#301a5a"},
+  poison: {body:"#071a00", fieldBg:"rgba(150,255,50,0.25)", fieldBorder:"#aaff33", enemyBg:"rgba(100,220,20,0.25)",enemyBorder:"#88dd22"},
+  steel:  {body:"#18181e", fieldBg:"rgba(130,130,150,0.30)",fieldBorder:"#707088", enemyBg:"rgba(90,90,110,0.28)",enemyBorder:"#505068"},
+  neutral:{body:"#1a2a1a", fieldBg:"rgba(0,80,0,0.35)",    fieldBorder:"#2d6a2d", enemyBg:"rgba(80,0,0,0.25)",  enemyBorder:"#6a2d2d"}
+};
+
+// ★クライアント側属性取得（攻撃音用）
+const _clientAttrMap={
+  "フレイムスパーク":"fire","ファイアウルフ":"fire","ブレイズリザード":"fire","マグマウルフ":"fire","フレイムナイト":"fire","アッシュソルジャー":"fire","フレイムレオン":"fire","ボルケーノタートル":"fire","インフェルノドラゴン":"fire","バーンアウト":"fire","フレイムパージャー":"fire","ブレイズフェニックス":"fire","フレイムエンペラー":"fire","メガフレアドラゴン":"fire",
+  "ウォータードロップ":"water","アクアフィッシュ":"water","アイスウォリアー":"water","エナジーカラパス":"water","クリスタルシェル":"water","フロストビースト":"water","アイスガーディアン":"water","バーストパファー":"water","トレントサーペント":"water","アクアドラゴン":"water","オーシャンナイト":"water","テンペストシャーク":"water","タイダルリヴァイアサン":"water","フローズンキング":"water",
+  "サンダービート":"thunder","スパークマウス":"thunder","ライトニングラプター":"thunder","ボルトウォリアー":"thunder","ボルトホーク":"thunder","ライトニングウルフ":"thunder","スパークレパード":"thunder","エレキドラゴン":"thunder","プラズマメイジ":"thunder","ボルトチェンジャー":"thunder","サンダーランページ":"thunder","サンダーロード":"thunder","ストームタイタン":"thunder","ボルトエンペラー":"thunder",
+  "フォレストラビット":"forest","グリーンナイト":"forest","ウッドゴーレム":"forest","グロウコア":"forest","アーマードライノス":"forest","フォレストビースト":"forest","モスストーン":"forest","フォレストエルフ":"forest","フォレストスイーパー":"forest","エンシェントツリー":"forest","ジャングルタイラント":"forest","ワイルドベア":"forest","グリーンドラゴン":"forest","ネイチャーロード":"forest",
+  "シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark",
+  "ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison",
+  "ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel",
+  "ギアトークン":"steel","シードトークン":"forest"
+};
+function getClientAttr(name){ return _clientAttrMap[name]||"neutral"; }
+
+function applyAttrColor(attr){
+  const c=attrColors[attr]||attrColors.neutral;
+  document.body.style.background=c.body;
+  const root=document.documentElement;
+  root.style.setProperty("--field-bg", c.fieldBg);
+  root.style.setProperty("--field-border", c.fieldBorder);
+  root.style.setProperty("--enemy-field-bg", c.enemyBg);
+  root.style.setProperty("--enemy-field-border", c.enemyBorder);
+}
+
+function detectDeckAttr(deck){
+  if(!deck||deck.length===0) return "neutral";
+  const attrMap={
+    "フレイムスパーク":"fire","ファイアウルフ":"fire","ブレイズリザード":"fire","マグマウルフ":"fire","フレイムナイト":"fire","アッシュソルジャー":"fire","フレイムレオン":"fire","ボルケーノタートル":"fire","インフェルノドラゴン":"fire","バーンアウト":"fire","フレイムパージャー":"fire","ブレイズフェニックス":"fire","フレイムエンペラー":"fire","メガフレアドラゴン":"fire","フレイムバーン":"fire","ファイアボール":"fire","フレイムストーム":"fire","業火の裁き":"fire","バーニングソウル":"fire","スカーチングレイン":"fire","エンラージ":"fire","炎の加護":"fire","フェニックスリバース":"fire",
+    "ウォータードロップ":"water","アクアフィッシュ":"water","アイスウォリアー":"water","エナジーカラパス":"water","クリスタルシェル":"water","フロストビースト":"water","アイスガーディアン":"water","バーストパファー":"water","トレントサーペント":"water","アクアドラゴン":"water","オーシャンナイト":"water","テンペストシャーク":"water","タイダルリヴァイアサン":"water","フローズンキング":"water","フリーズショット":"water","海の恵み":"water","アクアリターン":"water","激流":"water","アイシクルドレイン":"water","大津波":"water","ウォーターカーテン":"water","クリスタルバリア":"water","エナジーブースト":"water",
+    "サンダービート":"thunder","スパークマウス":"thunder","ライトニングラプター":"thunder","ボルトウォリアー":"thunder","ボルトホーク":"thunder","ライトニングウルフ":"thunder","スパークレパード":"thunder","エレキドラゴン":"thunder","プラズマメイジ":"thunder","ボルトチェンジャー":"thunder","サンダーランページ":"thunder","サンダーロード":"thunder","ストームタイタン":"thunder","ボルトエンペラー":"thunder","スピードドロー":"thunder","エレキサーキット":"thunder","チェインライトニング":"thunder","サンダーストライク":"thunder","稲妻の速攻":"thunder","エナジーチャージ":"thunder","ボルトレイジ":"thunder","プラズマバースト":"thunder","サンダーボム":"thunder",
+    "フォレストラビット":"forest","グリーンナイト":"forest","ウッドゴーレム":"forest","グロウコア":"forest","アーマードライノス":"forest","フォレストビースト":"forest","モスストーン":"forest","フォレストエルフ":"forest","フォレストスイーパー":"forest","エンシェントツリー":"forest","ジャングルタイラント":"forest","ワイルドベア":"forest","グリーンドラゴン":"forest","ネイチャーロード":"forest","シードバースト":"forest","グロウス":"forest","リンカーネーション":"forest","森の恵み":"forest","ナチュラルアーマー":"forest","根の呪縛":"forest","大地の力":"forest","シードスポーン":"forest","リーフストーム":"forest",
+    "シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark","ダークブラスト":"dark","マインドコントロール":"dark","ソウルトレード":"dark","エナジーカース":"dark","リセット":"dark","ソウルドレイン":"dark","ディスカード":"dark","カースシャドウ":"dark","デスペレーション":"dark",
+    "ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison","インジェクション":"poison","サクリファイス":"poison","劇薬調合":"poison","ポイズンスパイク":"poison","解毒剤":"poison","ペインシェア":"poison","禁断の秘薬":"poison","ヴェノムハーベスト":"poison","トキシックアポカリプス":"poison",
+    "ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel","リサイクル":"steel","緊急生産":"steel","スクラップ&ビルド":"steel","自爆装置":"steel","装甲強化":"steel","ギアリペア":"steel","チェーンリアクション":"steel","メガギアフュージョン":"steel","オーバーロード":"steel"
+  };
+  const counts={};
+  deck.forEach(name=>{
+    const a=attrMap[name];
+    if(a&&a!=="neutral") counts[a]=(counts[a]||0)+1;
+  });
+  let maxAttr="neutral";
+  let maxCount=0;
+  Object.entries(counts).forEach(([a,n])=>{ if(n>maxCount){maxCount=n;maxAttr=a;} });
+  return maxAttr;
+}
+
+function loadDeckOptions(){
+  [1,2].forEach(pn=>{
+    const sel=document.getElementById("deckSelectP"+pn);
+    if(!sel) return;
+    const all=JSON.parse(localStorage.getItem("decks_p"+pn)||"[]");
+    sel.innerHTML="<option value='-1'>デッキ選択</option>";
+    all.forEach((d,i)=>{
+      if(!d) return;
+      const opt=document.createElement("option");
+      opt.value=i;
+      opt.innerText="["+(i+1)+"] "+(d.name||"名称未設定");
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function selectPlayer(num){
+  const sel=document.getElementById("deckSelectP"+num);
+  const slotIdx=parseInt(sel.value,10);
+  let deck;
+  if(slotIdx>=0){
+    const all=JSON.parse(localStorage.getItem("decks_p"+num)||"[]");
+    deck=(all[slotIdx]&&all[slotIdx].cards)||[];
+  } else {
+    deck=JSON.parse(localStorage.getItem("deck"+num)||"[]");
+  }
+  if(!deck||deck.length===0){ alert("デッキを選択してください"); return; }
+  socket.emit("join",{player:num,deck});
+  const slotName=slotIdx>=0?`スロット${slotIdx+1}`:"デフォルト";
+  document.getElementById("playerStatus").innerText="P"+num+" 参加（"+slotName+")";
+  // ★自分のデッキ属性でカラー適用
+  const attr=detectDeckAttr(deck);
+  applyAttrColor(attr);
+}
+
+// ★攻撃アニメーション
+function playAttackAnim(attackerIdx){
+  const cards=document.getElementById("myField").querySelectorAll(".card");
+  const card=cards[attackerIdx];
+  if(!card) return;
+  card.style.animation="none";
+  card.style.transform="translateY(0)";
+  void card.offsetWidth; // reflow強制
+  card.style.animation="attackUp 0.35s ease-in-out forwards";
+  setTimeout(()=>{
+    card.style.animation="";
+    card.style.transform="";
+  },380);
+}
+
+function surrender(){
+  if(!confirm("本当に降参しますか？")) return;
+  socket.emit("action",{type:"surrender"});
+}
+
+function reset(){
+  socket.emit("action",{type:"reset"});
+  // ★ログリセット
+  lastDisplayedLogs=[];
+  prevAllLogsLen=0;
+  allLogsData=[];
+  const logBox=document.getElementById("logBox");
+  logBox.innerHTML=`<div style="color:#666;font-size:12px">（まだログがありません）</div>`;
+  document.getElementById("logTitle").innerText="📋 ゲームログ（リアルタイム）";
+  // ★勝敗フラグリセット
+  resultShown=false;
+  // ★BGM再起動
+  stopBGM();
+  startBGM();
+}
+
+function endTurn(){
+  clearSelection();
+  socket.emit("action",{type:"end_turn"});
+}
+
+function showMyGrave(){ openGraveModal(myGraveData, "🪦 自分の捨て場"); }
+function showEnemyGrave(){ openGraveModal(enemyGraveData, "🪦 相手の捨て場"); }
+
+function openGraveModal(graveData, title){
+  document.getElementById("graveModalTitle").innerText=title;
+  const container=document.getElementById("graveModalCards");
+  container.innerHTML="";
+  if(!graveData||graveData.length===0){
+    container.innerHTML="<div style='color:#888;font-size:13px'>まだカードがありません</div>";
+  } else {
+    graveData.forEach(c=>{
+      const img=document.createElement("img");
+      img.src="images/"+c.name+".png";
+      img.title=c.name;
+      img.onmouseenter=()=>{
+        const prev=document.getElementById("gravePreview");
+        prev.innerHTML=`<img src="images/${c.name}.png">`;
+        prev.style.display="block";
+      };
+      img.onmouseleave=()=>{
+        const prev=document.getElementById("gravePreview");
+        prev.style.display="none";
+        prev.innerHTML="";
+      };
+      container.appendChild(img);
+    });
+  }
+  document.getElementById("graveModal").classList.add("open");
+}
+
+function stopBGM(){
+  if(bgmSource){ try{ bgmSource.stop(); }catch(e){} bgmSource=null; }
+  if(bgmContext){ try{ bgmContext.close(); }catch(e){} bgmContext=null; }
+  bgmBuffer=null; // ★contextを閉じたのでbufferも無効化。再取得が必要
+  BGM.pause(); BGM.currentTime=0;
+  bgmStarted=false;
+}
+
+function showResult(isWinner){
+  if(resultShown) return;
+  resultShown=true;
+  stopBGM();
+  const img=document.getElementById("resultImg");
+  img.src=isWinner?"images/YouWin.png":"images/YouLose.png";
+  const overlay=document.getElementById("resultOverlay");
+  overlay.style.display="flex";
+  if(isWinner){ BGM_WIN.currentTime=0; BGM_WIN.play().catch(()=>{}); }
+  else { BGM_LOSE.currentTime=0; BGM_LOSE.play().catch(()=>{}); }
+}
+
+function closeResult(){
+  document.getElementById("resultOverlay").style.display="none";
+  BGM_WIN.pause(); BGM_WIN.currentTime=0;
+  BGM_LOSE.pause(); BGM_LOSE.currentTime=0;
+}
+
+function closeGraveModal(){
+  document.getElementById("graveModal").classList.remove("open");
+  const prev=document.getElementById("gravePreview");
+  prev.style.display="none";
+  prev.innerHTML="";
+}
+
+function openLogModal(){
+  document.getElementById("logModalContent").innerHTML=
+    allLogsData.length===0
+      ? "まだログがありません"
+      : allLogsData.map(l=>`<div style="border-bottom:1px solid #333;padding:3px 0">${l}</div>`).join("");
+  document.getElementById("logModal").classList.add("open");
+}
+function closeLogModal(){
+  document.getElementById("logModal").classList.remove("open");
+}
+
+socket.on("message",(msg)=>{
+  if(msg.includes("グロウコアの効果でユニットを選択中")){
+    const old=document.getElementById("growCoreWaitMsg");
+    if(old) old.remove();
+    const waitDiv=document.createElement("div");
+    waitDiv.id="growCoreWaitMsg";
+    waitDiv.style.cssText="position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,80,0.9);color:#aaddff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:600;border:2px solid #6699ff;text-align:center;";
+    waitDiv.innerText="⏳ "+msg;
+    document.body.appendChild(waitDiv);
+  } else if(msg.includes("捨て場に送られました")){
+    // ★ハンデスメッセージはトースト表示（alertを使わない）
+    const old=document.getElementById("handToast");
+    if(old) old.remove();
+    const toast=document.createElement("div");
+    toast.id="handToast";
+    toast.style.cssText="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(80,0,0,0.92);color:#ffaaaa;padding:10px 22px;border-radius:8px;font-size:14px;z-index:700;border:2px solid #cc4444;text-align:center;pointer-events:none;";
+    toast.innerText="🃏 "+msg;
+    document.body.appendChild(toast);
+    setTimeout(()=>{ const el=document.getElementById("handToast"); if(el) el.remove(); },3000);
+  } else {
+    alert(msg);
+  }
+});
+
+socket.on("attackRollback",(data)=>{
+  // ★巻き戻し：攻撃者を選択状態に戻す（alertは使わない）
+  // トースト表示でメッセージを出す
+  const old=document.getElementById("rollbackToast");
+  if(old) old.remove();
+  const toast=document.createElement("div");
+  toast.id="rollbackToast";
+  toast.style.cssText="position:fixed;top:120px;left:50%;transform:translateX(-50%);background:rgba(80,40,0,0.95);color:#ffcc88;padding:10px 22px;border-radius:8px;font-size:14px;z-index:700;border:2px solid #cc8833;text-align:center;pointer-events:none;";
+  toast.innerText="⚠️ 攻撃対象が破壊されました。改めて選択してください";
+  document.body.appendChild(toast);
+  setTimeout(()=>{ const el=document.getElementById("rollbackToast"); if(el) el.remove(); },3000);
+  // ★攻撃者インデックスを選択状態に設定（update受信後も維持するため変数を保持）
+  pendingAttackerIndex=data.attackerIndex;
+});
+
+socket.on("growCoreResolved",()=>{
+
+  const el=document.getElementById("growCoreWaitMsg");
+  if(el) el.remove();
+});
+
+socket.on("showEffect",(data)=>{
+  const old=document.getElementById("effectPopup");
+  if(old) old.remove();
+  const popup=document.createElement("div");
+  popup.id="effectPopup";
+  popup.style.cssText="position:fixed;top:50%;left:50%;z-index:900;pointer-events:none;";
+  popup.innerHTML=`<img src="images/${data.cardName}.png" style="width:260px;border-radius:10px;box-shadow:0 0 24px #ffe066,0 0 48px rgba(255,224,102,0.5);animation:popIn 0.2s ease-out forwards;">`;
+  document.body.appendChild(popup);
+  // ★効果音
+  if(data.isSpell){
+    playSE(SE.spell);
+  } else {
+    playSE(SE.effect);
+  }
+  setTimeout(()=>{ const el=document.getElementById("effectPopup"); if(el) el.remove(); },1100);
+});
+
+// ★対象選択モード
+let selectTargetMode=null; // {type:"myUnit"|"enemyUnit"|"anyUnit", message}
+
+socket.on("selectTarget",(data)=>{
+  selectTargetMode=data;
+  document.getElementById("turn").innerText="⚔ "+data.message;
+
+  // ライフ入力モード
+  if(data.type==="lifeInput"){
+    const maxVal = data.message.includes("1〜") ? 3 : 99;
+    const input=prompt(data.message)||"0";
+    const amount=parseInt(input,10);
+    if(amount>0&&amount<=maxVal){
+      socket.emit("action",{type:"select_target",targetSide:"life",lifeAmount:amount});
+      selectTargetMode=null;
+      document.getElementById("turn").innerText="▶ あなたのターン";
+    }else{
+      socket.emit("action",{type:"select_target",targetSide:"life",lifeAmount:0}); // 無効値で再要求
+    }
+    return;
+  }
+
+  // 捨て場選択モード
+  if(data.type==="graveSelect"){
+    const options=data.options||[];
+    const choice=prompt(data.message+"\n"+(options.map((n,i)=>`${i}: ${n}`).join("\n")))||"";
+    const idx=parseInt(choice,10);
+    if(!isNaN(idx)&&idx>=0&&idx<options.length){
+      socket.emit("action",{type:"select_target",targetSide:"grave",graveIndex:idx});
+      selectTargetMode=null;
+      document.getElementById("turn").innerText="▶ あなたのターン";
+    }
+    return;
+  }
+  // ★モーダル風の通知を表示
+  const notice=document.createElement("div");
+  notice.id="targetNotice";
+  notice.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#ffe066;padding:16px 28px;border-radius:10px;font-size:15px;z-index:500;border:2px solid #ffe066;text-align:center;pointer-events:none;";
+  notice.innerText="⚔ "+data.message;
+  document.body.appendChild(notice);
+  setTimeout(()=>{ const el=document.getElementById("targetNotice"); if(el) el.remove(); },2000);
+});
+
+const myField=document.getElementById("myField");
+myField.ondragover=(e)=>e.preventDefault();
+myField.ondrop=(e)=>{
+  e.preventDefault();
+  if(draggedCard){
+    if(confirm(draggedCard+" を召喚しますか？")){
+      socket.emit("action",{type:"play_card",card:draggedCard});
+    }
+    draggedCard=null;
+  }
+};
+
+document.addEventListener("touchstart",(e)=>{
+  if(!e.target.closest(".card")){
+    document.getElementById("preview").innerHTML="";
+    clearSelection();
+  }
+});
+
+socket.on("update",(g)=>{
+
+  // ★音検知処理
+  // ドロー検知：自分のデッキが減った＝自分がドローした
+  if(prevMyDeckCount!==null && g.myDeckCount < prevMyDeckCount){
+    const drawCount = prevMyDeckCount - g.myDeckCount;
+    for(let i=0;i<drawCount;i++) playSE(SE.draw);
+  }
+  // 相手ドロー検知：相手デッキが減った
+  if(prevEnemyDeckCount!==null && g.enemyDeckCount < prevEnemyDeckCount){
+    const drawCount = prevEnemyDeckCount - g.enemyDeckCount;
+    for(let i=0;i<drawCount;i++) playSE(SE.draw);
+  }
+  prevMyDeckCount=g.myDeckCount;
+  prevEnemyDeckCount=g.enemyDeckCount;
+
+  // 召喚検知：自分の場が増えた
+  if(prevMyBoardCount!==null && g.myBoard.length > prevMyBoardCount){
+    playSE(SE.summon);
+  }
+  // 相手召喚検知：相手の場が増えた
+  if(prevEnemyBoardCount!==null && g.enemyBoard.length > prevEnemyBoardCount){
+    playSE(SE.summon);
+  }
+  prevMyBoardCount=g.myBoard.length;
+  prevEnemyBoardCount=g.enemyBoard.length;
+
+  // 攻撃音検知：allLogsに攻撃ログが新たに追加された場合
+  const newLogs=(g.allLogs||[]).slice(prevAllLogsLen);
+  newLogs.forEach(log=>{
+    if(log.includes("に攻撃（") || log.includes("でプレイヤーに直接攻撃") || log.includes("に全体攻撃")){
+      // 攻撃者の属性を特定するためログからユニット名を抽出
+      const match=log.match(/「(.+?)」(?:で|が)/);
+      if(match){
+        const unitName=match[1];
+        const attr=getClientAttr(unitName);
+        playSE(SE.atk[attr]||SE.atk.neutral);
+      }
+    }
+  });
+  prevAllLogsLen=(g.allLogs||[]).length;
+
+  // グロウコア待機中は既にselectTargetモードで上書きされているため変更不要
+  if(!selectTargetMode){
+    document.getElementById("turn").innerText=
+      g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+  }
+  document.getElementById("winner").innerText=
+    g.winner?(g.winner===socket.id?"🏆 勝ち！":"💀 負け"):"";
+  // ★勝敗演出
+  if(g.winner && !resultShown){
+    setTimeout(()=>{ showResult(g.winner===socket.id); }, 300);
+  }
+  // ★ゲームリセット時に結果フラグをリセット
+  if(!g.winner) resultShown=false;
+
+  let handIcons="手札: ";
+  for(let i=0;i<g.enemyHandCount;i++) handIcons+="🂠";
+
+  document.getElementById("enemyLife").innerText="❤ "+g.enemyLife;
+  document.getElementById("enemyEnergy").innerText="🔋 "+g.enemyEnergy+"/"+g.enemyMaxEnergy;
+  document.getElementById("enemyDeck").innerText="🂠 デッキ "+g.enemyDeckCount;
+  document.getElementById("enemyHandDisplay").innerText=handIcons;
+
+  allLogsData=g.allLogs||[];
+  const logBox=document.getElementById("logBox");
+  const currentLogs=g.currentTurnLogs||[];
+  // ★現ターンのログがあれば更新して保持、なければ前回表示を維持
+  if(currentLogs.length>0){
+    lastDisplayedLogs=currentLogs;
+  }
+  const displayLogs=lastDisplayedLogs;
+  if(displayLogs.length===0){
+    logBox.innerHTML=`<div style="color:#666;font-size:12px">（まだログがありません）</div>`;
+  }else{
+    logBox.innerHTML=displayLogs.map(l=>`<div class="logLine">${l}</div>`).join("");
+    logBox.scrollTop=logBox.scrollHeight;
+  }
+  document.getElementById("logTitle").innerText="📋 ゲームログ（リアルタイム）";
+
+  // --- 相手フィールド ---
+  const ef=document.getElementById("enemyField");
+  ef.innerHTML="";
+  g.enemyBoard.forEach((c,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    const img=document.createElement("img");
+    img.src="images/"+c.name+".png";
+    img.onmouseenter=()=>{ document.getElementById("preview").innerHTML=`<img src="images/${c.name}.png">`; };
+    img.onmouseleave=()=>{ document.getElementById("preview").innerHTML=""; };
+    div.ondragover=(e)=>e.preventDefault();
+    div.ondrop=(e)=>{
+      e.preventDefault();
+      if(draggedUnitIndex!==null){
+        const atkIdx=draggedUnitIndex;
+        draggedUnitIndex=null;
+        playAttackAnim(atkIdx);
+        setTimeout(()=>{
+          socket.emit("action",{type:"attack",a:atkIdx,t:i});
+        },200);
+      }
+    };
+div.onclick=()=>{
+      // ★対象選択モード中
+      if(selectTargetMode && (selectTargetMode.type==="enemyUnit"||selectTargetMode.type==="anyUnit")){
+        socket.emit("action",{type:"select_target",targetIndex:i,targetSide:"enemy"});
+        selectTargetMode=null;
+        document.getElementById("turn").innerText=g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+        return;
+      }
+      if(selectedUnitIndex!==null){
+        const atkIdx=selectedUnitIndex;
+        clearSelection();
+        playAttackAnim(atkIdx);
+        setTimeout(()=>{
+          socket.emit("action",{type:"attack",a:atkIdx,t:i});
+        },200);
+      }
+    };
+const stat=document.createElement("div");
+    stat.className="stat";
+    let statText=`HP${c.hp} AT${c.atk}`;
+    if(c.disabled) statText+=" 🚫";
+    if(c.barrier)  statText+=" 💎";
+    if(c.denko && !c.attacked) statText+=" ⚡x2";
+    if(c.denko && c.attacked && !c.denkoAttackedThisTurn) statText+=" ⚡x1";
+    stat.innerText=statText;
+    div.appendChild(img); div.appendChild(stat);
+    ef.appendChild(div);
+  });
+
+  // --- 直接攻撃ゾーン ---
+  const epz=document.getElementById("enemyPlayerZone");
+  epz.ondragover=(e)=>{e.preventDefault();epz.classList.add("dragover");};
+  epz.ondragleave=()=>epz.classList.remove("dragover");
+  epz.ondrop=(e)=>{
+    e.preventDefault();
+    epz.classList.remove("dragover");
+    if(draggedUnitIndex!==null){
+      const atkIdx=draggedUnitIndex;
+      draggedUnitIndex=null;
+      playAttackAnim(atkIdx);
+      setTimeout(()=>{
+        socket.emit("action",{type:"attack",a:atkIdx});
+      },200);
+    }
+  };
+  epz.onclick=()=>{
+    if(selectedUnitIndex!==null){
+      const atkIdx=selectedUnitIndex;
+      clearSelection();
+      playAttackAnim(atkIdx);
+      setTimeout(()=>{
+        socket.emit("action",{type:"attack",a:atkIdx});
+      },200);
+    }
+  };
+
+  // --- 自分フィールド ---
+  myField.innerHTML="";
+  g.myBoard.forEach((c,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    const img=document.createElement("img");
+    img.src="images/"+c.name+".png";
+    img.onmouseenter=()=>{ document.getElementById("preview").innerHTML=`<img src="images/${c.name}.png">`; };
+    img.onmouseleave=()=>{ document.getElementById("preview").innerHTML=""; };
+    img.draggable=true;
+    img.ondragstart=()=>{ draggedUnitIndex=i; draggedUnitName=c.name; };
+div.onclick=()=>{
+      // ★対象選択モード中
+      if(selectTargetMode && (selectTargetMode.type==="myUnit"||selectTargetMode.type==="anyUnit")){
+        socket.emit("action",{type:"select_target",targetIndex:i,targetSide:"my"});
+        selectTargetMode=null;
+        document.getElementById("turn").innerText=g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+        return;
+      }
+      // 電光石火2回目：同じユニットが選択済みでも解除しない（そのまま相手を選ばせる）
+      if(selectedUnitIndex===i){
+        // 電光石火持ちで1回目攻撃済みの場合は選択維持（2回目攻撃のため）
+        if(c.denko && c.attacked && !c.denkoAttackedThisTurn){
+          // 電光石火2回目のため選択維持
+          return;
+        }
+        clearSelection();
+        return;
+      }
+      clearSelection();
+      selectedUnitIndex=i;
+      selectedUnitName=c.name;
+      div.classList.add("selected");
+    };
+const stat=document.createElement("div");
+    stat.className="stat";
+    let statText=`HP${c.hp} AT${c.atk}`;
+    if(c.disabled) statText+=" 🚫";
+    if(c.barrier)  statText+=" 🛡";
+    if(c.denko && !c.attacked) statText+=" ⚡x2";
+    if(c.denko && c.attacked && !c.denkoAttackedThisTurn) statText+=" ⚡x1";
+    stat.innerText=statText;
+    div.appendChild(img); div.appendChild(stat);
+    myField.appendChild(div);
+  });
+
+  // ★巻き戻し後の攻撃者選択を復元
+  if(pendingAttackerIndex!==null){
+    const cards=myField.querySelectorAll(".card");
+    if(cards[pendingAttackerIndex]){
+      selectedUnitIndex=pendingAttackerIndex;
+      selectedUnitName=g.myBoard[pendingAttackerIndex]?.name||"";
+      cards[pendingAttackerIndex].classList.add("selected");
+    }
+    pendingAttackerIndex=null;
+  }
+
+  // --- 自分情報 ---
+  document.getElementById("myLife").innerText="❤ "+g.myLife;
+  document.getElementById("myEnergy").innerText="🔋 "+g.myEnergy+"/"+g.myMaxEnergy;
+  document.getElementById("myDeck").innerText="🂠 デッキ "+g.myDeckCount;
+  myGraveData=g.myGrave;
+  enemyGraveData=g.enemyGrave;
+
+// ★手札捨て待ちメッセージ
+  if(g.pendingDiscard && g.pendingDiscard>0){
+    if(g.isHandLimit){
+      document.getElementById("turn").innerText=
+        `⚠️ 手札上限超過！${g.pendingDiscard}枚捨ててください（上限7枚）`;
+    } else if(g.isSoulTrade){
+      document.getElementById("turn").innerText=
+        `🔄 ソウルトレード：捨てるカードを1枚選んでください`;
+    }
+  }
+
+  // --- 手札 ---
+  const hand=document.getElementById("handArea");
+  hand.innerHTML="";
+  g.myHand.forEach(card=>{
+    const div=document.createElement("div");
+    div.className="card";
+    const img=document.createElement("img");
+    img.src="images/"+card+".png";
+    img.onmouseenter=()=>{ document.getElementById("preview").innerHTML=`<img src="images/${card}.png">`; };
+    img.onmouseleave=()=>{ document.getElementById("preview").innerHTML=""; };
+    img.draggable=true;
+    img.ondragstart=()=>{ draggedCard=card; };
+div.onclick=()=>{
+      if(g.pendingDiscard && g.pendingDiscard>0){
+        if(confirm(card+" を捨てますか？")){
+          socket.emit("action",{type:"discard_hand",card});
+        }
+      
+        } else if(selectTargetMode && (
+        selectTargetMode.type==="handUnit_steel_cost3"||
+        selectTargetMode.type==="handUnit_cost2"||
+        selectTargetMode.type==="handUnit_cost3"||
+        selectTargetMode.type==="handUnit_steel"
+      )){
+        // ★手札からユニット選択系
+        const hi=g.myHand.indexOf(card);
+        socket.emit("action",{type:"select_target",targetIndex:hi,targetSide:"hand",handIndex:hi});
+        selectTargetMode=null;
+        document.getElementById("turn").innerText=g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+      } else if(selectTargetMode && selectTargetMode.type==="soulTrade"){
+        // ★ソウルトレードの手札捨て（select_targetとして送信）
+        if(confirm(card+" を捨てますか？")){
+          const hi=g.myHand.indexOf(card);
+          socket.emit("action",{type:"select_target",targetSide:"soulTrade",handIndex:hi,card:card});
+          selectTargetMode=null;
+          document.getElementById("turn").innerText=g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+        }
+      } else {
+        if(confirm(card+" を使用しますか？")){
+          socket.emit("action",{type:"play_card",card});
+        }
+      }
+    };
+    div.appendChild(img);
+    hand.appendChild(div);
+  });
+
+});
+</script>
+</body>
+</html>

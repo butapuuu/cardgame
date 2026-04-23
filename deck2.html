@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<style>
+body{
+  display:flex;
+}
+
+/* 左 */
+#left{
+  width:70%;
+}
+
+/* 右（プレビュー） */
+#right{
+  width:30%;
+  position:fixed;
+  right:-2cm; /* ★右に2cmずらす */
+  top:20px;
+}
+
+/* デッキ（2行固定） */
+#deck{
+  display:grid;
+  grid-template-columns:repeat(10,80px);
+  grid-template-rows:repeat(2,100px);
+  gap:5px;
+  border:2px solid black;
+  padding:5px;
+  min-height:210px;
+}
+
+/* カード一覧 */
+#cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,80px);
+  gap:8px;
+  margin-top:10px;
+}
+
+.card{
+  text-align:center;
+  cursor:pointer;
+}
+
+.card img{
+  width:80px;
+}
+
+/* プレビュー */
+#preview img{
+  width:300px;
+}
+
+/* フィルター */
+.filter button{
+  margin:2px;
+}
+</style>
+
+<div id="left">
+
+<h2>デッキ構築（プレイヤー2）</h2>
+<h3 id="count"></h3>
+
+<!-- デッキ -->
+<div id="deck"></div>
+
+<!-- デッキ名・スロット選択UI -->
+<div style="margin:8px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+  <label>デッキ名：</label>
+  <input id="deckNameInput" type="text" placeholder="デッキ名を入力" maxlength="20"
+    style="padding:4px 8px;border-radius:4px;border:1px solid #999;width:140px;">
+  <label>スロット：</label>
+  <select id="deckSlotSelect" style="padding:4px;border-radius:4px;">
+    <option value="0">スロット1</option>
+    <option value="1">スロット2</option>
+    <option value="2">スロット3</option>
+    <option value="3">スロット4</option>
+    <option value="4">スロット5</option>
+    <option value="5">スロット6</option>
+    <option value="6">スロット7</option>
+    <option value="7">スロット8</option>
+    <option value="8">スロット9</option>
+    <option value="9">スロット10</option>
+  </select>
+  <button onclick="loadSlot()">このスロットを読込</button>
+</div>
+<div id="slotList" style="font-size:12px;color:#555;margin-bottom:6px;"></div>
+
+<button onclick="save()">保存</button>
+<button onclick="clearDeck()">クリア</button>
+
+<hr>
+
+<!-- 検索 -->
+<input id="search" placeholder="検索" oninput="renderCards()">
+
+<!-- 属性フィルター -->
+<div class="filter">
+  <button onclick="setFilter('all')">全て</button>
+  <button onclick="setFilter('fire')">火</button>
+  <button onclick="setFilter('water')">水</button>
+  <button onclick="setFilter('thunder')">雷</button>
+  <button onclick="setFilter('forest')">森</button>
+  <button onclick="setFilter('dark')">闇</button>
+  <button onclick="setFilter('poison')">毒</button>
+  <button onclick="setFilter('steel')">鉄</button>
+  <button onclick="setFilter('neutral')">汎用</button>
+</div>
+
+<div id="cards"></div>
+
+</div>
+
+<div id="right">
+  <div id="preview"></div>
+</div>
+
+<script>
+
+const cards = [
+"フレイムスパーク",
+"ファイアウルフ",
+"ブレイズリザード",
+"マグマウルフ",
+"フレイムナイト",
+"アッシュソルジャー",
+"フレイムレオン",
+"ボルケーノタートル",
+"インフェルノドラゴン",
+"バーンアウト",
+"フレイムパージャー",
+"ブレイズフェニックス",
+"フレイムエンペラー",
+"メガフレアドラゴン",
+"フレイムバーン",
+"ファイアボール",
+"フレイムストーム",
+"業火の裁き",
+"バーニングソウル",
+"スカーチングレイン",
+"エンラージ",
+"炎の加護",
+"フェニックスリバース",
+
+"ウォータードロップ",
+"アクアフィッシュ",
+"アイスウォリアー",
+"エナジーカラパス",
+"クリスタルシェル",
+"フロストビースト",
+"アイスガーディアン",
+"バーストパファー",
+"トレントサーペント",
+"アクアドラゴン",
+"オーシャンナイト",
+"テンペストシャーク",
+"タイダルリヴァイアサン",
+"フローズンキング",
+"フリーズショット",
+"海の恵み",
+"アクアリターン",
+"激流",
+"アイシクルドレイン",
+"大津波",
+"ウォーターカーテン",
+"クリスタルバリア",
+"エナジーブースト",
+
+"サンダービート",
+"スパークマウス",
+"ライトニングラプター",
+"ボルトウォリアー",
+"ボルトホーク",
+"ライトニングウルフ",
+"スパークレパード",
+"エレキドラゴン",
+"プラズマメイジ",
+"ボルトチェンジャー",
+"サンダーランページ",
+"サンダーロード",
+"ストームタイタン",
+"ボルトエンペラー",
+"スピードドロー",
+"エレキサーキット",
+"チェインライトニング",
+"サンダーストライク",
+"稲妻の速攻",
+"エナジーチャージ",
+"ボルトレイジ",
+"プラズマバースト",
+"サンダーボム",
+
+"フォレストラビット",
+"グリーンナイト",
+"ウッドゴーレム",
+"グロウコア",
+"アーマードライノス",
+"フォレストビースト",
+"モスストーン",
+"フォレストエルフ",
+"フォレストスイーパー",
+"エンシェントツリー",
+"ジャングルタイラント",
+"ワイルドベア",
+"グリーンドラゴン",
+"ネイチャーロード",
+"シードバースト",
+"グロウス",
+"リンカーネーション",
+"森の恵み",
+"ナチュラルアーマー",
+"根の呪縛",
+"大地の力",
+"シードスポーン",
+"リーフストーム",
+
+"シャドウバット",
+"ダークスライム",
+"シャドウアサシン",
+"ダークナイト",
+"ナイトメアビースト",
+"アビスナイト",
+"ナイトリカー",
+"ダークサイフォナー",
+"カースドラゴン",
+"ヘルハウンド",
+"ナイトテラー",
+"ダークロード",
+"シャドウキング",
+"アビスウォール",
+"ダークブラスト",
+"マインドコントロール",
+"ソウルトレード",
+"エナジーカース",
+"リセット",
+"ソウルドレイン",
+"ディスカード",
+"カースシャドウ",
+"デスペレーション",
+
+"ポイズンインプ",
+"トキシックスライム",
+"トキシックビースト",
+"プラーグハウンド",
+"ブライトレッチ",
+"ポイズンドレイン",
+"マッドサイエンティスト",
+"ヴェノムアルケミスト",
+"マイアズマウォーカー",
+"ヴェノムロード",
+"ベインブリンガー",
+"ポイズンナイト",
+"コラプトジャイアント",
+"トキシックドラゴン",
+"インジェクション",
+"サクリファイス",
+"劇薬調合",
+"ポイズンスパイク",
+"解毒剤",
+"ペインシェア",
+"禁断の秘薬",
+"ヴェノムハーベスト",
+"トキシックアポカリプス",
+
+"ギアスカウト",
+"プロトタイプユニット",
+"メタルブルート",
+"ギアコンバーター",
+"スチールブレイバー",
+"スチールビースト",
+"オートマトンファクトリー",
+"メカニカルアーチャー",
+"ヘビィタンク",
+"ギアドレイク",
+"ギアタイタン",
+"フェルムマスター",
+"アイアンレイダー",
+"メガコンストラクト",
+"リサイクル",
+"緊急生産",
+"スクラップ&ビルド",
+"自爆装置",
+"装甲強化",
+"ギアリペア",
+"チェーンリアクション",
+"メガギアフュージョン",
+"オーバーロード",
+
+"ダブルドロー",
+"浄化の光",
+"リバース"
+];
+
+// ===== 属性マップ（必要なら拡張） =====
+const attrMap = {
+"フレイムスパーク":"fire",
+"ファイアウルフ":"fire",
+"ブレイズリザード":"fire",
+"マグマウルフ":"fire",
+"フレイムナイト":"fire",
+"アッシュソルジャー":"fire",
+"フレイムレオン":"fire",
+"ボルケーノタートル":"fire",
+"インフェルノドラゴン":"fire",
+"バーンアウト":"fire",
+"フレイムパージャー":"fire",
+"ブレイズフェニックス":"fire",
+"フレイムエンペラー":"fire",
+"メガフレアドラゴン":"fire",
+"フレイムバーン":"fire",
+"ファイアボール":"fire",
+"フレイムストーム":"fire",
+"業火の裁き":"fire",
+"バーニングソウル":"fire",
+"スカーチングレイン":"fire",
+"エンラージ":"fire",
+"炎の加護":"fire",
+"フェニックスリバース":"fire",
+
+"ウォータードロップ":"water",
+"アクアフィッシュ":"water",
+"アイスウォリアー":"water",
+"エナジーカラパス":"water",
+"クリスタルシェル":"water",
+"フロストビースト":"water",
+"アイスガーディアン":"water",
+"バーストパファー":"water",
+"トレントサーペント":"water",
+"アクアドラゴン":"water",
+"オーシャンナイト":"water",
+"テンペストシャーク":"water",
+"タイダルリヴァイアサン":"water",
+"フローズンキング":"water",
+"フリーズショット":"water",
+"海の恵み":"water",
+"アクアリターン":"water",
+"激流":"water",
+"アイシクルドレイン":"water",
+"大津波":"water",
+"ウォーターカーテン":"water",
+"クリスタルバリア":"water",
+"エナジーブースト":"water",
+
+"サンダービート":"thunder",
+"スパークマウス":"thunder",
+"ライトニングラプター":"thunder",
+"ボルトウォリアー":"thunder",
+"ボルトホーク":"thunder",
+"ライトニングウルフ":"thunder",
+"スパークレパード":"thunder",
+"エレキドラゴン":"thunder",
+"プラズマメイジ":"thunder",
+"ボルトチェンジャー":"thunder",
+"サンダーランページ":"thunder",
+"サンダーロード":"thunder",
+"ストームタイタン":"thunder",
+"ボルトエンペラー":"thunder",
+"スピードドロー":"thunder",
+"エレキサーキット":"thunder",
+"チェインライトニング":"thunder",
+"サンダーストライク":"thunder",
+"稲妻の速攻":"thunder",
+"エナジーチャージ":"thunder",
+"ボルトレイジ":"thunder",
+"プラズマバースト":"thunder",
+"サンダーボム":"thunder",
+
+"フォレストラビット":"forest",
+"グリーンナイト":"forest",
+"ウッドゴーレム":"forest",
+"グロウコア":"forest",
+"アーマードライノス":"forest",
+"フォレストビースト":"forest",
+"モスストーン":"forest",
+"フォレストエルフ":"forest",
+"フォレストスイーパー":"forest",
+"エンシェントツリー":"forest",
+"ジャングルタイラント":"forest",
+"ワイルドベア":"forest",
+"グリーンドラゴン":"forest",
+"ネイチャーロード":"forest",
+"シードバースト":"forest",
+"グロウス":"forest",
+"リンカーネーション":"forest",
+"森の恵み":"forest",
+"ナチュラルアーマー":"forest",
+"根の呪縛":"forest",
+"大地の力":"forest",
+"シードスポーン":"forest",
+"リーフストーム":"forest",
+
+"シャドウバット":"dark",
+"ダークスライム":"dark",
+"シャドウアサシン":"dark",
+"ダークナイト":"dark",
+"ナイトメアビースト":"dark",
+"アビスナイト":"dark",
+"ナイトリカー":"dark",
+"ダークサイフォナー":"dark",
+"カースドラゴン":"dark",
+"ヘルハウンド":"dark",
+"ナイトテラー":"dark",
+"ダークロード":"dark",
+"シャドウキング":"dark",
+"アビスウォール":"dark",
+"ダークブラスト":"dark",
+"マインドコントロール":"dark",
+"ソウルトレード":"dark",
+"エナジーカース":"dark",
+"リセット":"dark",
+"ソウルドレイン":"dark",
+"ディスカード":"dark",
+"カースシャドウ":"dark",
+"デスペレーション":"dark",
+
+"ポイズンインプ":"poison",
+"トキシックスライム":"poison",
+"トキシックビースト":"poison",
+"プラーグハウンド":"poison",
+"ブライトレッチ":"poison",
+"ポイズンドレイン":"poison",
+"マッドサイエンティスト":"poison",
+"ヴェノムアルケミスト":"poison",
+"マイアズマウォーカー":"poison",
+"ヴェノムロード":"poison",
+"ベインブリンガー":"poison",
+"ポイズンナイト":"poison",
+"コラプトジャイアント":"poison",
+"トキシックドラゴン":"poison",
+"インジェクション":"poison",
+"サクリファイス":"poison",
+"劇薬調合":"poison",
+"ポイズンスパイク":"poison",
+"解毒剤":"poison",
+"ペインシェア":"poison",
+"禁断の秘薬":"poison",
+"ヴェノムハーベスト":"poison",
+"トキシックアポカリプス":"poison",
+
+"ギアスカウト":"steel",
+"プロトタイプユニット":"steel",
+"メタルブルート":"steel",
+"ギアコンバーター":"steel",
+"スチールブレイバー":"steel",
+"スチールビースト":"steel",
+"オートマトンファクトリー":"steel",
+"メカニカルアーチャー":"steel",
+"ヘビィタンク":"steel",
+"ギアドレイク":"steel",
+"ギアタイタン":"steel",
+"フェルムマスター":"steel",
+"アイアンレイダー":"steel",
+"メガコンストラクト":"steel",
+"リサイクル":"steel",
+"緊急生産":"steel",
+"スクラップ&ビルド":"steel",
+"自爆装置":"steel",
+"装甲強化":"steel",
+"ギアリペア":"steel",
+"チェーンリアクション":"steel",
+"メガギアフュージョン":"steel",
+"オーバーロード":"steel",
+
+"ダブルドロー":"neutral",
+"浄化の光":"neutral",
+"リバース":"neutral"
+};
+
+let deck=[];
+let filter="all";
+
+// ===== フィルター =====
+function setFilter(f){
+  filter=f;
+  renderCards();
+}
+
+// ===== ひらがな変換 =====
+function hira(str){
+  return str.replace(/[ァ-ン]/g, s => String.fromCharCode(s.charCodeAt(0)-0x60));
+}
+
+// ===== カード一覧 =====
+function renderCards(){
+  const area=document.getElementById("cards");
+  area.innerHTML="";
+
+  const keyword=document.getElementById("search").value;
+
+  cards.forEach(c=>{
+
+    // 検索
+    if(keyword){
+      const k=hira(keyword);
+      if(!hira(c).includes(k)) return;
+    }
+
+    // フィルター
+    if(filter!=="all"){
+      if(attrMap[c]!==filter) return;
+    }
+
+    const div=document.createElement("div");
+    div.className="card";
+
+    const img=document.createElement("img");
+    img.src="images/"+c+".png";
+
+    // ★プレビュー（一覧）
+    img.onmouseenter=()=>{
+      preview.innerHTML=`<img src="images/${c}.png">`;
+    };
+    img.onmouseleave=()=>{
+      preview.innerHTML="";
+    };
+
+    div.onclick=()=>{
+
+      if(deck.length>=20) return;
+
+      const count = deck.filter(x=>x===c).length;
+
+      if(count>=2){
+        alert("同名カードは2枚まで");
+        return;
+      }
+
+      deck.push(c);
+      render();
+    };
+
+    const name=document.createElement("div");
+    name.innerText=c;
+
+    div.appendChild(img);
+    div.appendChild(name);
+    area.appendChild(div);
+  });
+}
+
+// ===== デッキ描画 =====
+function render(){
+  document.getElementById("count").innerText=`枚数: ${deck.length}/20`;
+
+  const area=document.getElementById("deck");
+  area.innerHTML="";
+
+  deck.forEach((c,i)=>{
+
+    const div=document.createElement("div");
+    div.className="card";
+
+    const img=document.createElement("img");
+    img.src="images/"+c+".png";
+
+    // ★プレビュー（デッキ側も追加）
+    img.onmouseenter=()=>{
+      preview.innerHTML=`<img src="images/${c}.png">`;
+    };
+    img.onmouseleave=()=>{
+      preview.innerHTML="";
+    };
+
+    img.onclick=()=>{
+      deck.splice(i,1);
+      render();
+    };
+
+    div.appendChild(img);
+    area.appendChild(div);
+  });
+}
+
+// ===== デッキクリア =====
+function clearDeck(){
+  if(!confirm("デッキをすべてクリアしますか？")) return;
+  deck=[];
+  render();
+}
+
+// ===== スロット一覧表示 =====
+function refreshSlotList(){
+  const all=JSON.parse(localStorage.getItem("decks_p2")||"[]");
+  const el=document.getElementById("slotList");
+  if(!el) return;
+  const names=all.map((d,i)=>d?`[${i+1}]${d.name||"名称未設定"}`:"").filter(s=>s);
+  el.innerText=names.length>0?"保存済み: "+names.join(" / "):"（保存済みなし）";
+}
+
+// ===== スロット読込 =====
+function loadSlot(){
+  const slot=parseInt(document.getElementById("deckSlotSelect").value,10);
+  const all=JSON.parse(localStorage.getItem("decks_p2")||"[]");
+  if(!all[slot]){ alert("このスロットにデッキがありません"); return; }
+  const d=all[slot];
+  document.getElementById("deckNameInput").value=d.name||"";
+  deck=d.cards||[];
+  render();
+  alert(`スロット${slot+1}「${d.name||"名称未設定"}」を読み込みました`);
+}
+
+// ===== 保存 =====
+function save(){
+  if(deck.length!==20){
+    alert("20枚必要");
+    return;
+  }
+  let attrs=new Set();
+  deck.forEach(c=>{
+    if(attrMap[c] && attrMap[c]!=="neutral") attrs.add(attrMap[c]);
+  });
+  if(attrs.size>1){
+    alert("属性は1種類のみ");
+    return;
+  }
+  const slot=parseInt(document.getElementById("deckSlotSelect").value,10);
+  const name=document.getElementById("deckNameInput").value||("デッキ"+(slot+1));
+  const all=JSON.parse(localStorage.getItem("decks_p2")||"[]");
+  while(all.length<=slot) all.push(null);
+  all[slot]={name, cards:deck};
+  localStorage.setItem("decks_p2", JSON.stringify(all));
+  // 後方互換：従来キーにも保存（スロット問わず最後に保存したものをdeck1に）
+  localStorage.setItem("deck2", JSON.stringify(deck));
+  refreshSlotList();
+  alert(`スロット${slot+1}「${name}」に保存しました`);
+}
+
+render();
+renderCards();
+refreshSlotList();
+
+</script>
+
+</body>
+</html>
