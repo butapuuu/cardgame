@@ -1028,6 +1028,15 @@ function notifyPendingTarget(){
       });
     }
   }
+  if(pt.effect==="UNIT_DES_SUM_C3_HAND"){
+    const ownerSocket=io.sockets.sockets.get(pt.player);
+    if(ownerSocket){
+      ownerSocket.emit("selectTarget",{
+        type:"handUnit_cost3",
+        message:"リンカーネーション：召喚するコスト3以下のユニットを手札から選択してください"
+      });
+    }
+  }
 }
 
 // ★効果演出送信
@@ -1466,6 +1475,13 @@ const op=getOpponent(socket.id);
           if(eff==="DES_SUMMON_C2_HAND"){
             const turnSocket=io.sockets.sockets.get(game.turn);
             if(turnSocket) turnSocket.emit("growCoreResolved");
+            // ★pendingNextがあれば続けて処理（リンカーネーション等）
+            if(pt.pendingNext){
+              const nxt=pt.pendingNext;
+              game.pendingTarget={player:nxt.player, effect:nxt.effect, card:nxt.card};
+              notifyPendingTarget();
+              send();return;
+            }
           }
           if(eff==="SUM_H_C3X2_STEP1"){
             const valid2=game.hands[p].filter(name=>cards[name]?.type==="unit"&&(cards[name]?.cost||0)<=3);
@@ -1802,11 +1818,22 @@ case "UNIT_DES_SUM_C2":{
           game.board[p].splice(targetIndex,1);
           game.graves[p].push(targetUnit);
           addLog(p,`「${pt.card}」で「${targetUnit.name}」を破壊`);
+          // ★破壊前にリンカーネーションのカード名を保存
+          const linkaCard=pt.card;
           triggerDestroyEffect(targetUnit,p);
-          game.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3_HAND",card:pt.card};
-          socket.emit("selectTarget",{type:"handUnit_cost3",message:"召喚するコスト3以下のユニットを手札から選択してください"});
+          // ★triggerDestroyEffectでpendingTarget(DES_SUMMON_C2_HAND)がセットされた場合
+          if(game.pendingTarget && game.pendingTarget.effect==="DES_SUMMON_C2_HAND"){
+            // グロウコア効果を先に処理し、完了後にリンカーネーション効果を続ける
+            game.pendingTarget.pendingNext={effect:"UNIT_DES_SUM_C3_HAND", card:linkaCard, player:p};
+            notifyPendingTarget();
+            send();return;
+          }
+          // 破壊時効果なし→そのままリンカーネーション処理
+          game.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3_HAND",card:linkaCard};
+          notifyPendingTarget();
           send();return;
         }
+        
 
         case "OVERLOAD_A+3_END_DES_ALL":{
           // 場の鉄ユニット全体のATK+3、全体にoverloadMark
@@ -1869,7 +1896,7 @@ case "UNIT_DES_SUM_C2":{
           const handCard=game.hands[p][data.handIndex];
           if(!handCard||cards[handCard]?.type!=="unit"||(cards[handCard]?.cost||0)>2){
             socket.emit("message","コスト2以下のユニットを選択してください");
-            game.pendingTarget={player:p,effect:"DES_SUMMON_C2_HAND",card:pt.card};
+            game.pendingTarget={player:p,effect:"DES_SUMMON_C2_HAND",card:pt.card,pendingNext:pt.pendingNext};
             socket.emit("selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを選択してください"});
             send();return;
           }
@@ -1879,7 +1906,15 @@ case "UNIT_DES_SUM_C2":{
           game.board[p].push(newU);
           addLog(p,`「${pt.card}」破壊時：「${handCard}」を召喚`);
           triggerSummonEffect(newU,p,socket,io);
-          break;
+          // ★pendingNextがあれば続けて処理（リンカーネーション等）
+          if(pt.pendingNext){
+            const nxt=pt.pendingNext;
+            game.pendingTarget={player:nxt.player, effect:nxt.effect, card:nxt.card};
+            notifyPendingTarget();
+            send();return;
+          }
+          game.pendingTarget=null;
+          send();return;
         }
 
         case "SUM_DES_SUM_C2_HAND":
