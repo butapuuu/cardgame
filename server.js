@@ -230,7 +230,8 @@ pendingDiscard:{},   // {プレイヤーID: 捨てる枚数} 手札捨て待ち
   turnBuffs:{},        // {プレイヤーID: {atk:N}} このターンのみのバフ
   pendingTarget:null,  // 対象選択待ち {player, effect, card, extra}
   pendingHandLimitDiscard:null, // 手札上限捨て待ちプレイヤーID
-  allLogs:[],
+  pendingNext:null, // ★連鎖する次の効果処理
+  allLogs:[],
   turnLogs:{},
   prevLogs:{}
 };
@@ -989,7 +990,7 @@ function resetGame(){
   game.board={};game.hands={};game.decks={};
   game.graves={};game.energy={};game.maxEnergy={};
   game.life={};game.winner=null;game.noAttack={};
-  game.pendingDiscard={};game.turnBuffs={};game.pendingHandLimitDiscard=null;
+  game.pendingDiscard={};game.turnBuffs={};game.pendingHandLimitDiscard=null;game.pendingNext=null;
   game.allLogs=[];game.turnLogs={};game.prevLogs={};
 
   [game.player1,game.player2].forEach(p=>{
@@ -1434,6 +1435,13 @@ const op=getOpponent(socket.id);
         }
         if(game.life[p]<=0) game.winner=op;
         game.pendingTarget=null;
+        // ★pendingNextチェック
+        if(game.pendingNext){
+          const nxt=game.pendingNext;
+          game.pendingNext=null;
+          game.pendingTarget={player:nxt.player, effect:nxt.effect, card:nxt.card};
+          notifyPendingTarget();
+        }
         send();return;
       }
 
@@ -1475,12 +1483,13 @@ const op=getOpponent(socket.id);
           if(eff==="DES_SUMMON_C2_HAND"){
             const turnSocket=io.sockets.sockets.get(game.turn);
             if(turnSocket) turnSocket.emit("growCoreResolved");
-            // ★pendingNextがあれば続けて処理（リンカーネーション等）
             if(pt.pendingNext){
               const nxt=pt.pendingNext;
-              game.pendingTarget={player:nxt.player, effect:nxt.effect, card:nxt.card};
-              notifyPendingTarget();
-              send();return;
+              if(game.pendingTarget){
+                game.pendingTarget.pendingNext=nxt;
+              } else {
+                game.pendingNext=nxt;
+              }
             }
           }
           if(eff==="SUM_H_C3X2_STEP1"){
@@ -1488,9 +1497,16 @@ const op=getOpponent(socket.id);
             if(valid2.length>0&&game.board[p].length<3){
               game.pendingTarget={player:p,effect:"SUM_H_C3X2_STEP2",card:pt.card};
               socket.emit("selectTarget",{type:"handUnit_cost3",message:"2体目：コスト3以下のユニットを選択してください"});
-              notifyPendingTarget();
-              send();return;
-            }
+              // ★game.pendingNextがあれば次の効果へ
+        if(!game.pendingTarget && game.pendingNext){
+          const nxt=game.pendingNext;
+          game.pendingNext=null;
+          game.pendingTarget={player:nxt.player, effect:nxt.effect, card:nxt.card};
+          notifyPendingTarget();
+        }
+        send();
+        return;
+      }
           }
         }else{
           game.pendingTarget=null;
@@ -1685,10 +1701,12 @@ const op=getOpponent(socket.id);
         case "SUM_A_PERM-2":
           targetUnit.atk=Math.max(0,targetUnit.atk-2);
           addLog(p,`「${pt.card}」召喚時効果：「${targetUnit.name}」のATK-2（永続）`);
+          if(pt.pendingNext) game.pendingNext=pt.pendingNext;
           break;
         case "SUM_UNIT_A_PERM+1":
           targetUnit.atk+=1;
           addLog(p,`「${pt.card}」召喚時効果：「${targetUnit.name}」のATK+1（永続）`);
+          if(pt.pendingNext) game.pendingNext=pt.pendingNext;
           break;
         case "L_SELF-1_A+3":
           targetUnit.atk+=3;
@@ -1906,14 +1924,18 @@ case "UNIT_DES_SUM_C2":{
           game.board[p].push(newU);
           addLog(p,`「${pt.card}」破壊時：「${handCard}」を召喚`);
           triggerSummonEffect(newU,p,socket,io);
-          // ★pendingNextがあれば続けて処理（リンカーネーション等）
           if(pt.pendingNext){
             const nxt=pt.pendingNext;
-            game.pendingTarget={player:nxt.player, effect:nxt.effect, card:nxt.card};
-            notifyPendingTarget();
-            send();return;
+            if(game.pendingTarget){
+              // 召喚時効果のpendingTargetにpendingNextを引き継ぐ
+              game.pendingTarget.pendingNext=nxt;
+            } else {
+              // 召喚時効果なし→game.pendingNextに保存してselect_target完了時に実行
+              game.pendingNext=nxt;
+            }
+          } else {
+            if(!game.pendingTarget) game.pendingTarget=null;
           }
-          game.pendingTarget=null;
           send();return;
         }
 
@@ -1986,6 +2008,13 @@ case "UNIT_DES_SUM_C2":{
           break;
       }
 
+      // ★pendingTargetにpendingNextが残っていればgame.pendingNextに移す
+      if(!game.pendingTarget && game.pendingNext){
+        const nxt=game.pendingNext;
+        game.pendingNext=null;
+        game.pendingTarget={player:nxt.player, effect:nxt.effect, card:nxt.card};
+        notifyPendingTarget();
+      }
       send();
       return;
     } // if(data.type==="select_target") 終了
