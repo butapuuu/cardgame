@@ -1214,6 +1214,15 @@ const op=getOpponent(socket.id);
           if(def.hp<=0) toDestroy.push(i);
           addLog(socket.id,`「${atk.name}」が「${def.name}」に全体攻撃（${realDmg}ダメージ）`);
         });
+        // ★全体攻撃の被弾エフェクト：全ユニットに
+        const atkAttrForHit2=getAttr(atk.name)||"neutral";
+        const opSock2=io.sockets.sockets.get(op);
+        const hitCount=game.board[op].length+toDestroy.length;
+        for(let idx=0;idx<hitCount;idx++){
+          if(opSock2) opSock2.emit("hitEffect",{targetIdx:idx, attr:atkAttrForHit2});
+          socket.emit("hitEffect",{targetIdx:idx, attr:atkAttrForHit2, isEnemy:true});
+        }
+        
 
         // 相手ユニット破壊
         toDestroy.reverse().forEach(i=>{
@@ -1304,6 +1313,13 @@ const op=getOpponent(socket.id);
         atk.hp-=actualDefDmg;
 
         addLog(socket.id,`「${atk.name}」で「${def.name}」に攻撃（${actualAtkDmg}ダメージ、反撃${actualDefDmg}ダメージ）`);
+        // ★被弾エフェクト：防御側プレイヤーに送信
+        { const atkAttrForHit=getAttr(atk.name)||"neutral";
+          const opSock=io.sockets.sockets.get(op);
+          if(opSock) opSock.emit("hitEffect",{targetIdx:data.t, attr:atkAttrForHit});
+          // 攻撃者側の画面にも表示（自分が攻撃した相手に）
+          socket.emit("hitEffect",{targetIdx:data.t, attr:atkAttrForHit, isEnemy:true});
+        }
 
         if(def.hp<=0){
           game.board[op].splice(data.t,1);

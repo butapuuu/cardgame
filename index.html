@@ -314,6 +314,7 @@ body{
   align-items:center;
   cursor:pointer;
   transition:transform 0.15s;
+  position:relative;
 }
 .card:hover{ transform:translateY(-6px); }
 .card img{
@@ -365,6 +366,20 @@ body{
 @keyframes attackMoveRight0 { 0%{transform:translate(0,0);} 45%{transform:translate(160px,-80px);} 100%{transform:translate(0,0);} }
 @keyframes attackMoveRight1 { 0%{transform:translate(0,0);} 45%{transform:translate(0px,-140px);} 100%{transform:translate(0,0);} }
 @keyframes attackMoveRight2 { 0%{transform:translate(0,0);} 45%{transform:translate(-160px,-80px);} 100%{transform:translate(0,0);} }
+
+@keyframes screenShake {
+  0%  { transform:translate(0,0) rotate(0deg); }
+  15% { transform:translate(-6px,-4px) rotate(-0.5deg); }
+  30% { transform:translate(6px,4px) rotate(0.5deg); }
+  45% { transform:translate(-5px,3px) rotate(-0.3deg); }
+  60% { transform:translate(5px,-3px) rotate(0.3deg); }
+  75% { transform:translate(-3px,2px) rotate(-0.2deg); }
+  90% { transform:translate(3px,-2px) rotate(0.2deg); }
+  100%{ transform:translate(0,0) rotate(0deg); }
+}
+.shaking {
+  animation: screenShake 0.45s ease-in-out;
+}
 
 @keyframes popIn {
   0%{ transform:translate(-50%,-50%) scale(0.3); opacity:0; }
@@ -580,6 +595,10 @@ let prevMyBoardCount=null;
 let prevEnemyBoardCount=null;
 let prevAllLogsLen=0;
 let pendingAttackerIndex=null;
+let hitEffectActiveEnemy=false;
+let hitEffectActiveMy=false;
+let hitEffectEnemyTimer=null;
+let hitEffectMyTimer=null;
 
 function clearSelection(){
   selectedUnitIndex=null;
@@ -846,6 +865,42 @@ socket.on("message",(msg)=>{
   }
 });
 
+socket.on("hitEffect",(data)=>{
+  // ★被弾中フラグをセット
+  if(data.isEnemy){
+    hitEffectActiveEnemy=true;
+    clearTimeout(hitEffectEnemyTimer);
+    hitEffectEnemyTimer=setTimeout(()=>{ hitEffectActiveEnemy=false; }, 520);
+  } else {
+    hitEffectActiveMy=true;
+    clearTimeout(hitEffectMyTimer);
+    hitEffectMyTimer=setTimeout(()=>{ hitEffectActiveMy=false; }, 520);
+  }
+  const fieldId = data.isEnemy ? "enemyField" : "myField";
+  const cardEls=document.getElementById(fieldId).querySelectorAll(".card");
+  const card=cardEls[data.targetIdx];
+  if(!card) return;
+
+  const attr=data.attr||"fire";
+  const rect=card.getBoundingClientRect();
+  const cx=rect.left+rect.width/2;
+  const cy=rect.top+rect.height/2;
+
+  // fixedで画面上に重ねる（updateによる再描画の影響を受けない）
+  const fx=document.createElement("img");
+  fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+  fx.style.cssText=`
+    position:fixed;
+    left:${cx}px;
+    top:${cy}px;
+    transform:translate(-50%,-50%);
+    width:100px;
+    pointer-events:none;
+    z-index:999;
+  `;
+  document.body.appendChild(fx);
+  setTimeout(()=>{ fx.remove(); }, 500);
+});
 
 socket.on("attackRollback",(data)=>{
   // ★巻き戻し：攻撃者を選択状態に戻す（alertは使わない）
@@ -985,6 +1040,13 @@ socket.on("update",(g)=>{
         const attr=getClientAttr(unitName);
         playSE(SE.atk[attr]||SE.atk.neutral);
       }
+      // ★直接攻撃のとき画面を揺らす
+      if(log.includes("でプレイヤーに直接攻撃")){
+        document.body.classList.remove("shaking");
+        void document.body.offsetWidth;
+        document.body.classList.add("shaking");
+        setTimeout(()=>document.body.classList.remove("shaking"), 460);
+      }
     }
   });
   prevAllLogsLen=(g.allLogs||[]).length;
@@ -1028,9 +1090,10 @@ socket.on("update",(g)=>{
   document.getElementById("logTitle").innerText="📋 ゲームログ（リアルタイム）";
 
   // --- 相手フィールド ---
-  const ef=document.getElementById("enemyField");
-  ef.innerHTML="";
-  g.enemyBoard.forEach((c,i)=>{
+  const _renderEnemyField=()=>{
+    const ef=document.getElementById("enemyField");
+    ef.innerHTML="";
+    g.enemyBoard.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className="card";
     const img=document.createElement("img");
@@ -1089,6 +1152,14 @@ const stat=document.createElement("div");
     div.appendChild(img); div.appendChild(stat);
     ef.appendChild(div);
   });
+  }; // _renderEnemyField終了
+
+  // ★被弾アニメーション中なら少し遅らせてから再描画
+  if(hitEffectActiveEnemy){
+    setTimeout(_renderEnemyField, 400);
+  } else {
+    _renderEnemyField();
+  }
 
   // --- 直接攻撃ゾーン ---
   const epz=document.getElementById("enemyPlayerZone");
