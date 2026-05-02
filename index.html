@@ -459,10 +459,18 @@ body{
     <div id="enemyPlayerZone">⚔ ここをタップ / ドロップで直接攻撃</div>
 
     <!-- 相手フィールド -->
-    <div class="field" id="enemyField"></div>
+    <div class="field" id="enemyField" style="display:flex;align-items:center;gap:10px;">
+      <div id="enemyFieldSpell" style="width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
+      <div style="width:2px;background:rgba(255,255,255,0.15);align-self:stretch;margin:4px 4px;flex-shrink:0;"></div>
+      <div id="enemyUnits" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;"></div>
+    </div>
 
     <!-- 自分フィールド -->
-    <div class="field" id="myField"></div>
+    <div class="field" id="myField" style="display:flex;align-items:center;gap:10px;">
+      <div id="myFieldSpell" style="width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
+      <div style="width:2px;background:rgba(255,255,255,0.15);align-self:stretch;margin:4px 4px;flex-shrink:0;"></div>
+      <div id="myUnits" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;"></div>
+    </div>
 
     <!-- 自分情報 -->
     <div class="infoBar">
@@ -595,6 +603,7 @@ let prevMyBoardCount=null;
 let prevEnemyBoardCount=null;
 let prevAllLogsLen=0;
 let pendingAttackerIndex=null;
+let latestGameState={};
 let hitEffectActiveEnemy=false;
 let hitEffectActiveMy=false;
 let hitEffectEnemyTimer=null;
@@ -627,7 +636,7 @@ const _clientAttrMap={
   "シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark",
   "ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison",
   "ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel",
-  "ギアトークン":"steel","シードトークン":"forest"
+  "ギアトークン":"steel","ギギアトークン":"steel","シードトークン":"forest"
 };
 function getClientAttr(name){ return _clientAttrMap[name]||"neutral"; }
 
@@ -645,12 +654,12 @@ function detectDeckAttr(deck){
   if(!deck||deck.length===0) return "neutral";
   const attrMap={
     "フレイムスパーク":"fire","ファイアウルフ":"fire","ブレイズリザード":"fire","マグマウルフ":"fire","フレイムナイト":"fire","アッシュソルジャー":"fire","フレイムレオン":"fire","ボルケーノタートル":"fire","インフェルノドラゴン":"fire","バーンアウト":"fire","フレイムパージャー":"fire","ブレイズフェニックス":"fire","フレイムエンペラー":"fire","メガフレアドラゴン":"fire","フレイムバーン":"fire","ファイアボール":"fire","フレイムストーム":"fire","業火の裁き":"fire","バーニングソウル":"fire","スカーチングレイン":"fire","エンラージ":"fire","炎の加護":"fire","フェニックスリバース":"fire",
-    "ウォータードロップ":"water","アクアフィッシュ":"water","アイスウォリアー":"water","エナジーカラパス":"water","クリスタルシェル":"water","フロストビースト":"water","アイスガーディアン":"water","バーストパファー":"water","トレントサーペント":"water","アクアドラゴン":"water","オーシャンナイト":"water","テンペストシャーク":"water","タイダルリヴァイアサン":"water","フローズンキング":"water","フリーズショット":"water","海の恵み":"water","アクアリターン":"water","激流":"water","アイシクルドレイン":"water","大津波":"water","ウォーターカーテン":"water","クリスタルバリア":"water","エナジーブースト":"water",
+    "ウォータードロップ":"water","アクアフィッシュ":"water","アイスウォリアー":"water","エナジーカラパス":"water","クリスタルシェル":"water","フロストビースト":"water","アイスガーディアン":"water","バーストパファー":"water","トレントサーペント":"water","アクアドラゴン":"water","オーシャンナイト":"water","テンペストシャーク":"water","タイダルリヴァイアサン":"water","フローズンキング":"water","フリーズショット":"water","海の恵み":"water","アクアリターン":"water","激流":"water","アイシクルドレイン":"water","大津波":"water","ウォーターカーテン":"water","クリスタルバリア":"water","エナジーブースト":"water","深海の神殿":"water",
     "サンダービート":"thunder","スパークマウス":"thunder","ライトニングラプター":"thunder","ボルトウォリアー":"thunder","ボルトホーク":"thunder","ライトニングウルフ":"thunder","スパークレパード":"thunder","エレキドラゴン":"thunder","プラズマメイジ":"thunder","ボルトチェンジャー":"thunder","サンダーランページ":"thunder","サンダーロード":"thunder","ストームタイタン":"thunder","ボルトエンペラー":"thunder","スピードドロー":"thunder","エレキサーキット":"thunder","チェインライトニング":"thunder","サンダーストライク":"thunder","稲妻の速攻":"thunder","エナジーチャージ":"thunder","ボルトレイジ":"thunder","プラズマバースト":"thunder","サンダーボム":"thunder",
-    "フォレストラビット":"forest","グリーンナイト":"forest","ウッドゴーレム":"forest","グロウコア":"forest","アーマードライノス":"forest","フォレストビースト":"forest","モスストーン":"forest","フォレストエルフ":"forest","フォレストスイーパー":"forest","エンシェントツリー":"forest","ジャングルタイラント":"forest","ワイルドベア":"forest","グリーンドラゴン":"forest","ネイチャーロード":"forest","シードバースト":"forest","グロウス":"forest","リンカーネーション":"forest","森の恵み":"forest","ナチュラルアーマー":"forest","根の呪縛":"forest","大地の力":"forest","シードスポーン":"forest","リーフストーム":"forest",
+    "フォレストラビット":"forest","グリーンナイト":"forest","ウッドゴーレム":"forest","グロウコア":"forest","アーマードライノス":"forest","フォレストビースト":"forest","モスストーン":"forest","フォレストエルフ":"forest","フォレストスイーパー":"forest","エンシェントツリー":"forest","ジャングルタイラント":"forest","ワイルドベア":"forest","グリーンドラゴン":"forest","ネイチャーロード":"forest","シードバースト":"forest","グロウス":"forest","リンカーネーション":"forest","森の恵み":"forest","ナチュラルアーマー":"forest","根の呪縛":"forest","大地の力":"forest","シードスポーン":"forest","リーフストーム":"forest","世界樹の聖域":"forest",
     "シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark","ダークブラスト":"dark","マインドコントロール":"dark","ソウルトレード":"dark","エナジーカース":"dark","リセット":"dark","ソウルドレイン":"dark","ディスカード":"dark","カースシャドウ":"dark","デスペレーション":"dark",
-    "ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison","インジェクション":"poison","サクリファイス":"poison","劇薬調合":"poison","ポイズンスパイク":"poison","解毒剤":"poison","ペインシェア":"poison","禁断の秘薬":"poison","ヴェノムハーベスト":"poison","トキシックアポカリプス":"poison",
-    "ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel","リサイクル":"steel","緊急生産":"steel","スクラップ&ビルド":"steel","自爆装置":"steel","装甲強化":"steel","ギアリペア":"steel","チェーンリアクション":"steel","メガギアフュージョン":"steel","オーバーロード":"steel"
+    "ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison","インジェクション":"poison","サクリファイス":"poison","劇薬調合":"poison","ポイズンスパイク":"poison","解毒剤":"poison","ペインシェア":"poison","禁断の秘薬":"poison","ヴェノムハーベスト":"poison","トキシックアポカリプス":"poison","猛毒の沼地":"poison",
+    "ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel","リサイクル":"steel","緊急生産":"steel","スクラップ&ビルド":"steel","自爆装置":"steel","装甲強化":"steel","ギアリペア":"steel","チェーンリアクション":"steel","メガギアフュージョン":"steel","オーバーロード":"steel","機甲要塞都市":"steel"
   };
   const counts={};
   deck.forEach(name=>{
@@ -698,21 +707,117 @@ function selectPlayer(num){
   applyAttrColor(attr);
 }
 
+function renderFieldSpell(elementId, fsData){
+  const el=document.getElementById(elementId);
+  if(!el) return;
+  // ★フィールドスペルが消えた場合、少し遅らせて消去（破壊エフェクト表示のため）
+  if(!fsData||!fsData.name){
+    setTimeout(()=>{
+      const el2=document.getElementById(elementId);
+      if(el2) el2.innerHTML="";
+    },400);
+    return;
+  }
+  el.innerHTML="";
+  const div=document.createElement("div");
+  div.className="card";
+  div.style.cssText="display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;position:relative;";
+  const img=document.createElement("img");
+  img.src=`images/${fsData.name}.png`;
+  img.style.cssText="width:72px;border-radius:5px;box-shadow:0 2px 6px #000;";
+  img.onerror=()=>{img.style.display="none";};
+  // ★プレビュー表示
+  img.onmouseenter=()=>{ document.getElementById("preview").innerHTML=`<img src="images/${fsData.name}.png">`; };
+  img.onmouseleave=()=>{ document.getElementById("preview").innerHTML=""; };
+  const dur=document.createElement("div");
+  dur.className="stat";
+  dur.style.cssText="font-size:11px;color:#ffe066;margin-top:2px;background:rgba(0,0,0,0.6);border-radius:3px;padding:1px 4px;";
+  dur.textContent=`耐久:${fsData.durability}`;
+  div.appendChild(img);
+  div.appendChild(dur);
+
+  // ★相手フィールドスペルへの攻撃
+  if(elementId==="enemyFieldSpell"){
+    div.onclick=()=>{
+      if(selectedUnitIndex===null) return;
+      const atkIdx=selectedUnitIndex;
+      const atkName=latestGameState?.myBoard?.[atkIdx]?.name||"ユニット";
+      if(!confirm(`「${atkName}」で「${fsData.name}」に攻撃しますか？`)) return;
+
+      // ★攻撃アニメーション：myUnitsからカード取得
+      const myContainer=document.getElementById("myUnits")||document.getElementById("myField");
+      const myCards=myContainer.querySelectorAll(".card");
+      const atkCardEl=myCards[atkIdx];
+
+      // ★フィールドスペルの現在位置をDOMから直接取得（古いdiv参照を使わない）
+      const fsDivNow=document.getElementById("enemyFieldSpell")?.querySelector(".card");
+
+      // ★座標を先に記録（DOM再構築前に取得）
+      const atkRect=atkCardEl ? atkCardEl.getBoundingClientRect() : null;
+      const tgtRect=fsDivNow ? fsDivNow.getBoundingClientRect() : null;
+
+      clearSelection();
+
+      if(atkCardEl && atkRect && tgtRect){
+        const dx=((tgtRect.left+tgtRect.width/2)-(atkRect.left+atkRect.width/2))*0.7;
+        const dy=((tgtRect.top+tgtRect.height/2)-(atkRect.top+atkRect.height/2))*0.7;
+        const attr=latestGameState?.myBoard?.[atkIdx]?.attr||"fire";
+
+        // ★攻撃アニメーション開始
+        atkCardEl.style.transition="none";
+        atkCardEl.style.transform="translate(0,0)";
+        void atkCardEl.offsetWidth;
+        atkCardEl.style.transition="transform 0.18s ease-out";
+        atkCardEl.style.transform=`translate(${dx}px,${dy}px)`;
+
+        // ★200ms後：戻りアニメーション＋被弾エフェクト＋ソケット送信
+        setTimeout(()=>{
+          // 戻りアニメーション（DOM再構築後でも元素がなければ無視）
+          if(atkCardEl.isConnected){
+            atkCardEl.style.transition="transform 0.16s ease-in";
+            atkCardEl.style.transform="translate(0,0)";
+            setTimeout(()=>{ atkCardEl.style.transition=""; atkCardEl.style.transform=""; },180);
+          }
+
+          // 被弾エフェクト：破壊されても座標は記録済みなので確実に表示
+          const cx=tgtRect.left+tgtRect.width/2;
+          const cy=tgtRect.top+tgtRect.height/2;
+          const fx=document.createElement("img");
+          fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+          fx.style.cssText=`position:fixed;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;
+          document.body.appendChild(fx);
+          setTimeout(()=>fx.remove(),500);
+
+          // ★ソケット送信はアニメーション開始200ms後（戻り途中）
+          socket.emit("action",{type:"attack",a:atkIdx,target:"fieldSpell"});
+        },200);
+
+      } else {
+        // カード要素が取得できなかった場合は即送信
+        socket.emit("action",{type:"attack",a:atkIdx,target:"fieldSpell"});
+      }
+    };
+  }
+
+  el.appendChild(div);
+}
 // ★攻撃アニメーション
 function playAttackAnim(attackerIdx, targetIdx, isDirect, enemyBoardLen){
-  const myCards=document.getElementById("myField").querySelectorAll(".card");
+  // ★myUnitsが存在すればそちらを使う（フィールドスペル実装後）
+  const myContainer=document.getElementById("myUnits")||document.getElementById("myField");
+  const myCards=myContainer.querySelectorAll(".card");
   const card=myCards[attackerIdx];
   if(!card) return;
 
-  let dx=0, dy=-120; // デフォルト：真上
+  let dx=0, dy=-120;
 
   if(isDirect){
-    // 直接攻撃：真上に大きく
     dx=0; dy=-220;
   } else if(targetIdx!==null && targetIdx!==undefined){
-    // ★DOM上の実際の座標差で方向を計算
     const atkRect=card.getBoundingClientRect();
-    const enCards=document.getElementById("enemyField").querySelectorAll(".card");
+    // ★enemyUnitsが存在すればそちらを使う
+    const enContainer=document.getElementById("enemyUnits")||document.getElementById("enemyField");
+    const enCards=enContainer.querySelectorAll(".card");
     const tgtCard=enCards[targetIdx];
     if(tgtCard){
       const tgtRect=tgtCard.getBoundingClientRect();
@@ -720,13 +825,11 @@ function playAttackAnim(attackerIdx, targetIdx, isDirect, enemyBoardLen){
       const atkCy=atkRect.top+atkRect.height/2;
       const tgtCx=tgtRect.left+tgtRect.width/2;
       const tgtCy=tgtRect.top+tgtRect.height/2;
-      // 移動量は実際の距離の70%（行って戻るので半分まで行けばいい）
       dx=(tgtCx-atkCx)*0.7;
       dy=(tgtCy-atkCy)*0.7;
     }
   }
 
-  // style.transformで直接移動（CSSアニメーション名不要）
   card.style.transition="none";
   card.style.transform="translate(0,0)";
   void card.offsetWidth;
@@ -876,7 +979,9 @@ socket.on("hitEffect",(data)=>{
     clearTimeout(hitEffectMyTimer);
     hitEffectMyTimer=setTimeout(()=>{ hitEffectActiveMy=false; }, 520);
   }
-  const fieldId = data.isEnemy ? "enemyField" : "myField";
+  const fieldId = data.isEnemy
+    ? (document.getElementById("enemyUnits") ? "enemyUnits" : "enemyField")
+    : (document.getElementById("myUnits") ? "myUnits" : "myField");
   const cardEls=document.getElementById(fieldId).querySelectorAll(".card");
   const card=cardEls[data.targetIdx];
   if(!card) return;
@@ -947,6 +1052,18 @@ socket.on("selectTarget",(data)=>{
   selectTargetMode=data;
   document.getElementById("turn").innerText="⚔ "+data.message;
 
+if(data.type==="fieldSpell"){
+    const myFs=latestGameState?.myFieldSpell;
+    const enFs=latestGameState?.enemyFieldSpell;
+    let msg="崩壊：破壊するフィールドスペルを選択\n";
+    if(myFs) msg+=`[自分] ${myFs.name}（耐久${myFs.durability}）\n`;
+    if(enFs) msg+=`[相手] ${enFs.name}（耐久${enFs.durability}）\n`;
+    const choice=confirm(msg+"OKで相手、キャンセルで自分のフィールドスペルを破壊");
+    const target=choice?"op":"my";
+    socket.emit("action",{type:"select_target",fieldSpellTarget:target});
+    return;
+  }
+
   // ライフ入力モード
   if(data.type==="lifeInput"){
     const maxVal = data.message.includes("1〜") ? 3 : 99;
@@ -1003,6 +1120,7 @@ document.addEventListener("touchstart",(e)=>{
 });
 
 socket.on("update",(g)=>{
+  latestGameState=g;
 
   // ★音検知処理
   // ドロー検知：自分のデッキが減った＝自分がドローした
@@ -1089,9 +1207,15 @@ socket.on("update",(g)=>{
   }
   document.getElementById("logTitle").innerText="📋 ゲームログ（リアルタイム）";
 
+
+　// --- フィールドスペル表示 ---
+  renderFieldSpell("myFieldSpell", g.myFieldSpell);
+  renderFieldSpell("enemyFieldSpell", g.enemyFieldSpell);
+
   // --- 相手フィールド ---
   const _renderEnemyField=()=>{
-    const ef=document.getElementById("enemyField");
+    const ef=document.getElementById("enemyUnits");
+    if(!ef) return;
     ef.innerHTML="";
     g.enemyBoard.forEach((c,i)=>{
     const div=document.createElement("div");
@@ -1197,7 +1321,9 @@ const stat=document.createElement("div");
   };
 
   // --- 自分フィールド ---
-  myField.innerHTML="";
+  const myUnits=document.getElementById("myUnits");
+  if(!myUnits) return;
+  myUnits.innerHTML="";
   g.myBoard.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className="card";
@@ -1239,7 +1365,7 @@ const stat=document.createElement("div");
     if(c.denko && c.attacked && !c.denkoAttackedThisTurn) statText+=" ⚡x1";
     stat.innerText=statText;
     div.appendChild(img); div.appendChild(stat);
-    myField.appendChild(div);
+    myUnits.appendChild(div);
   });
 
   // ★巻き戻し後の攻撃者選択を復元

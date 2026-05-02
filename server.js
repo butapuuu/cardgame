@@ -64,6 +64,7 @@ const cards = {
 "ウォーターカーテン":{cost:2,type:"spell",attr:"water",effect:"ALL_H_PERM+2"},
 "クリスタルバリア":{cost:2,type:"spell",attr:"water",effect:"CRYSTAL_BARRIER"},
 "エナジーブースト":{cost:3,type:"spell",attr:"water",effect:"E+2"},
+"深海の神殿":{cost:2,type:"spell",attr:"water",effect:"PERM_SPELL_WATER_HEAL",durability:5},
 
 //⚡雷
 "サンダービート":{cost:1,atk:2,hp:1,type:"unit",attr:"thunder",effect:"DENKOUSEKKA"},
@@ -95,7 +96,7 @@ const cards = {
 "フォレストラビット":{cost:1,atk:1,hp:2,type:"unit",attr:"forest",effect:"SUM_UNIT_A_PERM+1"},
 "グリーンナイト":{cost:2,atk:3,hp:3,type:"unit",attr:"forest"},
 "ウッドゴーレム":{cost:2,atk:1,hp:4,type:"unit",attr:"forest",effect:"SUM_A_PERM-2"},
-"グロウコア":{cost:2,atk:2,hp:3,type:"unit",attr:"forest",destroyEffect:"DES_SUMMON_C2"},
+"グロウコア":{cost:1,atk:1,hp:2,type:"unit",attr:"forest",destroyEffect:"DES_SUMMON_C3"},
 "アーマードライノス":{cost:3,atk:2,hp:4,type:"unit",attr:"forest",effect:"DAMAGE_REDUCE_1"},
 "フォレストビースト":{cost:3,atk:3,hp:4,type:"unit",attr:"forest",effect:"END_A+1"},
 "モスストーン":{cost:3,atk:4,hp:4,type:"unit",attr:"forest"},
@@ -116,17 +117,18 @@ const cards = {
 "大地の力":{cost:3,type:"spell",attr:"forest",effect:"ALL_A_H_PERM+2"},
 "シードスポーン":{cost:3,type:"spell",attr:"forest",effect:"SUM_H_C3X2"},
 "リーフストーム":{cost:3,type:"spell",attr:"forest",effect:"ALL_UNIT_DMG3_MY_A_H+1"},
+"世界樹の聖域":{cost:2,type:"spell",attr:"forest",effect:"PERM_SPELL_FOREST_BUFF",durability:5},
 
 //🌑闇
-"シャドウバット":{cost:2,atk:2,hp:1,type:"unit",attr:"dark",effect:"SUM_R_HAN1"},
+"シャドウバット":{cost:2,atk:2,hp:1,type:"unit",attr:"dark",effect:"SUM_R_HAN1_C2"},
 "ダークスライム":{cost:1,atk:1,hp:3,type:"unit",attr:"dark"},
 "シャドウアサシン":{cost:3,atk:4,hp:2,type:"unit",attr:"dark",effect:"SUM_A_PERM-2"},
 "ダークナイト":{cost:2,atk:3,hp:3,type:"unit",attr:"dark"},
 "ナイトメアビースト":{cost:1,atk:2,hp:2,type:"unit",attr:"dark"},
 "アビスナイト":{cost:3,atk:4,hp:4,type:"unit",attr:"dark"},
 "ナイトリカー":{cost:3,atk:4,hp:3,type:"unit",attr:"dark",destroyEffect:"DES_BOTH_DISC1"},
-"ダークサイフォナー":{cost:3,atk:4,hp:3,type:"unit",attr:"dark",effect:"SUM_OPP_E-1"},
-"カースドラゴン":{cost:4,atk:5,hp:4,type:"unit",attr:"dark",attackEffect:"HAN1"},
+"ダークサイフォナー":{cost:3,atk:3,hp:3,type:"unit",attr:"dark",effect:"SUM_OPP_E-1"},
+"カースドラゴン":{cost:4,atk:4,hp:4,type:"unit",attr:"dark",attackEffect:"HAN1"},
 "ヘルハウンド":{cost:4,atk:6,hp:4,type:"unit",attr:"dark"},
 "ナイトテラー":{cost:4,atk:5,hp:5,type:"unit",attr:"dark"},
 "ダークロード":{cost:5,atk:7,hp:5,type:"unit",attr:"dark",effect:"SUM_R_HAN1"},
@@ -141,7 +143,7 @@ const cards = {
 "ソウルドレイン":{cost:3,type:"spell",attr:"dark",effect:"L_ADJ8"},
 "ディスカード":{cost:1,type:"spell",attr:"dark",effect:"HAN1_DRAW1"},
 "カースシャドウ":{cost:1,type:"spell",attr:"dark",effect:"A_PERM-3"},
-"デスペレーション":{cost:3,type:"spell",attr:"dark",effect:"ALL_DISC2"},
+"デスペレーション":{cost:3,type:"spell",attr:"dark",effect:"OPP_HAND_TO2"},
 
 //☠️毒
 "ポイズンインプ":{cost:1,atk:4,hp:2,type:"unit",attr:"poison",effect:"SUM_L_SELF-2"},
@@ -168,6 +170,7 @@ const cards = {
 "禁断の秘薬":{cost:3,type:"spell",attr:"poison",effect:"L_SELF_HALF_DRAW5"},
 "ヴェノムハーベスト":{cost:3,type:"spell",attr:"poison",effect:"UNIT_DES_COST_LHEAL"},
 "トキシックアポカリプス":{cost:4,type:"spell",attr:"poison",effect:"LIFE_5_ALL_DES"},
+"猛毒の沼地":{cost:2,type:"spell",attr:"poison",effect:"PERM_SPELL_POISON_DMG1",durability:5},
 
 //⚙️鉄
 "ギアスカウト":{cost:1,atk:1,hp:1,type:"unit",attr:"steel",effect:"SUM_TOKEN1"},
@@ -194,11 +197,13 @@ const cards = {
 "チェーンリアクション":{cost:3,type:"spell",attr:"steel",effect:"IRON_COUNT_ALL_DMG1"},
 "メガギアフュージョン":{cost:3,type:"spell",attr:"steel",effect:"FUSION_IRON2"},
 "オーバーロード":{cost:4,type:"spell",attr:"steel",effect:"OVERLOAD_A+3_END_DES_ALL"},
+"機甲要塞都市":{cost:2,type:"spell",attr:"steel",effect:"PERM_SPELL_IRON_FACTORY",durability:5},
 
 //汎用
 "ダブルドロー":{cost:1,type:"spell",attr:"neutral",effect:"DRAW2"},
 "浄化の光":{cost:2,type:"spell",attr:"neutral",effect:"PURIFY"},
-"リバース":{cost:3,type:"spell",attr:"neutral",effect:"BOUNCE_UNIT"}
+"リバース":{cost:3,type:"spell",attr:"neutral",effect:"BOUNCE_UNIT"},
+"崩壊":{cost:1,type:"spell",attr:"neutral",effect:"DES_PERM_SPELL"}
 };
 
 
@@ -231,6 +236,7 @@ pendingDiscard:{},   // {プレイヤーID: 捨てる枚数} 手札捨て待ち
   pendingTarget:null,  // 対象選択待ち {player, effect, card, extra}
   pendingHandLimitDiscard:null, // 手札上限捨て待ちプレイヤーID
   pendingNext:null, // ★連鎖する次の効果処理
+  fieldSpell:{},   // ★フィールドスペル {プレイヤーID: {name, durability}}
   allLogs:[],
   turnLogs:{},
   prevLogs:{}
@@ -243,6 +249,7 @@ function getOpponent(id){
 // ★カード属性を取得
 function getAttr(cardName){
   if(cardName==="ギアトークン") return "steel";
+  if(cardName==="ギギアトークン") return "steel";
   if(cardName==="シードトークン") return "forest";
   return cards[cardName]?.attr || "neutral";
 }
@@ -343,11 +350,17 @@ function applyAllFieldEffects(p){
 
 // ★トークン召喚
 function summonToken(p, tokenName, n){
-  for(let i=0;i<n;i++){
-    if(game.board[p].length>=3) break;
-    const tokenAttr = tokenName==="ギアトークン"?"steel":"forest";
-    game.board[p].push({name:tokenName, atk:1, hp:1, attacked:false, attr:tokenAttr, isToken:true});
-  }
+  for(let i=0;i<n;i++){
+    if(game.board[p].length>=3) break;
+    const tokenAttr = tokenName==="ギアトークン"?"steel":"forest";
+    let tokenAtk=1;
+    let tokenHp=1;
+    // 機甲要塞都市：ギアトークンのATK+1
+    if(tokenName==="ギアトークン"&&game.fieldSpell[p]&&cards[game.fieldSpell[p].name]?.effect==="PERM_SPELL_IRON_FACTORY"){
+      tokenAtk+=1;
+    }
+    game.board[p].push({name:tokenName, atk:tokenAtk, hp:tokenHp, attacked:false, attr:tokenAttr, isToken:true});
+  }
 }
 
 // ★破壊時効果
@@ -388,12 +401,12 @@ function triggerDestroyEffect(unit, ownerPlayer){
         if(_sopS&&d1) _sopS.emit("message",`あなたの手札「${d1}」が捨て場に送られました`);
       }
       break;
-    case "DES_SUMMON_C2":
+    case "DES_SUMMON_C3":
       if(game.board[ownerPlayer].length<3){
-        const validHand=game.hands[ownerPlayer].filter(name=>cards[name]?.type==="unit"&&(cards[name]?.cost||0)<=2);
+        const validHand=game.hands[ownerPlayer].filter(name=>cards[name]?.type==="unit"&&(cards[name]?.cost||0)<=3&&getAttr(name)==="forest");
         if(validHand.length>0){
           game.pendingTarget={player:ownerPlayer,effect:"DES_SUMMON_C2_HAND",card:unit.name};
-          addLog(logPlayer,`「${unit.name}」破壊時効果：コスト2以下ユニットを召喚できます`);
+          addLog(logPlayer,`「${unit.name}」破壊時効果：コスト3以下の森ユニットを召喚できます`);
         }
       }
       break;
@@ -441,6 +454,16 @@ function triggerSummonEffect(unit, p, socket, io){
         addLog(p,`「${unit.name}」召喚時効果：相手手札「${d||"なし"}」をランダム破棄`);
         const _s1=io.sockets.sockets.get(p);
         if(_s1&&d) _s1.emit("message",`相手の手札「${d}」が捨て場に送られました`);
+      }
+      break;
+    case "SUM_R_HAN1_C2":
+      if(game.hands[op].length>=2){
+        const d2=discardRandom(op);
+        addLog(p,`「${unit.name}」召喚時効果：相手手札「${d2||"なし"}」をランダム破棄`);
+        const _s1c2=io.sockets.sockets.get(p);
+        if(_s1c2&&d2) _s1c2.emit("message",`相手の手札「${d2}」が捨て場に送られました`);
+      }else{
+        addLog(p,`「${unit.name}」召喚時効果：相手の手札が1枚以下のため不発`);
       }
       break;
     case "SUM_OPP_E-1":
@@ -620,12 +643,33 @@ function processSpellEffect(cardName, p, socket){
         if(_sda&&discardedAll.length>0) _sda.emit("message",`相手の手札「${discardedAll.join("、")}」が捨て場に送られました`);
       }
       return true;
+    case "OPP_HAND_TO2":
+      { if(game.hands[op].length<=2){
+          addLog(p,`「${cardName}」：相手の手札が2枚以下のため不発`);
+          socket.emit("message","相手の手札が2枚以下のため不発です");
+          return false;
+        }
+        const discarded2=[];
+        while(game.hands[op].length>2){
+          const d=discardRandom(op);
+          if(d) discarded2.push(d);
+        }
+        addLog(p,`「${cardName}」で相手の手札を残り2枚まで破棄（${discarded2.length}枚）`);
+        const _sdop=io.sockets.sockets.get(p);
+        if(_sdop&&discarded2.length>0) _sdop.emit("message",`相手の手札「${discarded2.join("、")}」が捨て場に送られました`);
+      }
+      return true;
     case "HAN1_DRAW1":
-      { const discarded=discardRandom(op);
-        draw(p);
-        addLog(p,`「${cardName}」で相手手札「${discarded||"なし"}」を破棄、自分1枚ドロー`);
-        const _s2=io.sockets.sockets.get(p);
-        if(_s2&&discarded) _s2.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
+      { draw(p);
+        addLog(p,`「${cardName}」で1枚ドロー`);
+        if(game.hands[op].length>=2){
+          const discarded=discardRandom(op);
+          addLog(p,`「${cardName}」で相手手札「${discarded||"なし"}」を破棄`);
+          const _s2=io.sockets.sockets.get(p);
+          if(_s2&&discarded) _s2.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
+        }else{
+          addLog(p,`「${cardName}」：相手の手札が1枚以下のためハンデス不発`);
+        }
       }
       return true;
     case "DRAW2_DISC1":
@@ -692,10 +736,14 @@ function processSpellEffect(cardName, p, socket){
     case "OPP_E-1_HAN1":
       game.maxEnergy[op]=Math.max(0,game.maxEnergy[op]-1);
       game.energy[op]=Math.min(game.energy[op],game.maxEnergy[op]);
-      { const discarded=discardRandom(op);
-        addLog(p,`「${cardName}」で相手エネルギー-1、相手手札「${discarded||"なし"}」破棄`);
+      addLog(p,`「${cardName}」で相手エネルギー-1`);
+      if(game.hands[op].length>=2){
+        const discarded=discardRandom(op);
+        addLog(p,`「${cardName}」で相手手札「${discarded||"なし"}」破棄`);
         const _s3=io.sockets.sockets.get(p);
         if(_s3&&discarded) _s3.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
+      }else{
+        addLog(p,`「${cardName}」：相手の手札が1枚以下のためハンデス不発`);
       }
       return true;
     case "L_SELF-2_ALL_DMG4":
@@ -940,6 +988,40 @@ function processSpellEffect(cardName, p, socket){
       }
       return "pending";
 
+    case "PERM_SPELL_WATER_HEAL":
+    case "PERM_SPELL_FOREST_BUFF":
+    case "PERM_SPELL_POISON_DMG1":
+    case "PERM_SPELL_IRON_FACTORY":{
+      if(game.fieldSpell[p]){
+        socket.emit("message","すでにフィールドスペルが場にあります");
+        return false;
+      }
+      const dur=cards[cardName]?.durability||5;
+      game.fieldSpell[p]={name:cardName,durability:dur};
+      addLog(p,`「${cardName}」をフィールドに設置（耐久${dur}）`);
+      // 世界樹の聖域：即座に場のユニット全体ATK/HP+1
+      if(eff==="PERM_SPELL_FOREST_BUFF"){
+        game.board[p].forEach(u=>{u.atk+=1;u.hp+=1;});
+        addLog(p,`「${cardName}」：場の全ユニットATK/HP+1`);
+      }
+      // 機甲要塞都市：場のギアトークン全体ATK+1
+      if(eff==="PERM_SPELL_IRON_FACTORY"){
+        game.board[p].forEach(u=>{if(u.name==="ギアトークン"){u.atk+=1;}});
+        addLog(p,`「${cardName}」：場のギアトークンATK+1`);
+      }
+      return true;
+    }
+    case "DES_PERM_SPELL":{
+      const hasP=game.fieldSpell[p];
+      const hasOp=game.fieldSpell[op];
+      if(!hasP&&!hasOp){
+        socket.emit("message","場にフィールドスペルがありません");
+        return false;
+      }
+      game.pendingTarget={player:p,effect:"DES_PERM_SPELL",card:cardName};
+      socket.emit("selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択してください"});
+      return "pending";
+    }
     default:
       return false;
   }
@@ -983,6 +1065,24 @@ function startTurn(p){
   });
 
   // END_A+1（フォレストビースト）はターン終了時に処理
+
+  // ★フィールドスペル：ターン開始時効果
+  const fs=game.fieldSpell[p];
+  if(fs){
+    const fsEff=cards[fs.name]?.effect||"";
+    // 深海の神殿：ライフ+3
+    if(fsEff==="PERM_SPELL_WATER_HEAL"){
+      game.life[p]+=3;
+      addLog(p,`「${fs.name}」：ライフ+3`);
+    }
+    // 機甲要塞都市：ギギアトークン召喚
+    if(fsEff==="PERM_SPELL_IRON_FACTORY"){
+      if(game.board[p].length<3){
+        game.board[p].push({name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true});
+        addLog(p,`「${fs.name}」：ギギアトークンを召喚`);
+      }
+    }
+  }
 }
 
 function resetGame(){
@@ -990,7 +1090,7 @@ function resetGame(){
   game.board={};game.hands={};game.decks={};
   game.graves={};game.energy={};game.maxEnergy={};
   game.life={};game.winner=null;game.noAttack={};
-  game.pendingDiscard={};game.turnBuffs={};game.pendingHandLimitDiscard=null;game.pendingNext=null;
+  game.pendingDiscard={};game.turnBuffs={};game.pendingHandLimitDiscard=null;game.pendingNext=null;game.fieldSpell={};
   game.allLogs=[];game.turnLogs={};game.prevLogs={};
 
   [game.player1,game.player2].forEach(p=>{
@@ -1040,6 +1140,25 @@ function notifyPendingTarget(){
   }
 }
 
+// ★フィールドスペル破壊処理
+function destroyFieldSpell(ownerPlayer){
+  const fs=game.fieldSpell[ownerPlayer];
+  if(!fs) return;
+  const eff=cards[fs.name]?.effect||"";
+  // 世界樹の聖域：場のユニットATK/HP-1
+  if(eff==="PERM_SPELL_FOREST_BUFF"){
+    game.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp=Math.max(1,u.hp-1);});
+    addLog(ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK/HP-1`);
+  }
+  // 機甲要塞都市：場のギアトークンATK-1
+  if(eff==="PERM_SPELL_IRON_FACTORY"){
+    game.board[ownerPlayer].forEach(u=>{if(u.name==="ギアトークン"){u.atk=Math.max(0,u.atk-1);}});
+    addLog(ownerPlayer,`「${fs.name}」破壊：場のギアトークンATK-1`);
+  }
+  addLog(ownerPlayer,`フィールドスペル「${fs.name}」が破壊されました`);
+  delete game.fieldSpell[ownerPlayer];
+}
+
 // ★効果演出送信
 function showEffect(cardName, isSpell){
   [game.player1,game.player2].forEach(id=>{
@@ -1081,9 +1200,11 @@ function send(){
       
 currentTurnLogs:game.turnLogs[game.turn]||[],
 
+      myFieldSpell:game.fieldSpell[id]||null,
+      enemyFieldSpell:game.fieldSpell[op]||null,
       allLogs:[...game.allLogs]
-    });
-  });
+    });
+  });
 }
 
 io.on("connection",(socket)=>{
@@ -1267,6 +1388,49 @@ const op=getOpponent(socket.id);
         atk.attacked=true;
       }
 
+　　　// ★フィールドスペルへの攻撃（相手の場にユニットがいない場合も攻撃可能）
+      if(data.target==="fieldSpell"&&game.fieldSpell[op]){
+        const fs=game.fieldSpell[op];
+        const atkPowerFS=isDenkoSecond?Math.floor(atk.atk/2):atk.atk;
+        fs.durability-=atkPowerFS;
+        addLog(socket.id,`「${atk.name}」がフィールドスペル「${fs.name}」に${atkPowerFS}ダメージ（残耐久${Math.max(0,fs.durability)}）`);
+        if(fs.durability<=0){
+          destroyFieldSpell(op);
+        }
+        // ★攻撃時効果
+        if(atkCard && atkCard.attackEffect){
+          showEffect(atk.name);
+          if(atkCard.attackEffect==="L_DMG1"){
+            damageLife(op,1);
+            addLog(socket.id,`「${atk.name}」攻撃時効果：相手ライフ-1`);
+          }
+          if(atkCard.attackEffect==="HAN1"){
+            if(game.hands[op].length>=2){
+              const discarded=discardRandom(op);
+              addLog(socket.id,`「${atk.name}」攻撃時効果：相手手札「${discarded||"なし"}」をランダム破棄`);
+              const _sh=io.sockets.sockets.get(socket.id);
+              if(_sh&&discarded) _sh.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
+            }else{
+              addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が1枚以下のため不発`);
+            }
+          }
+          if(atkCard.attackEffect==="ATTACK_HEAL_DMG"){
+            game.life[socket.id]+=atkPowerFS;
+            addLog(socket.id,`「${atk.name}」攻撃時効果：自分ライフ+${atkPowerFS}`);
+          }
+          if(atkCard.attackEffect==="ALL_UNIT_DMG1"){
+            damageAllUnits(op,1,socket.id);
+            addLog(socket.id,`「${atk.name}」攻撃時効果：相手全体1ダメージ`);
+          }
+        }
+        // 攻撃済みフラグ
+        if(isDenkoSecond){atk.attacked=true;atk.denkoAttackedThisTurn=true;}
+        else{atk.attacked=true;}
+        notifyPendingTarget();
+        send();
+        return;
+      }
+
       if(game.board[op].length>0){
         // ★ストームタイタン：攻撃前に全体1ダメ処理
         // rollbackAttackフラグがある場合は2回目攻撃なので攻撃時効果をスキップ
@@ -1354,10 +1518,14 @@ const op=getOpponent(socket.id);
           addLog(socket.id,`「${atk.name}」攻撃時効果：相手ライフ-1`);
         }
         if(atkCard && atkCard.attackEffect==="HAN1"){
-          const discarded=discardRandom(op);
-          addLog(socket.id,`「${atk.name}」攻撃時効果：相手手札「${discarded||"なし"}」をランダム破棄`);
-          const _sh=io.sockets.sockets.get(socket.id);
-          if(_sh&&discarded) _sh.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
+          if(game.hands[op].length>=2){
+            const discarded=discardRandom(op);
+            addLog(socket.id,`「${atk.name}」攻撃時効果：相手手札「${discarded||"なし"}」をランダム破棄`);
+            const _sh=io.sockets.sockets.get(socket.id);
+            if(_sh&&discarded) _sh.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
+          }else{
+            addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が1枚以下のため不発`);
+          }
         }
         if(atkCard && atkCard.attackEffect==="ATTACK_HEAL_DMG"){
           game.life[socket.id]+=actualAtkDmg;
@@ -1374,10 +1542,14 @@ const op=getOpponent(socket.id);
           showEffect(atk.name);
         }
         if(atkCard && atkCard.attackEffect==="HAN1"){
-          const discarded=discardRandom(op);
-          addLog(socket.id,`「${atk.name}」攻撃時効果：相手手札「${discarded||"なし"}」をランダム破棄`);
-          const _sh=io.sockets.sockets.get(socket.id);
-          if(_sh&&discarded) _sh.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
+          if(game.hands[op].length>=2){
+            const discarded=discardRandom(op);
+            addLog(socket.id,`「${atk.name}」攻撃時効果：相手手札「${discarded||"なし"}」をランダム破棄`);
+            const _sh=io.sockets.sockets.get(socket.id);
+            if(_sh&&discarded) _sh.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
+          }else{
+            addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が1枚以下のため不発`);
+          }
         }
         if(atkCard && atkCard.attackEffect==="ATTACK_HEAL_DMG"){
           game.life[socket.id]+=dmg;
@@ -1489,6 +1661,10 @@ const op=getOpponent(socket.id);
             attr:steelOnly?"steel":(hc.attr||"neutral"),
             damageReduce:hc.effect==="DAMAGE_REDUCE_1"};
           game.board[p].push(newU);
+          // ★世界樹の聖域バフ適用（フュージョン以外）
+          if(eff!=="FUSION_IRON2_HAND"&&game.fieldSpell[p]&&cards[game.fieldSpell[p].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
+            newU.atk+=1; newU.hp+=1;
+          }
           const label = eff==="FUSION_IRON2_HAND" ? `メガギアフュージョン（ATK+${bonusAtk}/HP+${bonusHp}）` :
                         eff==="DES_SUMMON_C2_HAND" ? `「${pt.card}」破壊時` :
                         (eff==="SUM_H_C3X2_STEP1"||eff==="SUM_H_C3X2_STEP2") ? "シードスポーン" : `「${pt.card}」`;
@@ -1926,18 +2102,22 @@ case "UNIT_DES_SUM_C2":{
         }
 
         case "DES_SUMMON_C2_HAND":{
-          // グロウコア破壊時：手札からコスト2以下召喚
+          // グロウコア破壊時：手札からコスト3以下の森ユニット召喚
           const handCard=game.hands[p][data.handIndex];
-          if(!handCard||cards[handCard]?.type!=="unit"||(cards[handCard]?.cost||0)>2){
-            socket.emit("message","コスト2以下のユニットを選択してください");
+          if(!handCard||cards[handCard]?.type!=="unit"||(cards[handCard]?.cost||0)>3||getAttr(handCard)!=="forest"){
+            socket.emit("message","コスト3以下の森ユニットを選択してください");
             game.pendingTarget={player:p,effect:"DES_SUMMON_C2_HAND",card:pt.card,pendingNext:pt.pendingNext};
-            socket.emit("selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを選択してください"});
+            socket.emit("selectTarget",{type:"handUnit_cost3",message:"コスト3以下の森ユニットを選択してください"});
             send();return;
           }
           game.hands[p].splice(data.handIndex,1);
           const hc=cards[handCard];
           const newU={name:handCard,atk:hc.atk,hp:hc.hp,attacked:false,attr:hc.attr||"neutral",damageReduce:hc.effect==="DAMAGE_REDUCE_1"};
           game.board[p].push(newU);
+          // ★世界樹の聖域バフ適用
+          if(game.fieldSpell[p]&&cards[game.fieldSpell[p].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
+            newU.atk+=1; newU.hp+=1;
+          }
           addLog(p,`「${pt.card}」破壊時：「${handCard}」を召喚`);
           triggerSummonEffect(newU,p,socket,io);
           if(pt.pendingNext){
@@ -2020,6 +2200,19 @@ case "UNIT_DES_SUM_C2":{
           break;
         }
       
+        case "DES_PERM_SPELL":{
+          const target=data.fieldSpellTarget;
+          const targetPlayer=target==="my"?p:op;
+          if(!game.fieldSpell[targetPlayer]){
+            socket.emit("message","対象のフィールドスペルがありません");
+            game.pendingTarget=pt;
+            socket.emit("selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択してください"});
+            send();return;
+          }
+          destroyFieldSpell(targetPlayer);
+          game.pendingTarget=null;
+          break;
+        }
         default:
           break;
       }
@@ -2060,6 +2253,11 @@ case "UNIT_DES_SUM_C2":{
         };
         game.board[socket.id].push(unit);
         addLog(socket.id,`「${data.card}」を召喚（ATK${unit.atk}/HP${unit.hp}）`);
+        // ★世界樹の聖域：後から出したユニットにもATK/HP+1
+        if(game.fieldSpell[socket.id]&&cards[game.fieldSpell[socket.id].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
+          unit.atk+=1;
+          unit.hp+=1;
+        }
         // ★演出はtriggerSummonEffect内で行う（効果がある場合のみ）
         triggerSummonEffect(unit,socket.id,socket,io);
       }else{
@@ -2154,6 +2352,14 @@ case "UNIT_DES_SUM_C2":{
         return; // ターン終了を保留
       }
       game.pendingHandLimitDiscard=null;
+
+　　　// ★猛毒の沼地：相手ターン終了時に全ユニット1ダメージ
+      const fsOp=game.fieldSpell[op];
+      if(fsOp&&cards[fsOp.name]?.effect==="PERM_SPELL_POISON_DMG1"){
+        damageAllUnits(socket.id,1,socket.id);
+        damageAllUnits(op,1,socket.id);
+        addLog(socket.id,`「${fsOp.name}」：お互いの全ユニットに1ダメージ`);
+      }
 
       game.noAttack[socket.id]=false;
       game.prevLogs[socket.id]=[...(game.turnLogs[socket.id]||[])];
