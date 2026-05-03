@@ -89,16 +89,24 @@ body{
 }
 
 #allLogBtn{
-  background:#333;
-  color:#ccc;
-  border:1px solid #555;
+  background:linear-gradient(135deg,#0a0a1a,#1a1a2a);
+  color:#8899cc;
+  border:1px solid #334488;
   border-radius:6px;
-  padding:6px;
-  font-size:12px;
+  padding:7px;
+  font-size:11px;
+  font-weight:bold;
+  letter-spacing:2px;
   cursor:pointer;
   text-align:center;
+  box-shadow:0 0 8px rgba(50,80,180,0.2), inset 0 0 4px rgba(0,0,0,0.4);
+  transition:all 0.2s;
 }
-#allLogBtn:hover{ background:#555; }
+#allLogBtn:hover{
+  background:linear-gradient(135deg,#1a1a2a,#2a2a4a);
+  color:#aabbee;
+  box-shadow:0 0 14px rgba(80,120,220,0.4);
+}
 
 /* ===== 捨て場モーダル ===== */
 #graveModal{
@@ -217,15 +225,53 @@ body{
 }
 
 #header button{
-  background:#444;
-  color:#eee;
-  border:1px solid #666;
+  background:linear-gradient(135deg,#1a2a1a,#2a3a2a);
+  color:#aaddaa;
+  border:1px solid #3a6a3a;
   border-radius:6px;
   padding:6px 14px;
   cursor:pointer;
-  font-size:14px;
+  font-size:12px;
+  font-weight:bold;
+  letter-spacing:1px;
+  box-shadow:0 0 8px rgba(40,120,40,0.2), inset 0 0 4px rgba(0,0,0,0.3);
+  transition:all 0.2s;
+  white-space:nowrap;
 }
-#header button:hover{ background:#666; }
+#header button:hover{
+  background:linear-gradient(135deg,#2a3a2a,#3a5a3a);
+  color:#ccffcc;
+  box-shadow:0 0 12px rgba(40,180,40,0.35);
+}
+/* ゲーム開始ボタンは別色 */
+#header button[onclick="reset()"]{
+  background:linear-gradient(135deg,#2a1a00,#4a3000);
+  color:#ffcc66;
+  border:1px solid #aa6600;
+  box-shadow:0 0 8px rgba(180,100,0,0.3);
+  font-size:13px;
+}
+#header button[onclick="reset()"]:hover{
+  background:linear-gradient(135deg,#4a3000,#6a4a00);
+  color:#ffee88;
+  box-shadow:0 0 14px rgba(220,140,0,0.45);
+}
+/* プルダウン */
+#header select{
+  background:#0e1a0e;
+  color:#aaddaa;
+  border:1px solid #3a6a3a;
+  border-radius:6px;
+  padding:4px 8px;
+  font-size:12px;
+  max-width:130px;
+  box-shadow:inset 0 0 4px rgba(0,0,0,0.4);
+  cursor:pointer;
+}
+#header select option{
+  background:#0e1a0e;
+  color:#aaddaa;
+}
 
 #turn{ font-size:16px; font-weight:bold; color:#ffe066; }
 #winner{ font-size:18px; font-weight:bold; color:#ff6666; }
@@ -276,22 +322,27 @@ body{
 
 /* ===== 直接攻撃ゾーン ===== */
 #enemyPlayerZone{
-  background:rgba(80,0,0,0.2);
-  border:2px dashed #884444;
-  border-radius:8px;
-  height:48px;
+  background:linear-gradient(135deg,rgba(80,0,0,0.25),rgba(120,0,0,0.15));
+  border:1px solid rgba(180,60,60,0.4);
+  border-radius:6px;
+  height:36px;
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#cc8888;
-  font-size:13px;
+  color:rgba(220,100,100,0.7);
+  font-size:11px;
+  font-weight:bold;
+  letter-spacing:3px;
   cursor:pointer;
-  transition:background 0.2s;
+  transition:all 0.2s;
+  box-shadow:inset 0 0 10px rgba(180,0,0,0.1);
 }
 #enemyPlayerZone:hover,
 #enemyPlayerZone.dragover{
-  background:rgba(180,0,0,0.35);
-  border-color:#cc4444;
+  background:linear-gradient(135deg,rgba(160,20,20,0.4),rgba(100,0,0,0.3));
+  border-color:rgba(255,80,80,0.7);
+  color:rgba(255,150,150,0.95);
+  box-shadow:0 0 14px rgba(220,50,50,0.4), inset 0 0 10px rgba(180,0,0,0.2);
 }
 
 /* ===== 手札エリア ===== */
@@ -300,11 +351,13 @@ body{
   border:2px solid #2d4a2d;
   border-radius:10px;
   min-height:110px;
-  padding:8px;
+  padding:8px 16px;
   display:flex;
-  align-items:center;
-  gap:4px;
-  flex-wrap:wrap;
+  align-items:flex-end;
+  justify-content:center;
+  flex-wrap:nowrap;
+  overflow:visible;
+  position:relative;
 }
 
 /* ===== カード ===== */
@@ -315,8 +368,10 @@ body{
   cursor:pointer;
   transition:transform 0.15s;
   position:relative;
+  z-index:1;
+  flex-shrink:0;
 }
-.card:hover{ transform:translateY(-6px); }
+.card:hover{ transform:translateY(-10px) !important; z-index:100 !important; }
 .card img{
   width:72px;
   border-radius:5px;
@@ -335,18 +390,51 @@ body{
   border-radius:5px;
 }
 
-/* ===== ターン終了ボタン ===== */
+/* ===== ターン終了・降参ボタン ===== */
 #endTurnBtn{
-  background:#2a6a2a;
-  color:#eee;
-  border:2px solid #4a9a4a;
+  background:linear-gradient(135deg,#0d2a0d,#1a4a1a);
+  color:#88ff88;
+  border:1px solid #2a8a2a;
   border-radius:8px;
-  padding:10px 28px;
-  font-size:15px;
+  padding:10px 16px;
+  font-size:13px;
+  font-weight:bold;
+  letter-spacing:1px;
   cursor:pointer;
-  transition:background 0.2s;
+  white-space:nowrap;
+  box-shadow:0 0 10px rgba(40,180,40,0.3), inset 0 0 6px rgba(0,0,0,0.4);
+  transition:all 0.2s;
+  width:100%;
 }
-#endTurnBtn:hover{ background:#3a8a3a; }
+#endTurnBtn:hover{
+  background:linear-gradient(135deg,#1a4a1a,#2a6a2a);
+  box-shadow:0 0 16px rgba(40,220,40,0.5);
+  color:#aaffaa;
+}
+#surrenderBtn{
+  background:linear-gradient(135deg,#2a0808,#4a1212) !important;
+  color:#ff8888 !important;
+  border:1px solid #8a2222 !important;
+  border-radius:8px !important;
+  padding:8px 16px !important;
+  font-size:13px !important;
+  font-weight:bold !important;
+  letter-spacing:1px !important;
+  cursor:pointer !important;
+  white-space:nowrap !important;
+  box-shadow:0 0 10px rgba(180,40,40,0.3), inset 0 0 6px rgba(0,0,0,0.4) !important;
+  transition:all 0.2s !important;
+  width:100% !important;
+  text-align:center !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+#surrenderBtn:hover{
+  background:linear-gradient(135deg,#4a1212,#6a1a1a) !important;
+  box-shadow:0 0 16px rgba(220,40,40,0.5) !important;
+  color:#ffaaaa !important;
+}
 
 /* ===== スマホ ===== */
 @media(max-width:700px){
@@ -381,15 +469,276 @@ body{
   animation: screenShake 0.45s ease-in-out;
 }
 
+/* ===== ターン交代アニメーション ===== */
+#turnChangeOverlay{
+  position:fixed;
+  top:0;left:-100%;
+  width:100%;height:100%;
+  z-index:3000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+#turnChangeOverlay img{
+  width:80%;
+  max-width:700px;
+  filter:drop-shadow(0 0 30px rgba(255,200,50,0.8));
+}
+@keyframes turnChangeSlide{
+  0%  { left:-100%; opacity:0; }
+  15% { left:0%;    opacity:1; }
+  75% { left:0%;    opacity:1; }
+  100%{ left:100%;  opacity:0; }
+}
+.turn-change-anim{
+  animation:turnChangeSlide 1.4s cubic-bezier(0.22,1,0.36,1) forwards !important;
+}
+
 @keyframes popIn {
   0%{ transform:translate(-50%,-50%) scale(0.3); opacity:0; }
   60%{ transform:translate(-50%,-50%) scale(1.1); opacity:1; }
   100%{ transform:translate(-50%,-50%) scale(1); opacity:1; }
 }
 
+/* ===== 扇状手札 ===== */
+#handArea{
+  position:relative;
+  overflow:visible;
+}
+#handArea .card{
+  transition:transform 0.18s ease;
+  transform-origin:center bottom;
+  flex-shrink:1;
+  position:relative;
+}
+/* 枚数に応じて扇の角度をJSで付与するためここではrotateなし */
+
+/* ===== 新UI追加CSS ===== */
+.pm-wrapper{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  width:100%;
+}
+.pm-half{
+  display:flex;
+  align-items:stretch;
+  gap:8px;
+  min-height:180px;
+  position:relative;
+}
+/* 左エリア・右エリア */
+.pm-side{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  flex-shrink:0;
+  width:110px;
+}
+/* ライフ円形UI */
+.life-circle{
+  width:72px;height:72px;
+  border-radius:50%;
+  background:radial-gradient(circle at 40% 35%, #5a1a1a, #1a0808);
+  border:3px solid #cc4444;
+  box-shadow:0 0 12px rgba(200,50,50,0.5), inset 0 0 8px rgba(0,0,0,0.6);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  position:relative;
+}
+.life-circle .lc-val{
+  font-size:22px;font-weight:bold;color:#ffaaaa;
+  line-height:1;font-family:Georgia,serif;
+}
+.life-circle .lc-label{
+  font-size:9px;color:#cc6666;letter-spacing:2px;margin-top:1px;
+}
+/* エネルギーUI */
+.energy-plate{
+  background:linear-gradient(135deg,#0a1a2a,#0d2a3a);
+  border:1px solid #2266aa;
+  border-radius:8px;
+  padding:5px 10px;
+  text-align:center;
+  box-shadow:0 0 8px rgba(40,120,200,0.3);
+  width:100%;
+}
+.energy-plate .ep-label{
+  font-size:9px;color:#4488cc;letter-spacing:1px;
+}
+.energy-plate .ep-val{
+  font-size:13px;font-weight:bold;color:#88ccff;
+}
+/* デッキ・捨て場エリア */
+.deck-grave-area{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  align-items:center;
+  justify-content:center;
+}
+.deck-pile{
+  position:relative;
+  width:56px;
+  cursor:default;
+}
+.deck-pile img{
+  width:56px;border-radius:5px;
+  box-shadow:
+    1px 1px 0 #222,
+    2px 2px 0 #1a1a1a,
+    3px 3px 0 #141414,
+    4px 4px 0 #0e0e0e,
+    5px 5px 0 #080808,
+    0 6px 12px rgba(0,0,0,0.7);
+}
+.deck-pile .deck-count{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  color:#fff;font-size:15px;font-weight:bold;
+  text-shadow:0 0 6px #000, 0 0 12px #000;
+  pointer-events:none;
+  z-index:10;
+}
+.grave-pile{
+  position:relative;
+  width:56px;
+  cursor:pointer;
+}
+.grave-pile img{
+  width:56px;border-radius:5px;
+  box-shadow:0 2px 6px #000;
+  transition:transform 0.15s;
+}
+.grave-pile:hover img{ transform:translateY(-4px); }
+.grave-pile .grave-empty{
+  width:56px;height:80px;
+  border:1px solid rgba(180,140,80,0.4);
+  border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(180,140,80,0.4);
+  font-size:9px;
+  letter-spacing:2px;
+  font-weight:bold;
+  background:rgba(180,140,80,0.04);
+  box-shadow:inset 0 0 8px rgba(0,0,0,0.3);
+}
+/* 中央フィールドエリア */
+.pm-center{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.field-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:var(--field-bg, rgba(0,80,0,0.35));
+  border:2px solid var(--field-border, #2d6a2d);
+  border-radius:10px;
+  min-height:130px;
+  padding:8px 10px;
+  flex:1;
+  transition:background 0.8s,border-color 0.8s;
+}
+.field-row.enemy-row{
+  background:var(--enemy-field-bg, rgba(80,0,0,0.25));
+  border-color:var(--enemy-field-border, #6a2d2d);
+}
+.unit-slots{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex:1;
+  position:relative;
+  min-height:110px;
+}
+
+.unit-slot-empty{
+  width:72px;
+  height:100px;
+  border:1px solid rgba(255,255,255,0.18);
+  border-radius:6px;
+  flex-shrink:0;
+  background:rgba(255,255,255,0.03);
+  box-shadow:inset 0 0 8px rgba(0,0,0,0.3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.unit-slot-empty::before{
+  content:"UNIT";
+  font-size:9px;
+  color:rgba(255,255,255,0.18);
+  letter-spacing:3px;
+  font-weight:bold;
+  pointer-events:none;
+}
+/* ユニットカードが存在する場合は空枠を非表示 */
+.unit-slots .card ~ .unit-slot-empty{
+  display:none;
+}
+/* フィールドスペルスロット */
+.fs-slot{
+  width:80px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  min-height:110px;
+  border:1px solid rgba(255,215,0,0.45);
+  border-radius:6px;
+  position:relative;
+  background:rgba(255,215,0,0.04);
+  box-shadow:inset 0 0 10px rgba(255,215,0,0.06);
+}
+.fs-slot::before{
+  content:"FIELD";
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-size:10px;
+  color:rgba(255,215,0,0.3);
+  letter-spacing:3px;
+  pointer-events:none;
+  font-weight:bold;
+}
+/* カードが入ったらテキストを隠す */
+.fs-slot:not(:empty)::before{
+  display:none;
+}
+/* 相手手札（裏向き）*/
+.enemy-hand-area{
+  display:flex;
+  gap:3px;
+  justify-content:center;
+  flex-wrap:wrap;
+  padding:4px 0;
+  min-height:40px;
+}
+.enemy-hand-card img{
+  width:40px;border-radius:3px;
+  box-shadow:0 1px 4px #000;
+}
+/* 区切り線 */
+.pm-divider{
+  height:2px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
+  margin:2px 0;
+}
+
 </style>
 </head>
 <body>
+
+<!-- ターン交代オーバーレイ -->
+<div id="turnChangeOverlay">
+  <img src="images/TURN CHANGE.png" id="turnChangeImg" alt="TURN CHANGE">
+</div>
 
 <!-- 勝敗画像オーバーレイ -->
 <div id="resultOverlay" onclick="closeResult()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:2000;justify-content:center;align-items:center;cursor:pointer;">
@@ -429,69 +778,149 @@ body{
   <!-- 中央：プレイマット -->
   <div id="mat">
 
-    <div id="header">
-      <button onclick="selectPlayer(1)">P1参加</button>
-      <select id="deckSelectP1" style="background:#222;color:#eee;border:1px solid #666;border-radius:4px;padding:2px 4px;max-width:130px;">
-        <option value="-1">デッキ選択</option>
-      </select>
-      <button onclick="selectPlayer(2)">P2参加</button>
-      <select id="deckSelectP2" style="background:#222;color:#eee;border:1px solid #666;border-radius:4px;padding:2px 4px;max-width:130px;">
-        <option value="-1">デッキ選択</option>
-      </select>
-      <span id="playerStatus"></span>
-      <button onclick="reset()" style="background:#664400;border-color:#aa6600;">ゲーム開始</button>
-      <button onclick="window.open('deck1.html','_blank')" style="background:#224422;color:#afa;border:1px solid #4a8a4a;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer;">📋 P1デッキ構築</button>
-      <button onclick="window.open('deck2.html','_blank')" style="background:#224422;color:#afa;border:1px solid #4a8a4a;border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer;">📋 P2デッキ構築</button>
-      <span id="turn"></span>
-      <span id="winner"></span>
+    <div id="header" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <!-- 1段目：参加・デッキ選択 -->
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button onclick="selectPlayer(1)">P1参加</button>
+        <select id="deckSelectP1">
+          <option value="-1">デッキ選択</option>
+        </select>
+        <button onclick="selectPlayer(2)">P2参加</button>
+        <select id="deckSelectP2">
+          <option value="-1">デッキ選択</option>
+        </select>
+        <span id="playerStatus" style="color:#aaa;font-size:12px;"></span>
+      </div>
+      <!-- 2段目：ゲーム開始・デッキ構築 -->
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <button onclick="reset()">▶ START GAME</button>
+        <button onclick="window.open('deck1.html','_blank')">P1 DECK</button>
+        <button onclick="window.open('deck2.html','_blank')">P2 DECK</button>
+        <span id="turn" style="font-size:15px;font-weight:bold;color:#ffe066;"></span>
+        <span id="winner" style="font-size:16px;font-weight:bold;color:#ff6666;"></span>
+      </div>
     </div>
 
-    <!-- 相手情報 -->
-    <div class="infoBar">
-      <span class="life" id="enemyLife">ライフ: -</span>
-      <span class="energy" id="enemyEnergy">エネルギー: -</span>
-      <span class="deckCount" id="enemyDeck">デッキ: -</span>
-      <span id="enemyHandDisplay"></span>
-      <button class="graveBtn" onclick="showEnemyGrave()">相手捨て場</button>
-    </div>
+    <div class="pm-wrapper">
 
-    <!-- 直接攻撃ゾーン -->
-    <div id="enemyPlayerZone">⚔ ここをタップ / ドロップで直接攻撃</div>
+      <!-- ===== 相手側（上半分）===== -->
+      <div class="pm-half">
 
-    <!-- 相手フィールド -->
-    <div class="field" id="enemyField" style="display:flex;align-items:center;gap:10px;">
-      <div id="enemyFieldSpell" style="width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
-      <div style="width:2px;background:rgba(255,255,255,0.15);align-self:stretch;margin:4px 4px;flex-shrink:0;"></div>
-      <div id="enemyUnits" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;"></div>
-    </div>
+        <!-- 相手：左エリア（捨て場→デッキ） -->
+        <div class="pm-side">
+          <div class="deck-grave-area">
+            <!-- 相手捨て場（左） -->
+            <div class="grave-pile" id="enemyGravePile" onclick="showEnemyGrave()">
+              <div class="grave-empty" id="enemyGraveEmpty">GRAVE</div>
+            </div>
+            <!-- 相手デッキ（右） -->
+            <div class="deck-pile">
+              <img src="images/card_back.png" id="enemyDeckImg" alt="deck">
+              <div class="deck-count" id="enemyDeck">-</div>
+            </div>
+          </div>
+        </div>
 
-    <!-- 自分フィールド -->
-    <div class="field" id="myField" style="display:flex;align-items:center;gap:10px;">
-      <div id="myFieldSpell" style="width:80px;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
-      <div style="width:2px;background:rgba(255,255,255,0.15);align-self:stretch;margin:4px 4px;flex-shrink:0;"></div>
-      <div id="myUnits" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;"></div>
-    </div>
+        <!-- 相手：中央エリア -->
+        <div class="pm-center">
+          <!-- 相手手札（裏向き） -->
+          <div class="enemy-hand-area" id="enemyHandArea"></div>
 
-    <!-- 自分情報 -->
-    <div class="infoBar">
-      <span class="life" id="myLife">ライフ: -</span>
-      <span class="energy" id="myEnergy">エネルギー: -</span>
-      <span class="deckCount" id="myDeck">デッキ: -</span>
-      <button class="graveBtn" onclick="showMyGrave()">自分捨て場</button>
-      <button id="endTurnBtn" onclick="endTurn()">ターン終了</button>
-      <button id="surrenderBtn" onclick="surrender()" style="background:#6a1a1a;color:#eee;border:2px solid #aa3333;border-radius:8px;padding:10px 18px;font-size:15px;cursor:pointer;">🏳 降参</button>
-    </div>
+          <!-- 直接攻撃ゾーン -->
+          <div id="enemyPlayerZone">⚔ DIRECT ATTACK</div>
 
-    <!-- 手札 -->
-    <div id="handArea"></div>
+          <!-- 相手フィールド（フィールドスペルは右側） -->
+          <div class="field-row enemy-row" id="enemyField">
+            <div id="enemyUnits" class="unit-slots">
+              <div class="unit-slot-empty"></div>
+              <div class="unit-slot-empty"></div>
+              <div class="unit-slot-empty"></div>
+            </div>
+            <div id="enemyFieldSpell" class="fs-slot"></div>
+          </div>
+        </div>
 
+        <!-- 相手：右エリア（ライフ・エネルギー） -->
+        <div class="pm-side">
+          <div class="life-circle">
+            <span class="lc-val" id="enemyLife">-</span>
+            <span class="lc-label">LIFE</span>
+          </div>
+          <div class="energy-plate">
+            <div class="ep-label">ENERGY</div>
+            <div class="ep-val" id="enemyEnergy">-/-</div>
+          </div>
+          <span class="deckCount" id="enemyDeckLabel" style="display:none"></span>
+          <span id="enemyHandDisplay" style="display:none"></span>
+         
+        </div>
+
+      </div><!-- /相手側 -->
+
+      <div class="pm-divider"></div>
+
+      <!-- ===== 自分側（下半分）===== -->
+      <div class="pm-half">
+
+        <!-- 自分：左エリア（ライフ・エネルギー・フィールドスペル） -->
+        <div class="pm-side">
+          <div class="life-circle">
+            <span class="lc-val" id="myLife">-</span>
+            <span class="lc-label">LIFE</span>
+          </div>
+          <div class="energy-plate">
+            <div class="ep-label">ENERGY</div>
+            <div class="ep-val" id="myEnergy">-/-</div>
+          </div>
+          
+        </div>
+
+        <!-- 自分：中央エリア -->
+        <div class="pm-center">
+          <!-- 自分フィールド（フィールドスペルは左側） -->
+          <div class="field-row" id="myField">
+            <div id="myFieldSpell" class="fs-slot"></div>
+            <div style="width:20px;flex-shrink:0;"></div>
+            <div id="myUnits" class="unit-slots">
+              <div class="unit-slot-empty"></div>
+              <div class="unit-slot-empty"></div>
+              <div class="unit-slot-empty"></div>
+            </div>
+          </div>
+
+          <!-- 手札 -->
+          <div id="handArea"></div>
+        </div>
+
+        <!-- 自分：右エリア（デッキ→捨て場・ボタン） -->
+        <div class="pm-side">
+          <div class="deck-grave-area">
+            <!-- 自分デッキ（左） -->
+            <div class="deck-pile">
+              <img src="images/card_back.png" id="myDeckImg" alt="deck">
+              <div class="deck-count" id="myDeck">-</div>
+            </div>
+            <!-- 自分捨て場（右） -->
+            <div class="grave-pile" id="myGravePile" onclick="showMyGrave()">
+              <div class="grave-empty" id="myGraveEmpty">GRAVE</div>
+            </div>
+          </div>
+          <button id="endTurnBtn" onclick="endTurn()">TURN END</button>
+          <button id="surrenderBtn" onclick="surrender()" style="text-align:center;justify-content:center;display:flex;align-items:center;">SURRENDER</button>
+        </div>
+
+      </div><!-- /自分側 -->
+
+    </div><!-- /pm-wrapper -->
+
+    <!-- ログパネルは右サイドに残す -->
   </div><!-- /mat -->
 
   <!-- 右：ログパネル -->
   <div id="logPanel">
-    <div id="logTitle">📋 前の相手ターンのログ</div>
+    <div id="logTitle">LAST TURN LOG</div>
     <div id="logBox"></div>
-    <button id="allLogBtn" onclick="openLogModal()">📜 全ログを見る</button>
+    <button id="allLogBtn" onclick="openLogModal()">ALL LOG</button>
   </div>
 
 </div><!-- /root -->
@@ -707,6 +1136,27 @@ function selectPlayer(num){
   applyAttrColor(attr);
 }
 
+function _renderGravePile(pileId, emptyId, graveData){
+  const pile=document.getElementById(pileId);
+  if(!pile) return;
+  // 既存のカード画像を削除（emptyDivは残す）
+  [...pile.querySelectorAll("img.grave-top")].forEach(el=>el.remove());
+  const emptyDiv=document.getElementById(emptyId);
+  if(!graveData||graveData.length===0){
+    if(emptyDiv) emptyDiv.style.display="flex";
+    return;
+  }
+  if(emptyDiv) emptyDiv.style.display="none";
+  const top=graveData[graveData.length-1];
+  const img=document.createElement("img");
+  img.src="images/"+top.name+".png";
+  img.className="grave-top";
+  img.style.cssText="width:56px;border-radius:5px;box-shadow:0 2px 6px #000;display:block;";
+  img.onmouseenter=()=>{ document.getElementById("preview").innerHTML=`<img src="images/${top.name}.png">`; };
+  img.onmouseleave=()=>{ document.getElementById("preview").innerHTML=""; };
+  pile.insertBefore(img, emptyDiv);
+}
+
 function renderFieldSpell(elementId, fsData){
   const el=document.getElementById(elementId);
   if(!el) return;
@@ -844,6 +1294,16 @@ function playAttackAnim(attackerIdx, targetIdx, isDirect, enemyBoardLen){
     },180);
   },200);
 }
+
+function showTurnChangeAnim(){
+  const overlay=document.getElementById("turnChangeOverlay");
+  if(!overlay) return;
+  overlay.classList.remove("turn-change-anim");
+  void overlay.offsetWidth; // reflow
+  overlay.classList.add("turn-change-anim");
+  setTimeout(()=>overlay.classList.remove("turn-change-anim"),1500);
+}
+
 function surrender(){
   if(!confirm("本当に降参しますか？")) return;
   socket.emit("action",{type:"surrender"});
@@ -857,7 +1317,7 @@ function reset(){
   allLogsData=[];
   const logBox=document.getElementById("logBox");
   logBox.innerHTML=`<div style="color:#666;font-size:12px">（まだログがありません）</div>`;
-  document.getElementById("logTitle").innerText="📋 ゲームログ（リアルタイム）";
+  document.getElementById("logTitle").innerText="GAME LOG";
   // ★勝敗フラグリセット
   resultShown=false;
   // ★BGM再起動
@@ -1072,7 +1532,7 @@ if(data.type==="fieldSpell"){
     if(amount>0&&amount<=maxVal){
       socket.emit("action",{type:"select_target",targetSide:"life",lifeAmount:amount});
       selectTargetMode=null;
-      document.getElementById("turn").innerText="▶ あなたのターン";
+      document.getElementById("turn").innerText="▶ YOUR TURN";
     }else{
       socket.emit("action",{type:"select_target",targetSide:"life",lifeAmount:0}); // 無効値で再要求
     }
@@ -1087,7 +1547,7 @@ if(data.type==="fieldSpell"){
     if(!isNaN(idx)&&idx>=0&&idx<options.length){
       socket.emit("action",{type:"select_target",targetSide:"grave",graveIndex:idx});
       selectTargetMode=null;
-      document.getElementById("turn").innerText="▶ あなたのターン";
+      document.getElementById("turn").innerText="▶ YOUR TURN";
     }
     return;
   }
@@ -1119,8 +1579,15 @@ document.addEventListener("touchstart",(e)=>{
   }
 });
 
+let _prevTurn=null;
 socket.on("update",(g)=>{
   latestGameState=g;
+
+  // ★ターン交代検知
+  if(_prevTurn!==null && _prevTurn!==g.turn && !g.winner){
+    showTurnChangeAnim();
+  }
+  _prevTurn=g.turn;
 
   // ★音検知処理
   // ドロー検知：自分のデッキが減った＝自分がドローした
@@ -1172,10 +1639,10 @@ socket.on("update",(g)=>{
   // グロウコア待機中は既にselectTargetモードで上書きされているため変更不要
   if(!selectTargetMode){
     document.getElementById("turn").innerText=
-      g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+      g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
   }
   document.getElementById("winner").innerText=
-    g.winner?(g.winner===socket.id?"🏆 勝ち！":"💀 負け"):"";
+    g.winner?(g.winner===socket.id?"YOU WIN！":"YOU LOSE"):"";
   // ★勝敗演出
   if(g.winner && !resultShown){
     setTimeout(()=>{ showResult(g.winner===socket.id); }, 300);
@@ -1183,13 +1650,27 @@ socket.on("update",(g)=>{
   // ★ゲームリセット時に結果フラグをリセット
   if(!g.winner) resultShown=false;
 
-  let handIcons="手札: ";
-  for(let i=0;i<g.enemyHandCount;i++) handIcons+="🂠";
+  // 相手手札を裏向き画像で表示
+  const enemyHandArea=document.getElementById("enemyHandArea");
+  if(enemyHandArea){
+    enemyHandArea.innerHTML="";
+    for(let i=0;i<g.enemyHandCount;i++){
+      const d=document.createElement("div");
+      d.className="enemy-hand-card";
+      const img=document.createElement("img");
+      img.src="images/card_back.png";
+      d.appendChild(img);
+      enemyHandArea.appendChild(d);
+    }
+  }
+  let handIcons="";
 
-  document.getElementById("enemyLife").innerText="❤ "+g.enemyLife;
-  document.getElementById("enemyEnergy").innerText="🔋 "+g.enemyEnergy+"/"+g.enemyMaxEnergy;
-  document.getElementById("enemyDeck").innerText="🂠 デッキ "+g.enemyDeckCount;
-  document.getElementById("enemyHandDisplay").innerText=handIcons;
+  document.getElementById("enemyLife").innerText=g.enemyLife;
+  document.getElementById("enemyEnergy").innerText=g.enemyEnergy+"/"+g.enemyMaxEnergy;
+  document.getElementById("enemyDeck").innerText=g.enemyDeckCount;
+  // 相手デッキ画像の表示切替
+  const enemyDeckImg=document.getElementById("enemyDeckImg");
+  if(enemyDeckImg) enemyDeckImg.style.opacity=g.enemyDeckCount>0?"1":"0.2";
 
   allLogsData=g.allLogs||[];
   const logBox=document.getElementById("logBox");
@@ -1205,7 +1686,7 @@ socket.on("update",(g)=>{
     logBox.innerHTML=displayLogs.map(l=>`<div class="logLine">${l}</div>`).join("");
     logBox.scrollTop=logBox.scrollHeight;
   }
-  document.getElementById("logTitle").innerText="📋 ゲームログ（リアルタイム）";
+  document.getElementById("logTitle").innerText="GAME LOG";
 
 
 　// --- フィールドスペル表示 ---
@@ -1217,6 +1698,12 @@ socket.on("update",(g)=>{
     const ef=document.getElementById("enemyUnits");
     if(!ef) return;
     ef.innerHTML="";
+    // ★UNIT空枠3つを常時表示
+    for(let si=0;si<3;si++){
+      const slot=document.createElement("div");
+      slot.className="unit-slot-empty";
+      ef.appendChild(slot);
+    }
     g.enemyBoard.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className="card";
@@ -1247,7 +1734,7 @@ div.onclick=()=>{
       if(selectTargetMode && (selectTargetMode.type==="enemyUnit"||selectTargetMode.type==="anyUnit")){
         socket.emit("action",{type:"select_target",targetIndex:i,targetSide:"enemy"});
         selectTargetMode=null;
-        document.getElementById("turn").innerText=g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+        document.getElementById("turn").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
         return;
       }
       if(selectedUnitIndex!==null){
@@ -1276,6 +1763,12 @@ const stat=document.createElement("div");
     div.appendChild(img); div.appendChild(stat);
     ef.appendChild(div);
   });
+
+// ★ユニット数に応じて空枠を調整
+    const emptySlots=ef.querySelectorAll(".unit-slot-empty");
+    const cardCount=ef.querySelectorAll(".card").length;
+    emptySlots.forEach((s,i)=>{ s.style.display=i<(3-cardCount)?"flex":"none"; });
+
   }; // _renderEnemyField終了
 
   // ★被弾アニメーション中なら少し遅らせてから再描画
@@ -1324,6 +1817,12 @@ const stat=document.createElement("div");
   const myUnits=document.getElementById("myUnits");
   if(!myUnits) return;
   myUnits.innerHTML="";
+  // ★UNIT空枠3つを常時表示
+  for(let si=0;si<3;si++){
+    const slot=document.createElement("div");
+    slot.className="unit-slot-empty";
+    myUnits.appendChild(slot);
+  }
   g.myBoard.forEach((c,i)=>{
     const div=document.createElement("div");
     div.className="card";
@@ -1338,7 +1837,7 @@ div.onclick=()=>{
       if(selectTargetMode && (selectTargetMode.type==="myUnit"||selectTargetMode.type==="anyUnit")){
         socket.emit("action",{type:"select_target",targetIndex:i,targetSide:"my"});
         selectTargetMode=null;
-        document.getElementById("turn").innerText=g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+        document.getElementById("turn").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
         return;
       }
       // 電光石火2回目：同じユニットが選択済みでも解除しない（そのまま相手を選ばせる）
@@ -1368,6 +1867,11 @@ const stat=document.createElement("div");
     myUnits.appendChild(div);
   });
 
+  // ★ユニット数に応じて空枠を調整
+  const myEmptySlots=myUnits.querySelectorAll(".unit-slot-empty");
+  const myCardCount=myUnits.querySelectorAll(".card").length;
+  myEmptySlots.forEach((s,i)=>{ s.style.display=i<(3-myCardCount)?"flex":"none"; });
+
   // ★巻き戻し後の攻撃者選択を復元
   if(pendingAttackerIndex!==null){
     const cards=myField.querySelectorAll(".card");
@@ -1380,11 +1884,17 @@ const stat=document.createElement("div");
   }
 
   // --- 自分情報 ---
-  document.getElementById("myLife").innerText="❤ "+g.myLife;
-  document.getElementById("myEnergy").innerText="🔋 "+g.myEnergy+"/"+g.myMaxEnergy;
-  document.getElementById("myDeck").innerText="🂠 デッキ "+g.myDeckCount;
+  document.getElementById("myLife").innerText=g.myLife;
+  document.getElementById("myEnergy").innerText=g.myEnergy+"/"+g.myMaxEnergy;
+  document.getElementById("myDeck").innerText=g.myDeckCount;
+  // 自分デッキ画像の表示切替
+  const myDeckImg=document.getElementById("myDeckImg");
+  if(myDeckImg) myDeckImg.style.opacity=g.myDeckCount>0?"1":"0.2";
   myGraveData=g.myGrave;
   enemyGraveData=g.enemyGrave;
+  // 捨て場の最新カード表示
+  _renderGravePile("myGravePile","myGraveEmpty",g.myGrave);
+  _renderGravePile("enemyGravePile","enemyGraveEmpty",g.enemyGrave);
 
 // ★手札捨て待ちメッセージ
   if(g.pendingDiscard && g.pendingDiscard>0){
@@ -1400,9 +1910,24 @@ const stat=document.createElement("div");
   // --- 手札 ---
   const hand=document.getElementById("handArea");
   hand.innerHTML="";
-  g.myHand.forEach(card=>{
+  const handCount=g.myHand.length;
+  // 枚数が増えるほど重なりを増やして枠内に収める
+  const maxAngle=Math.min(3*handCount, 24);
+  const overlapPx=handCount<=4 ? 0 : Math.min((handCount-4)*12, 44);
+  g.myHand.forEach((card,hi)=>{
     const div=document.createElement("div");
     div.className="card";
+    const ratio = handCount<=1 ? 0 : (hi/(handCount-1))*2-1;
+    const rotate = ratio * maxAngle;
+    const translateY = Math.abs(ratio) * Math.abs(rotate) * 0.4;
+    const marginLeft = hi===0 ? 0 : -overlapPx;
+    div.style.cssText=`transform:rotate(${rotate}deg) translateY(${translateY}px);transform-origin:center bottom;z-index:${hi};margin-left:${marginLeft}px;`;
+    div.onmouseenter=()=>{
+      div.style.cssText=`transform:rotate(${rotate}deg) translateY(${translateY-12}px);transform-origin:center bottom;z-index:100;transition:transform 0.18s ease;margin-left:${marginLeft}px;`;
+    };
+    div.onmouseleave=()=>{
+      div.style.cssText=`transform:rotate(${rotate}deg) translateY(${translateY}px);transform-origin:center bottom;z-index:${hi};transition:transform 0.18s ease;margin-left:${marginLeft}px;`;
+    };
     const img=document.createElement("img");
     img.src="images/"+card+".png";
     img.onmouseenter=()=>{ document.getElementById("preview").innerHTML=`<img src="images/${card}.png">`; };
@@ -1425,14 +1950,14 @@ div.onclick=()=>{
         const hi=g.myHand.indexOf(card);
         socket.emit("action",{type:"select_target",targetIndex:hi,targetSide:"hand",handIndex:hi});
         selectTargetMode=null;
-        document.getElementById("turn").innerText=g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+        document.getElementById("turn").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
       } else if(selectTargetMode && selectTargetMode.type==="soulTrade"){
         // ★ソウルトレードの手札捨て（select_targetとして送信）
         if(confirm(card+" を捨てますか？")){
           const hi=g.myHand.indexOf(card);
           socket.emit("action",{type:"select_target",targetSide:"soulTrade",handIndex:hi,card:card});
           selectTargetMode=null;
-          document.getElementById("turn").innerText=g.turn===socket.id?"▶ あなたのターン":"相手のターン";
+          document.getElementById("turn").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
         }
       } else {
         if(confirm(card+" を使用しますか？")){

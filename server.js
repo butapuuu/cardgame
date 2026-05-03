@@ -3,6 +3,121 @@ const app = express();
 const http = require("http").createServer(app);
 const io = require("socket.io")(http);
 
+// ★アクセスログ
+const fs_node=require("fs");
+const ACCESS_LOG="access_log.json";
+
+function loadAccessLog(){
+  try{ return JSON.parse(fs_node.readFileSync(ACCESS_LOG,"utf8")); }
+  catch(e){ return {}; }
+}
+function saveAccessLog(log){
+  fs_node.writeFileSync(ACCESS_LOG,JSON.stringify(log,null,2));
+}
+function recordAccess(page, req){
+  const log=loadAccessLog();
+  const now=new Date();
+  const day=now.toISOString().slice(0,10);
+  const hour=now.getHours();
+  const ua=req.headers["user-agent"]||"不明";
+  const ip=req.headers["x-forwarded-for"]||req.socket.remoteAddress||"不明";
+  // デバイス判定
+  let device="PC";
+  if(/Mobile|Android|iPhone|iPad|iPod/i.test(ua)) device="スマホ/タブレット";
+  // ブラウザ判定
+  let browser="不明";
+  if(/Chrome/i.test(ua)&&!/Edge|OPR/i.test(ua)) browser="Chrome";
+  else if(/Firefox/i.test(ua)) browser="Firefox";
+  else if(/Safari/i.test(ua)&&!/Chrome/i.test(ua)) browser="Safari";
+  else if(/Edge/i.test(ua)) browser="Edge";
+  else if(/OPR|Opera/i.test(ua)) browser="Opera";
+
+  if(!log[day]) log[day]={total:0,hours:{},pages:{},visitors:[]};
+  if(!log[day].hours) log[day].hours={};
+  if(!log[day].pages) log[day].pages={};
+  if(!log[day].visitors) log[day].visitors=[];
+  log[day].total++;
+  log[day].hours[hour]=(log[day].hours[hour]||0)+1;
+  log[day].pages[page]=(log[day].pages[page]||0)+1;
+  // アクセス詳細を記録
+  const timeStr=now.toISOString().replace("T"," ").slice(0,19);
+  log[day].visitors.push({time:timeStr, page, device, browser, ip});
+  // 直近500件のみ保持
+  if(log[day].visitors.length>500) log[day].visitors=log[day].visitors.slice(-500);
+  saveAccessLog(log);
+}
+
+// ★アクセスログ確認ページ（staticより前に定義）
+app.get("/admin/access",(req,res)=>{
+  const log=loadAccessLog();
+  let html="<html><head><meta charset='utf-8'><title>アクセス統計</title>";
+  html+="<style>";
+  html+="body{font-family:sans-serif;background:#1a2a1a;color:#eee;padding:20px;}";
+  html+="table{border-collapse:collapse;margin-bottom:20px;width:100%;}";
+  html+="td,th{border:1px solid #555;padding:6px 12px;text-align:left;}";
+  html+="th{background:#333;}";
+  html+="h2{color:#ffe066;}h3{color:#aaffaa;margin-top:24px;}";
+  html+=".device-pc{color:#88ccff;} .device-sp{color:#ffaa88;}";
+  html+=".section{background:rgba(0,0,0,0.3);border:1px solid #333;border-radius:8px;padding:12px;margin-bottom:16px;}";
+  html+="</style></head><body>";
+  html+="<h2>📊 アクセス統計</h2>";
+  const days=Object.keys(log).sort().reverse();
+  if(days.length===0){
+    html+="<p style='color:#888'>まだアクセスデータがありません</p>";
+  }
+  days.forEach(day=>{
+    html+=`<h3>📅 ${day}（合計: ${log[day].total}回）</h3>`;
+    html+="<div class='section'>";
+    // ページ別
+    if(log[day].pages&&Object.keys(log[day].pages).length>0){
+      html+="<b>ページ別</b><table><tr><th>ページ</th><th>回数</th></tr>";
+      Object.entries(log[day].pages).forEach(([page,count])=>{
+        html+=`<tr><td>${page}</td><td>${count}</td></tr>`;
+      });
+      html+="</table>";
+    }
+    // 時間帯別
+    html+="<b>時間帯別</b><table><tr><th>時間帯</th><th>回数</th></tr>";
+    for(let h=0;h<24;h++){
+      const count=(log[day].hours&&log[day].hours[h])||0;
+      if(count>0) html+=`<tr><td>${h}時台</td><td>${count}</td></tr>`;
+    }
+    html+="</table>";
+    html+="</div>";
+    // アクセス詳細（訪問者ログ）
+    if(log[day].visitors&&log[day].visitors.length>0){
+      html+="<div class='section'>";
+      html+="<b>アクセス詳細ログ</b>";
+      html+="<table><tr><th>時刻</th><th>ページ</th><th>デバイス</th><th>ブラウザ</th><th>IPアドレス</th></tr>";
+      // 新しい順に表示
+      [...log[day].visitors].reverse().forEach(v=>{
+        const deviceClass=v.device.includes("スマホ")?"device-sp":"device-pc";
+        const deviceIcon=v.device.includes("スマホ")?"📱":"🖥";
+        html+=`<tr>
+          <td>${v.time}</td>
+          <td>${v.page}</td>
+          <td class="${deviceClass}">${deviceIcon} ${v.device}</td>
+          <td>${v.browser}</td>
+          <td>${v.ip}</td>
+        </tr>`;
+      });
+      html+="</table></div>";
+    }
+  });
+  html+="</body></html>";
+  res.send(html);
+});
+
+// ★staticより前にカウント用ミドルウェアを設置
+app.use((req,res,next)=>{
+  const path=req.path;
+  if(path==="/"||path==="/index.html") recordAccess("index.html",req);
+  else if(path==="/room.html") recordAccess("room.html",req);
+  else if(path==="/deck1.html") recordAccess("deck1.html",req);
+  else if(path==="/deck2.html") recordAccess("deck2.html",req);
+  next();
+});
+
 app.use(express.static(__dirname));
 
 
