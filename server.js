@@ -1238,10 +1238,10 @@ function startTurn(p){
     // 機甲要塞都市：ギギギアトークン召喚
     if(fsEff==="PERM_SPELL_IRON_FACTORY"){
       if(game.board[p].length<3){
-        const gigToken={name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true};
+        const gigToken={name:"ギギギアトークン",atk:3,hp:3,attacked:false,attr:"steel",isToken:true};
         game.board[p].push(gigToken);
         applyFieldSpellOnSummon(gigToken, p);
-        addLog(p,`「${fs.name}」：ギギアトークンを召喚`);
+        addLog(p,`「${fs.name}」：ギギギアトークンを召喚`);
       }
     }
   }

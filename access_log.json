@@ -294,13 +294,14 @@
     ]
   },
   "2026-05-06": {
-    "total": 17,
+    "total": 21,
     "hours": {
+      "0": 4,
       "10": 7,
       "11": 10
     },
     "pages": {
-      "index.html": 14,
+      "index.html": 18,
       "deck2.html": 1,
       "deck1.html": 2
     },
@@ -419,6 +420,34 @@
       },
       {
         "time": "2026-05-06 02:22:13",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-06 15:09:38",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-06 15:09:43",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-06 15:12:51",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-06 15:12:53",
         "page": "index.html",
         "device": "PC",
         "browser": "Chrome",
