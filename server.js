@@ -153,6 +153,7 @@ const cards = {
 "エンラージ":{cost:1,type:"spell",attr:"fire",effect:"A+2_H+1"},
 "炎の加護":{cost:1,type:"spell",attr:"fire",effect:"TURN_ALL_A+1_L_DMGX"},
 "フェニックスリバース":{cost:3,type:"spell",attr:"fire",effect:"REVIVE_TOP"},
+"灼熱地獄":{cost:2,type:"spell",attr:"fire",effect:"PERM_SPELL_FIRE_OVERFLOW",durability:5},
 
 //💧水
 "ウォータードロップ":{cost:1,atk:1,hp:3,type:"unit",attr:"water"},
@@ -179,7 +180,7 @@ const cards = {
 "ウォーターカーテン":{cost:2,type:"spell",attr:"water",effect:"ALL_H_PERM+2"},
 "クリスタルバリア":{cost:2,type:"spell",attr:"water",effect:"CRYSTAL_BARRIER"},
 "エナジーブースト":{cost:3,type:"spell",attr:"water",effect:"E+2"},
-"深海の神殿":{cost:2,type:"spell",attr:"water",effect:"PERM_SPELL_WATER_HEAL",durability:5},
+"深海の神殿":{cost:2,type:"spell",attr:"water",effect:"PERM_SPELL_WATER_ENERGY",durability:5},
 
 //⚡雷
 "サンダービート":{cost:1,atk:2,hp:1,type:"unit",attr:"thunder",effect:"DENKOUSEKKA"},
@@ -206,6 +207,7 @@ const cards = {
 "ボルトレイジ":{cost:2,type:"spell",attr:"thunder",effect:"TURN_ALL_A+2"},
 "プラズマバースト":{cost:2,type:"spell",attr:"thunder",effect:"DES_COST2_DRAW"},
 "サンダーボム":{cost:4,type:"spell",attr:"thunder",effect:"ALL_UNIT_DMG4"},
+"ハイボルテージゾーン":{cost:2,type:"spell",attr:"thunder",effect:"PERM_SPELL_THUNDER_NOREFLECT",durability:5},
 
 //🌿森
 "フォレストラビット":{cost:1,atk:1,hp:2,type:"unit",attr:"forest",effect:"SUM_UNIT_A_PERM+1"},
@@ -259,6 +261,7 @@ const cards = {
 "ディスカード":{cost:1,type:"spell",attr:"dark",effect:"HAN1_DRAW1"},
 "カースシャドウ":{cost:1,type:"spell",attr:"dark",effect:"A_PERM-3"},
 "デスペレーション":{cost:3,type:"spell",attr:"dark",effect:"OPP_HAND_TO2"},
+"瘴気の迷宮":{cost:2,type:"spell",attr:"dark",effect:"PERM_SPELL_DARK_DEBUFF",durability:5},
 
 //☠️毒
 "ポイズンインプ":{cost:1,atk:4,hp:2,type:"unit",attr:"poison",effect:"SUM_L_SELF-2"},
@@ -285,7 +288,7 @@ const cards = {
 "禁断の秘薬":{cost:3,type:"spell",attr:"poison",effect:"L_SELF_HALF_DRAW5"},
 "ヴェノムハーベスト":{cost:3,type:"spell",attr:"poison",effect:"UNIT_DES_COST_LHEAL"},
 "トキシックアポカリプス":{cost:4,type:"spell",attr:"poison",effect:"LIFE_5_ALL_DES"},
-"猛毒の沼地":{cost:2,type:"spell",attr:"poison",effect:"PERM_SPELL_POISON_DMG1",durability:5},
+"薬草の湿地":{cost:2,type:"spell",attr:"poison",effect:"PERM_SPELL_HERB_HEAL",durability:5},
 
 //⚙️鉄
 "ギアスカウト":{cost:1,atk:1,hp:1,type:"unit",attr:"steel",effect:"SUM_TOKEN1"},
@@ -364,7 +367,7 @@ function getOpponent(id){
 // ★カード属性を取得
 function getAttr(cardName){
   if(cardName==="ギアトークン") return "steel";
-  if(cardName==="ギギアトークン") return "steel";
+  if(cardName==="ギギギアトークン") return "steel";
   if(cardName==="シードトークン") return "forest";
   return cards[cardName]?.attr || "neutral";
 }
@@ -463,6 +466,19 @@ function applyAllFieldEffects(p){
   });
 }
 
+// ★ユニット召喚後の共通バフ/デバフ適用
+function applyFieldSpellOnSummon(unit, ownerPlayer){
+  const op=getOpponent(ownerPlayer);
+  // 世界樹の聖域：自分フィールドスペルがある場合ATK/HP+1
+  if(game.fieldSpell[ownerPlayer]&&cards[game.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
+    unit.atk+=1; unit.hp+=1;
+  }
+  // 瘴気の迷宮：相手フィールドスペルがある場合ATK-1
+  if(game.fieldSpell[op]&&cards[game.fieldSpell[op].name]?.effect==="PERM_SPELL_DARK_DEBUFF"){
+    unit.atk=Math.max(0,unit.atk-1);
+  }
+}
+
 // ★トークン召喚
 function summonToken(p, tokenName, n){
   for(let i=0;i<n;i++){
@@ -474,7 +490,10 @@ function summonToken(p, tokenName, n){
     if(tokenName==="ギアトークン"&&game.fieldSpell[p]&&cards[game.fieldSpell[p].name]?.effect==="PERM_SPELL_IRON_FACTORY"){
       tokenAtk+=1;
     }
-    game.board[p].push({name:tokenName, atk:tokenAtk, hp:tokenHp, attacked:false, attr:tokenAttr, isToken:true});
+    const newToken={name:tokenName, atk:tokenAtk, hp:tokenHp, attacked:false, attr:tokenAttr, isToken:true};
+    game.board[p].push(newToken);
+    // ★共通バフ/デバフ適用
+    applyFieldSpellOnSummon(newToken, p);
   }
 }
 
@@ -1013,6 +1032,7 @@ function processSpellEffect(cardName, p, socket){
       const rc=cards[revived.name];
       const unit={name:revived.name,atk:rc.atk,hp:rc.hp,attacked:false,attr:rc.attr||"neutral",damageReduce:rc.effect==="DAMAGE_REDUCE_1"};
       game.board[p].push(unit);
+      applyFieldSpellOnSummon(unit, p);
       addLog(p,`「${cardName}」：「${revived.name}」を捨て場から蘇生`);
       triggerSummonEffect(unit,p,socket,io);
       return true;
@@ -1103,10 +1123,13 @@ function processSpellEffect(cardName, p, socket){
       }
       return "pending";
 
-    case "PERM_SPELL_WATER_HEAL":
+    case "PERM_SPELL_WATER_ENERGY":
+    case "PERM_SPELL_HERB_HEAL":
     case "PERM_SPELL_FOREST_BUFF":
-    case "PERM_SPELL_POISON_DMG1":
-    case "PERM_SPELL_IRON_FACTORY":{
+    case "PERM_SPELL_IRON_FACTORY":
+    case "PERM_SPELL_FIRE_OVERFLOW":
+    case "PERM_SPELL_THUNDER_NOREFLECT":
+    case "PERM_SPELL_DARK_DEBUFF":{
       if(game.fieldSpell[p]){
         socket.emit("message","すでにフィールドスペルが場にあります");
         return false;
@@ -1114,6 +1137,17 @@ function processSpellEffect(cardName, p, socket){
       const dur=cards[cardName]?.durability||5;
       game.fieldSpell[p]={name:cardName,durability:dur};
       addLog(p,`「${cardName}」をフィールドに設置（耐久${dur}）`);
+      // 深海の神殿：発動時エネルギー+1
+      if(eff==="PERM_SPELL_WATER_ENERGY"){
+        game.maxEnergy[p]=Math.min(10,game.maxEnergy[p]+1);
+        game.energy[p]=Math.min(game.maxEnergy[p],game.energy[p]+1);
+        addLog(p,`「${cardName}」：エネルギー+1`);
+      }
+      // 薬草の湿地：発動時ライフ+3
+      if(eff==="PERM_SPELL_HERB_HEAL"){
+        game.life[p]+=3;
+        addLog(p,`「${cardName}」：ライフ+3`);
+      }
       // 世界樹の聖域：即座に場のユニット全体ATK/HP+1
       if(eff==="PERM_SPELL_FOREST_BUFF"){
         game.board[p].forEach(u=>{u.atk+=1;u.hp+=1;});
@@ -1123,6 +1157,11 @@ function processSpellEffect(cardName, p, socket){
       if(eff==="PERM_SPELL_IRON_FACTORY"){
         game.board[p].forEach(u=>{if(u.name==="ギアトークン"){u.atk+=1;}});
         addLog(p,`「${cardName}」：場のギアトークンATK+1`);
+      }
+      // 瘴気の迷宮：相手場の全ユニットATK-1
+      if(eff==="PERM_SPELL_DARK_DEBUFF"){
+        game.board[op].forEach(u=>{u.atk=Math.max(0,u.atk-1);});
+        addLog(p,`「${cardName}」：相手場の全ユニットATK-1`);
       }
       return true;
     }
@@ -1185,15 +1224,23 @@ function startTurn(p){
   const fs=game.fieldSpell[p];
   if(fs){
     const fsEff=cards[fs.name]?.effect||"";
-    // 深海の神殿：ライフ+3
-    if(fsEff==="PERM_SPELL_WATER_HEAL"){
+    // 深海の神殿：ターン開始時エネルギー+1
+    if(fsEff==="PERM_SPELL_WATER_ENERGY"){
+      game.maxEnergy[p]=Math.min(10,game.maxEnergy[p]+1);
+      game.energy[p]=Math.min(game.maxEnergy[p],game.energy[p]+1);
+      addLog(p,`「${fs.name}」：エネルギー+1`);
+    }
+    // 薬草の湿地：ターン開始時ライフ+3
+    if(fsEff==="PERM_SPELL_HERB_HEAL"){
       game.life[p]+=3;
       addLog(p,`「${fs.name}」：ライフ+3`);
     }
-    // 機甲要塞都市：ギギアトークン召喚
+    // 機甲要塞都市：ギギギアトークン召喚
     if(fsEff==="PERM_SPELL_IRON_FACTORY"){
       if(game.board[p].length<3){
-        game.board[p].push({name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true});
+        const gigToken={name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true};
+        game.board[p].push(gigToken);
+        applyFieldSpellOnSummon(gigToken, p);
         addLog(p,`「${fs.name}」：ギギアトークンを召喚`);
       }
     }
@@ -1269,6 +1316,12 @@ function destroyFieldSpell(ownerPlayer){
   if(eff==="PERM_SPELL_IRON_FACTORY"){
     game.board[ownerPlayer].forEach(u=>{if(u.name==="ギアトークン"){u.atk=Math.max(0,u.atk-1);}});
     addLog(ownerPlayer,`「${fs.name}」破壊：場のギアトークンATK-1`);
+  }
+  // 瘴気の迷宮：相手場の全ユニットATK+1（元に戻す）
+  if(eff==="PERM_SPELL_DARK_DEBUFF"){
+    const opPlayer=getOpponent(ownerPlayer);
+    game.board[opPlayer].forEach(u=>{u.atk+=1;});
+    addLog(ownerPlayer,`「${fs.name}」破壊：相手場の全ユニットATK+1（元に戻す）`);
   }
   addLog(ownerPlayer,`フィールドスペル「${fs.name}」が破壊されました`);
   delete game.fieldSpell[ownerPlayer];
@@ -1389,6 +1442,14 @@ const op=getOpponent(socket.id);
       }
       const atk=game.board[socket.id][data.a];
       if(!atk)return;
+      // ★相手ユニットがいる場合の直接攻撃を防ぐ
+      const isDirect=data.t===undefined&&data.target!=="fieldSpell";
+      if(isDirect&&game.board[op].length>0){
+        socket.emit("message","相手ユニットが場にいる場合、直接攻撃はできません");
+        // 攻撃済みフラグを立てない（巻き戻し）
+        send();
+        return;
+      }
 
       if(atk.disabled){
         socket.emit("message","このユニットは行動不能です");
@@ -1442,8 +1503,9 @@ const op=getOpponent(socket.id);
           // バリアはターン終了時まで持続（ここでは消さない）
           const realDmg=barrierBlocked?0:actualDmg;
           def.hp-=realDmg;
-          // 反撃（電光石火1回目は反撃なし）
-          if(!isDenkoFirstAll){
+          // 反撃（電光石火1回目は反撃なし、ハイボルテージゾーンがある場合も反撃なし）
+          const noReflectAll=!!(game.fieldSpell[socket.id]&&cards[game.fieldSpell[socket.id].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
+          if(!isDenkoFirstAll&&!noReflectAll){
             const counterDmg=atk.damageReduce?Math.min(1,Math.floor(def.atk/2)):Math.floor(def.atk/2);
             totalCounter+=counterDmg;
           }
@@ -1511,6 +1573,10 @@ const op=getOpponent(socket.id);
         addLog(socket.id,`「${atk.name}」がフィールドスペル「${fs.name}」に${atkPowerFS}ダメージ（残耐久${Math.max(0,fs.durability)}）`);
         if(fs.durability<=0){
           destroyFieldSpell(op);
+        }
+        { const opSockFS=io.sockets.sockets.get(op);
+          const atkAttrFS=getAttr(atk.name)||"neutral";
+          if(opSockFS) opSockFS.emit("hitEffect",{targetIdx:-1, attr:atkAttrFS, attackerIdx:data.a, hasAttackAnim:true, isFieldSpell:true});
         }
         // ★攻撃時効果
         if(atkCard && atkCard.attackEffect){
@@ -1584,8 +1650,9 @@ const op=getOpponent(socket.id);
         const atkPower=isDenkoSecond?Math.floor(atk.atk/2):atk.atk;
         let actualAtkDmg=def.damageReduce?Math.min(1,atkPower):atkPower;
         if(def.barrier){actualAtkDmg=0;} // バリア中はダメージ0（バリアは消さない）
-        // 電光石火1回目は反撃なし
-        const counterBase=isDenkoFirst?0:Math.floor(def.atk/2);
+        // 電光石火1回目は反撃なし、ハイボルテージゾーンがある場合も反撃なし
+        const noReflect=!!(game.fieldSpell[socket.id]&&cards[game.fieldSpell[socket.id].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
+        const counterBase=(isDenkoFirst||noReflect)?0:Math.floor(def.atk/2);
         const actualDefDmg=atk.damageReduce?Math.min(1,counterBase):counterBase;
 
         def.hp-=actualAtkDmg;
@@ -1595,12 +1662,20 @@ const op=getOpponent(socket.id);
         // ★被弾エフェクト：防御側プレイヤーに送信
         { const atkAttrForHit=getAttr(atk.name)||"neutral";
           const opSock=io.sockets.sockets.get(op);
-          if(opSock) opSock.emit("hitEffect",{targetIdx:data.t, attr:atkAttrForHit});
-          // 攻撃者側の画面にも表示（自分が攻撃した相手に）
+          // ★hitEffectに攻撃者情報も含めて送信
+          if(opSock) opSock.emit("hitEffect",{targetIdx:data.t, attr:atkAttrForHit, attackerIdx:data.a, hasAttackAnim:true});
           socket.emit("hitEffect",{targetIdx:data.t, attr:atkAttrForHit, isEnemy:true});
         }
 
         if(def.hp<=0){
+          // ★灼熱地獄：余剰ダメージをライフに
+          if(game.fieldSpell[socket.id]&&cards[game.fieldSpell[socket.id].name]?.effect==="PERM_SPELL_FIRE_OVERFLOW"){
+            const overflow=Math.abs(def.hp); // hp<0の絶対値が余剰
+            if(overflow>0){
+              damageLife(op,overflow);
+              addLog(socket.id,`「${game.fieldSpell[socket.id].name}」：余剰${overflow}ダメージが相手ライフに`);
+            }
+          }
           game.board[op].splice(data.t,1);
           if(!def.isToken) game.graves[op].push(def);
           addLog(socket.id,`→「${def.name}」を撃破`);
@@ -1653,6 +1728,10 @@ const op=getOpponent(socket.id);
         game.life[op]-=dmg;
         addLog(socket.id,`「${atk.name}」でプレイヤーに直接攻撃（${dmg}ダメージ、相手ライフ${game.life[op]}）`);
         if(game.life[op]<=0) game.winner=socket.id;
+        // ★直接攻撃：hitEffectに攻撃者情報を含める
+        { const opSockD=io.sockets.sockets.get(op);
+          if(opSockD) opSockD.emit("hitEffect",{targetIdx:-1, attr:getAttr(atk.name)||"neutral", attackerIdx:data.a, hasAttackAnim:true, isDirect:true});
+        }
         if(atkCard && atkCard.attackEffect && !atk.rollbackAttack){
           showEffect(atk.name);
         }
@@ -1776,10 +1855,8 @@ const op=getOpponent(socket.id);
             attr:steelOnly?"steel":(hc.attr||"neutral"),
             damageReduce:hc.effect==="DAMAGE_REDUCE_1"};
           game.board[p].push(newU);
-          // ★世界樹の聖域バフ適用（フュージョン以外）
-          if(eff!=="FUSION_IRON2_HAND"&&game.fieldSpell[p]&&cards[game.fieldSpell[p].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
-            newU.atk+=1; newU.hp+=1;
-          }
+          // ★フィールドスペルによるバフ/デバフ適用（フュージョン以外）
+          if(eff!=="FUSION_IRON2_HAND") applyFieldSpellOnSummon(newU, p);
           const label = eff==="FUSION_IRON2_HAND" ? `メガギアフュージョン（ATK+${bonusAtk}/HP+${bonusHp}）` :
                         eff==="DES_SUMMON_C2_HAND" ? `「${pt.card}」破壊時` :
                         (eff==="SUM_H_C3X2_STEP1"||eff==="SUM_H_C3X2_STEP2") ? "シードスポーン" : `「${pt.card}」`;
@@ -2229,10 +2306,8 @@ case "UNIT_DES_SUM_C2":{
           const hc=cards[handCard];
           const newU={name:handCard,atk:hc.atk,hp:hc.hp,attacked:false,attr:hc.attr||"neutral",damageReduce:hc.effect==="DAMAGE_REDUCE_1"};
           game.board[p].push(newU);
-          // ★世界樹の聖域バフ適用
-          if(game.fieldSpell[p]&&cards[game.fieldSpell[p].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
-            newU.atk+=1; newU.hp+=1;
-          }
+          // ★フィールドスペルによるバフ/デバフ適用
+          applyFieldSpellOnSummon(newU, p);
           addLog(p,`「${pt.card}」破壊時：「${handCard}」を召喚`);
           triggerSummonEffect(newU,p,socket,io);
           if(pt.pendingNext){
@@ -2263,6 +2338,7 @@ case "UNIT_DES_SUM_C2":{
           const hc=cards[handCard];
           const newU={name:handCard,atk:hc.atk,hp:hc.hp,attacked:false,attr:hc.attr||"neutral",damageReduce:hc.effect==="DAMAGE_REDUCE_1"};
           game.board[p].push(newU);
+          applyFieldSpellOnSummon(newU, p);
           addLog(p,`「${pt.card}」：「${handCard}」を召喚`);
           triggerSummonEffect(newU,p,socket,io);
           break;
@@ -2280,6 +2356,7 @@ case "UNIT_DES_SUM_C2":{
           const hc=cards[handCard];
           const newU={name:handCard,atk:hc.atk,hp:hc.hp,attacked:false,attr:hc.attr||"neutral",damageReduce:hc.effect==="DAMAGE_REDUCE_1"};
           game.board[p].push(newU);
+          applyFieldSpellOnSummon(newU, p);
           addLog(p,`「${pt.card}」：「${handCard}」を召喚`);
           triggerSummonEffect(newU,p,socket,io);
           break;
@@ -2301,6 +2378,7 @@ case "UNIT_DES_SUM_C2":{
           if(game.board[p].length<3){
             const newU={name:handCard,atk:hc.atk,hp:hc.hp,attacked:false,attr:hc.attr||"neutral",damageReduce:hc.effect==="DAMAGE_REDUCE_1"};
             game.board[p].push(newU);
+            applyFieldSpellOnSummon(newU, p);
             addLog(p,`シードスポーン：「${handCard}」を召喚`);
             triggerSummonEffect(newU,p,socket,io);
           }
@@ -2368,11 +2446,8 @@ case "UNIT_DES_SUM_C2":{
         };
         game.board[socket.id].push(unit);
         addLog(socket.id,`「${data.card}」を召喚（ATK${unit.atk}/HP${unit.hp}）`);
-        // ★世界樹の聖域：後から出したユニットにもATK/HP+1
-        if(game.fieldSpell[socket.id]&&cards[game.fieldSpell[socket.id].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
-          unit.atk+=1;
-          unit.hp+=1;
-        }
+        // ★フィールドスペルによるバフ/デバフ適用
+        applyFieldSpellOnSummon(unit, socket.id);
         // ★演出はtriggerSummonEffect内で行う（効果がある場合のみ）
         triggerSummonEffect(unit,socket.id,socket,io);
       }else{
@@ -2385,7 +2460,13 @@ case "UNIT_DES_SUM_C2":{
           // 発動成功（trueまたは"pending"）→ここでログと演出
           addLog(socket.id,`スペル「${data.card}」を使用`);
           showEffect(data.card, true);
-          game.graves[socket.id].push({name:data.card});
+          // ★フィールドスペルは場に残るため捨て場に送らない
+          if(c.effect!=="PERM_SPELL_WATER_ENERGY"&&c.effect!=="PERM_SPELL_HERB_HEAL"&&
+             c.effect!=="PERM_SPELL_FOREST_BUFF"&&c.effect!=="PERM_SPELL_IRON_FACTORY"&&
+             c.effect!=="PERM_SPELL_FIRE_OVERFLOW"&&c.effect!=="PERM_SPELL_THUNDER_NOREFLECT"&&
+             c.effect!=="PERM_SPELL_DARK_DEBUFF"){
+            game.graves[socket.id].push({name:data.card});
+          }
         }
       }
       notifyPendingTarget();
