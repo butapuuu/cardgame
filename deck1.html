@@ -686,6 +686,9 @@ let attrFilter="all";
 let typeFilter="all";
 let costFilter="all";
 
+// ★制限カード（デッキに1枚まで）
+const limitedCards=["マインドコントロール"];
+
 // ===== ひらがな変換 =====
 function hira(str){
   return str.replace(/[ァ-ン]/g,s=>String.fromCharCode(s.charCodeAt(0)-0x60));
@@ -747,7 +750,9 @@ function renderCards(){
     div.appendChild(badge);
     div.onclick=()=>{
       if(deck.length>=20){ showToast("デッキは20枚まで"); return; }
-      if(deck.filter(x=>x===cd.name).length>=2){ showToast("同名カードは2枚まで"); return; }
+      const inDeckCount=deck.filter(x=>x===cd.name).length;
+      if(limitedCards.includes(cd.name)&&inDeckCount>=1){ showToast(`「${cd.name}」は制限カードのため1枚までです`); return; }
+      if(inDeckCount>=2){ showToast("同名カードは2枚まで"); return; }
       deck.push(cd.name);
       render();
       renderCards();

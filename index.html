@@ -495,6 +495,26 @@ body{
   animation:turnChangeSlide 1.4s cubic-bezier(0.22,1,0.36,1) forwards !important;
 }
 
+/* ===== ドローアニメーション ===== */
+#drawCardAnim{
+  position:fixed;
+  pointer-events:none;
+  z-index:2500;
+  display:none;
+  border-radius:8px;
+  box-shadow:0 0 20px rgba(255,220,100,0.8);
+  width:72px;
+}
+#drawCardAnimFront{
+  position:fixed;
+  pointer-events:none;
+  z-index:2500;
+  display:none;
+  border-radius:8px;
+  box-shadow:0 0 28px rgba(255,220,100,0.9), 0 0 56px rgba(255,200,50,0.5);
+  width:260px;
+}
+
 @keyframes popIn {
   0%{ transform:translate(-50%,-50%) scale(0.3); opacity:0; }
   60%{ transform:translate(-50%,-50%) scale(1.1); opacity:1; }
@@ -734,6 +754,10 @@ body{
 </style>
 </head>
 <body>
+
+<!-- ドローアニメーション -->
+<img id="drawCardAnim" src="images/card_back.png">
+<img id="drawCardAnimFront" src="images/card_back.png">
 
 <!-- ターン交代オーバーレイ -->
 <div id="turnChangeOverlay">
@@ -1069,6 +1093,19 @@ const _clientAttrMap={
 };
 function getClientAttr(name){ return _clientAttrMap[name]||"neutral"; }
 
+// ★カード基本ATK（バフ・デバフ判定用）
+const _baseAtkMap={
+  "フレイムスパーク":2,"ファイアウルフ":3,"ブレイズリザード":2,"マグマウルフ":3,"フレイムナイト":3,"アッシュソルジャー":3,"フレイムレオン":4,"ボルケーノタートル":3,"インフェルノドラゴン":5,"バーンアウト":5,"フレイムパージャー":4,"ブレイズフェニックス":4,"フレイムエンペラー":5,"メガフレアドラゴン":8,
+  "ウォータードロップ":1,"アクアフィッシュ":2,"アイスウォリアー":3,"エナジーカラパス":2,"クリスタルシェル":1,"フロストビースト":4,"アイスガーディアン":3,"バーストパファー":2,"トレントサーペント":2,"アクアドラゴン":4,"オーシャンナイト":5,"テンペストシャーク":6,"タイダルリヴァイアサン":5,"フローズンキング":3,
+  "サンダービート":2,"スパークマウス":1,"ライトニングラプター":3,"ボルトウォリアー":6,"ボルトホーク":3,"ライトニングウルフ":3,"スパークレパード":4,"エレキドラゴン":5,"プラズマメイジ":4,"ボルトチェンジャー":3,"サンダーランページ":3,"サンダーロード":6,"ストームタイタン":7,"ボルトエンペラー":5,
+  "フォレストラビット":1,"グリーンナイト":3,"ウッドゴーレム":1,"グロウコア":2,"アーマードライノス":2,"フォレストビースト":3,"モスストーン":4,"フォレストエルフ":4,"フォレストスイーパー":3,"エンシェントツリー":3,"ジャングルタイラント":5,"ワイルドベア":4,"グリーンドラゴン":6,"ネイチャーロード":3,
+  "シャドウバット":2,"ダークスライム":1,"シャドウアサシン":4,"ダークナイト":3,"ナイトメアビースト":2,"アビスナイト":4,"ナイトリカー":4,"ダークサイフォナー":3,"カースドラゴン":4,"ヘルハウンド":6,"ナイトテラー":5,"ダークロード":7,"シャドウキング":4,"アビスウォール":2,
+  "ポイズンインプ":4,"トキシックスライム":2,"トキシックビースト":5,"プラーグハウンド":3,"ブライトレッチ":4,"ポイズンドレイン":3,"マッドサイエンティスト":3,"ヴェノムアルケミスト":0,"マイアズマウォーカー":5,"ヴェノムロード":4,"ベインブリンガー":4,"ポイズンナイト":6,"コラプトジャイアント":5,"トキシックドラゴン":0,
+  "ギアスカウト":1,"プロトタイプユニット":1,"メタルブルート":2,"ギアコンバーター":2,"スチールブレイバー":3,"スチールビースト":5,"オートマトンファクトリー":2,"メカニカルアーチャー":4,"ヘビィタンク":4,"ギアドレイク":5,"ギアタイタン":4,"フェルムマスター":4,"アイアンレイダー":4,"メガコンストラクト":0,
+  "ギアトークン":1,"ギギギアトークン":3,"シードトークン":1
+};
+function getBaseAtk(name){ return _baseAtkMap[name]??null; }
+
 function applyAttrColor(attr){
   const c=attrColors[attr]||attrColors.neutral;
   document.body.style.background=c.body;
@@ -1139,8 +1176,8 @@ function selectPlayer(num){
 function _renderGravePile(pileId, emptyId, graveData){
   const pile=document.getElementById(pileId);
   if(!pile) return;
-  // 既存のカード画像を削除（emptyDivは残す）
   [...pile.querySelectorAll("img.grave-top")].forEach(el=>el.remove());
+  [...pile.querySelectorAll(".grave-count")].forEach(el=>el.remove());
   const emptyDiv=document.getElementById(emptyId);
   if(!graveData||graveData.length===0){
     if(emptyDiv) emptyDiv.style.display="flex";
@@ -1155,6 +1192,12 @@ function _renderGravePile(pileId, emptyId, graveData){
   img.onmouseenter=()=>{ document.getElementById("preview").innerHTML=`<img src="images/${top.name}.png">`; };
   img.onmouseleave=()=>{ document.getElementById("preview").innerHTML=""; };
   pile.insertBefore(img, emptyDiv);
+  // ★枚数表示
+  const countDiv=document.createElement("div");
+  countDiv.className="grave-count";
+  countDiv.style.cssText="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:15px;font-weight:bold;text-shadow:0 0 6px #000,0 0 12px #000;pointer-events:none;z-index:10;";
+  countDiv.innerText=graveData.length;
+  pile.appendChild(countDiv);
 }
 
 function renderFieldSpell(elementId, fsData){
@@ -1306,13 +1349,122 @@ function playAttackAnim(attackerIdx, targetIdx, isDirect, enemyBoardLen){
   },200);
 }
 
+// ★ドローアニメーションキュー
+let _drawQueue=[];
+let _drawPlaying=false;
+
+function playDrawAnim(cardName){
+  return new Promise(resolve=>{
+    _drawQueue.push({cardName, resolve, onPhase1Done:null});
+    if(!_drawPlaying) _startDrawWhenReady();
+  });
+}
+
+// ★フェーズ1完了時にコールバックを呼ぶバージョン
+function playDrawAnimWithCallback(cardName, onPhase1Done){
+  return new Promise(resolve=>{
+    _drawQueue.push({cardName, resolve, onPhase1Done});
+    if(!_drawPlaying) _startDrawWhenReady();
+  });
+}
+
+function _startDrawWhenReady(){
+  const now=Date.now();
+  const wait=Math.max(0, _turnChangeFinishTime - now);
+  if(wait>0){
+    setTimeout(()=>_processDrawQueue(), wait);
+  } else {
+    _processDrawQueue();
+  }
+}
+
+function _processDrawQueue(){
+  if(_drawQueue.length===0){ _drawPlaying=false; return; }
+  _drawPlaying=true;
+  const {cardName, resolve, onPhase1Done}=_drawQueue.shift();
+
+  const back=document.getElementById("drawCardAnim");
+  const front=document.getElementById("drawCardAnimFront");
+  if(!back||!front){ resolve(); _processDrawQueue(); return; }
+
+  // デッキ画像の位置を取得
+  const deckImg=document.getElementById("myDeckImg");
+  const deckRect=deckImg ? deckImg.getBoundingClientRect() : {left:window.innerWidth-80, top:window.innerHeight/2, width:56, height:80};
+  const deckCx=deckRect.left+deckRect.width/2;
+  const deckCy=deckRect.top+deckRect.height/2;
+  const centerX=window.innerWidth/2;
+  const centerY=window.innerHeight/2;
+
+  const dur1=250; // デッキから下へ
+  const dur2=380; // 下から中央へ
+  const dur3=380; // 中央停止
+  const dur4=200; // フェードアウト
+
+  // フェーズ1：デッキから裏向きで下へ（効果音）
+  playSE(SE.draw);
+  back.src="images/card_back.png";
+  back.style.display="block";
+  back.style.transition="none";
+  back.style.left=deckCx+"px";
+  back.style.top=deckCy+"px";
+  back.style.transform="translate(-50%,-50%)";
+  back.style.opacity="1";
+  back.style.width="56px";
+  void back.offsetWidth;
+  back.style.transition=`top ${dur1}ms ease-in, opacity ${dur1*0.6}ms ${dur1*0.4}ms ease-in`;
+  back.style.top=(window.innerHeight+100)+"px";
+  back.style.opacity="0";
+
+  setTimeout(()=>{
+    back.style.display="none";
+    // ★フェーズ1完了：デッキ枚数を減らすコールバック
+    if(onPhase1Done) onPhase1Done();
+
+    // フェーズ2：画面下から表向きで中央へ
+    front.src=cardName?"images/"+cardName+".png":"images/card_back.png";
+    front.style.display="block";
+    front.style.transition="none";
+    front.style.left=centerX+"px";
+    front.style.top=(window.innerHeight+200)+"px";
+    front.style.transform="translate(-50%,-50%)";
+    front.style.opacity="0";
+    front.style.width="260px";
+    void front.offsetWidth;
+    front.style.transition=`top ${dur2}ms cubic-bezier(0.22,1,0.36,1), opacity ${dur2*0.3}ms ease-out`;
+    front.style.top=centerY+"px";
+    front.style.opacity="1";
+
+    setTimeout(()=>{
+      // フェーズ3：中央停止
+      setTimeout(()=>{
+        // フェーズ4：フェードアウト→resolveで手札追加
+        front.style.transition=`opacity ${dur4}ms ease-out`;
+        front.style.opacity="0";
+        setTimeout(()=>{
+          front.style.display="none";
+          resolve(); // ←ここでresolveすると手札が追加される
+          _processDrawQueue();
+        }, dur4+30);
+      }, dur3);
+    }, dur2+30);
+  }, dur1+30);
+}
+
+let _turnChangeFinishTime=0;
+const SE_TURNCHANGE=new Audio("sounds/turn_change.mp3");
+SE_TURNCHANGE.volume=1.0;
+
 function showTurnChangeAnim(){
   const overlay=document.getElementById("turnChangeOverlay");
   if(!overlay) return;
   overlay.classList.remove("turn-change-anim");
-  void overlay.offsetWidth; // reflow
+  void overlay.offsetWidth;
   overlay.classList.add("turn-change-anim");
+  _turnChangeFinishTime=Date.now()+1500;
   setTimeout(()=>overlay.classList.remove("turn-change-anim"),1500);
+  // ★TURN CHANGE効果音
+  SE_TURNCHANGE.currentTime=0;
+  SE_TURNCHANGE.play().catch(()=>{});
 }
 
 function surrender(){
@@ -1780,14 +1932,47 @@ socket.on("update",(g)=>{
 
   // ★音検知処理
   // ドロー検知：自分のデッキが減った＝自分がドローした
+  let drawAnimPromise=Promise.resolve();
+  let _didDrawAnim=false;
   if(prevMyDeckCount!==null && g.myDeckCount < prevMyDeckCount){
     const drawCount = prevMyDeckCount - g.myDeckCount;
-    for(let i=0;i<drawCount;i++) playSE(SE.draw);
+    const drawnCards=[];
+    for(let i=0;i<drawCount;i++){
+      drawnCards.push(g.myHand[g.myHand.length-drawCount+i]||null);
+    }
+    const handBeforeDraw=g.myHand.slice(0, g.myHand.length-drawCount);
+    // ★まずドロー前の手札を表示
+    _renderHand(handBeforeDraw, g);
+    _didDrawAnim=true;
+    // ★ドロー前のデッキ枚数を表示しておく（アニメーション前は減らさない）
+    let displayDeckCount=prevMyDeckCount;
+    document.getElementById("myDeck").innerText=displayDeckCount;
+    const myDeckImgEl=document.getElementById("myDeckImg");
+    if(myDeckImgEl) myDeckImgEl.style.opacity=displayDeckCount>0?"1":"0.2";
+
+    drawAnimPromise=(async()=>{
+      for(let i=0;i<drawCount;i++){
+        // playDrawAnimをコールバック付きで呼ぶ：フェーズ1完了時にデッキ枚数を減らす
+        await playDrawAnimWithCallback(drawnCards[i], ()=>{
+          // 裏向きカードが画面外に消えた直後にデッキ枚数を1減らす
+          displayDeckCount--;
+          document.getElementById("myDeck").innerText=displayDeckCount;
+          if(myDeckImgEl) myDeckImgEl.style.opacity=displayDeckCount>0?"1":"0.2";
+        });
+        handBeforeDraw.push(drawnCards[i]);
+        _renderHand(handBeforeDraw, g);
+      }
+    })();
   }
-  // 相手ドロー検知：相手デッキが減った
+  // 相手ドロー検知：相手デッキが減った（TURN CHANGE後に効果音）
   if(prevEnemyDeckCount!==null && g.enemyDeckCount < prevEnemyDeckCount){
     const drawCount = prevEnemyDeckCount - g.enemyDeckCount;
-    for(let i=0;i<drawCount;i++) playSE(SE.draw);
+    const waitEnemy=Math.max(0, _turnChangeFinishTime - Date.now());
+    setTimeout(()=>{
+      for(let i=0;i<drawCount;i++){
+        setTimeout(()=>playSE(SE.draw), i*100);
+      }
+    }, waitEnemy);
   }
   prevMyDeckCount=g.myDeckCount;
   prevEnemyDeckCount=g.enemyDeckCount;
@@ -1857,9 +2042,10 @@ socket.on("update",(g)=>{
   document.getElementById("enemyLife").innerText=g.enemyLife;
   document.getElementById("enemyEnergy").innerText=g.enemyEnergy+"/"+g.enemyMaxEnergy;
   document.getElementById("enemyDeck").innerText=g.enemyDeckCount;
-  // 相手デッキ画像の表示切替
   const enemyDeckImg=document.getElementById("enemyDeckImg");
   if(enemyDeckImg) enemyDeckImg.style.opacity=g.enemyDeckCount>0?"1":"0.2";
+  // ★自分のデッキ枚数はドローアニメーションがある場合は後で更新
+  // （ドローなしの場合は即時更新、ドローありは後述のdrawAnimPromise内で更新）
 
   allLogsData=g.allLogs||[];
   const logBox=document.getElementById("logBox");
@@ -1944,12 +2130,17 @@ div.onclick=()=>{
     };
 const stat=document.createElement("div");
     stat.className="stat";
-    let statText=`HP${c.hp} AT${c.atk}`;
-    if(c.disabled) statText+=" 🚫";
-    if(c.barrier)  statText+=" 💎";
-    if(c.denko && !c.attacked) statText+=" ⚡x2";
-    if(c.denko && c.attacked && !c.denkoAttackedThisTurn) statText+=" ⚡x1";
-    stat.innerText=statText;
+    const baseAtk=getBaseAtk(c.name);
+    let atkColor="#ffe066";
+    if(baseAtk!==null){
+      if(c.atk>baseAtk) atkColor="#66aaff";
+      else if(c.atk<baseAtk) atkColor="#ff6666";
+    }
+    stat.innerHTML=`HP${c.hp} <span style="color:${atkColor}">AT${c.atk}</span>`;
+    if(c.disabled) stat.innerHTML+=" 🚫";
+    if(c.barrier)  stat.innerHTML+=" 💎";
+    if(c.denko && !c.attacked) stat.innerHTML+=" ⚡x2";
+    if(c.denko && c.attacked && !c.denkoAttackedThisTurn) stat.innerHTML+=" ⚡x1";
     div.appendChild(img); div.appendChild(stat);
     ef.appendChild(div);
   });
@@ -2060,12 +2251,17 @@ div.onclick=()=>{
     };
 const stat=document.createElement("div");
     stat.className="stat";
-    let statText=`HP${c.hp} AT${c.atk}`;
-    if(c.disabled) statText+=" 🚫";
-    if(c.barrier)  statText+=" 🛡";
-    if(c.denko && !c.attacked) statText+=" ⚡x2";
-    if(c.denko && c.attacked && !c.denkoAttackedThisTurn) statText+=" ⚡x1";
-    stat.innerText=statText;
+    const baseAtkMy=getBaseAtk(c.name);
+    let atkColorMy="#ffe066";
+    if(baseAtkMy!==null){
+      if(c.atk>baseAtkMy) atkColorMy="#66aaff";
+      else if(c.atk<baseAtkMy) atkColorMy="#ff6666";
+    }
+    stat.innerHTML=`HP${c.hp} <span style="color:${atkColorMy}">AT${c.atk}</span>`;
+    if(c.disabled) stat.innerHTML+=" 🚫";
+    if(c.barrier)  stat.innerHTML+=" 🛡";
+    if(c.denko && !c.attacked) stat.innerHTML+=" ⚡x2";
+    if(c.denko && c.attacked && !c.denkoAttackedThisTurn) stat.innerHTML+=" ⚡x1";
     div.appendChild(img); div.appendChild(stat);
     myUnits.appendChild(div);
   });
@@ -2098,10 +2294,12 @@ const stat=document.createElement("div");
   // --- 自分情報 ---
   document.getElementById("myLife").innerText=g.myLife;
   document.getElementById("myEnergy").innerText=g.myEnergy+"/"+g.myMaxEnergy;
-  document.getElementById("myDeck").innerText=g.myDeckCount;
-  // 自分デッキ画像の表示切替
-  const myDeckImg=document.getElementById("myDeckImg");
-  if(myDeckImg) myDeckImg.style.opacity=g.myDeckCount>0?"1":"0.2";
+  // ★ドローアニメーションがない場合は即時更新（ドローありの場合はdrawAnimPromise内で更新）
+  if(!_didDrawAnim){
+    document.getElementById("myDeck").innerText=g.myDeckCount;
+    const myDeckImg=document.getElementById("myDeckImg");
+    if(myDeckImg) myDeckImg.style.opacity=g.myDeckCount>0?"1":"0.2";
+  }
   myGraveData=g.myGrave;
   enemyGraveData=g.enemyGrave;
   // 捨て場の最新カード表示
@@ -2120,13 +2318,28 @@ const stat=document.createElement("div");
   }
 
   // --- 手札 ---
+  if(!_didDrawAnim){
+    _renderHand(g.myHand, g);
+  }
+  // ★ドローなしの場合のみここでデッキ枚数を更新
+  if(!_didDrawAnim){
+    document.getElementById("myDeck").innerText=g.myDeckCount;
+    const myDeckImg=document.getElementById("myDeckImg");
+    if(myDeckImg) myDeckImg.style.opacity=g.myDeckCount>0?"1":"0.2";
+  }
+
+  void drawAnimPromise;
+
+});
+
+// ★手札描画関数（切り出し）
+function _renderHand(handCards, g){
   const hand=document.getElementById("handArea");
   hand.innerHTML="";
-  const handCount=g.myHand.length;
-  // 枚数が増えるほど重なりを増やして枠内に収める
+  const handCount=handCards.length;
   const maxAngle=Math.min(3*handCount, 24);
   const overlapPx=handCount<=4 ? 0 : Math.min((handCount-4)*12, 44);
-  g.myHand.forEach((card,hi)=>{
+  handCards.forEach((card,hi)=>{
     const div=document.createElement("div");
     div.className="card";
     const ratio = handCount<=1 ? 0 : (hi/(handCount-1))*2-1;
@@ -2180,8 +2393,8 @@ div.onclick=()=>{
     div.appendChild(img);
     hand.appendChild(div);
   });
+}
 
-});
 </script>
 </body>
 </html>

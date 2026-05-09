@@ -454,5 +454,355 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-05-09": {
+    "total": 48,
+    "hours": {
+      "0": 23,
+      "1": 8,
+      "23": 17
+    },
+    "pages": {
+      "index.html": 46,
+      "deck1.html": 2
+    },
+    "visitors": [
+      {
+        "time": "2026-05-09 14:21:32",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:21:35",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:28:10",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:28:18",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:28:21",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:30:24",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:30:28",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:32:26",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:32:28",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:36:48",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:38:58",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:39:02",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:39:23",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:40:31",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:40:32",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:41:28",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 14:41:29",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:00:44",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:00:45",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:02:18",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:02:19",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:04:07",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:04:08",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:05:35",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:05:40",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:19:15",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-05-09 15:19:16",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:26:10",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-05-09 15:26:12",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:32:07",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:32:09",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:35:50",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:38:51",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:38:52",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:49:59",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:50:00",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:58:07",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:58:09",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:58:29",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 15:58:31",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 16:09:03",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 16:09:05",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 16:09:27",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 16:09:28",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 16:13:35",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 16:13:37",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 16:16:50",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-09 16:16:52",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }
