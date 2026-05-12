@@ -368,6 +368,7 @@ function getOpponent(id){
 // ★カード属性を取得
 function getAttr(cardName){
   if(cardName==="ギアトークン") return "steel";
+　if(cardName==="ギギアトークン") return "steel";
   if(cardName==="ギギギアトークン") return "steel";
   if(cardName==="シードトークン") return "forest";
   return cards[cardName]?.attr || "neutral";
@@ -1795,6 +1796,10 @@ const op=getOpponent(socket.id);
           }else{
             addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が1枚以下のため不発`);
           }
+        }
+        if(atkCard && atkCard.attackEffect==="L_DMG1"){
+          damageLife(op,1);
+          addLog(socket.id,`「${atk.name}」攻撃時効果：相手ライフ-1`);
         }
         if(atkCard && atkCard.attackEffect==="ATTACK_HEAL_DMG"){
           game.life[socket.id]+=dmg;

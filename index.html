@@ -1120,7 +1120,7 @@ const _clientAttrMap={
   "シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark",
   "ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison",
   "ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel",
-  "ギアトークン":"steel","ギギギアトークン":"steel","シードトークン":"forest"
+  "ギアトークン":"steel","ギギアトークン":"steel","ギギギアトークン":"steel","シードトークン":"forest"
 };
 function getClientAttr(name){ return _clientAttrMap[name]||"neutral"; }
 
@@ -1133,7 +1133,7 @@ const _baseAtkMap={
   "シャドウバット":2,"ダークスライム":1,"シャドウアサシン":4,"ダークナイト":3,"ナイトメアビースト":2,"アビスナイト":4,"ナイトリカー":4,"ダークサイフォナー":3,"カースドラゴン":4,"ヘルハウンド":6,"ナイトテラー":5,"ダークロード":7,"シャドウキング":4,"アビスウォール":2,
   "ポイズンインプ":4,"トキシックスライム":2,"トキシックビースト":5,"プラーグハウンド":3,"ブライトレッチ":4,"ポイズンドレイン":3,"マッドサイエンティスト":3,"ヴェノムアルケミスト":0,"マイアズマウォーカー":5,"ヴェノムロード":4,"ベインブリンガー":4,"ポイズンナイト":6,"コラプトジャイアント":5,"トキシックドラゴン":0,
   "ギアスカウト":1,"プロトタイプユニット":1,"メタルブルート":2,"ギアコンバーター":2,"スチールブレイバー":3,"スチールビースト":5,"オートマトンファクトリー":2,"メカニカルアーチャー":4,"ヘビィタンク":4,"ギアドレイク":5,"ギアタイタン":4,"フェルムマスター":4,"アイアンレイダー":4,"メガコンストラクト":0,
-  "ギアトークン":1,"ギギギアトークン":3,"シードトークン":1
+  "ギアトークン":1, "ギギアトークン":2,"ギギギアトークン":3,"シードトークン":1
 };
 function getBaseAtk(name){ return _baseAtkMap[name]??null; }
 
@@ -2381,7 +2381,7 @@ const stat=document.createElement("div");
     img.onmouseenter=()=>{ document.getElementById("preview").innerHTML=`<img src="images/${c.name}.png">`; };
     img.onmouseleave=()=>{ document.getElementById("preview").innerHTML=""; };
     img.draggable=true;
-    img.ondragstart=()=>{ draggedUnitIndex=i; draggedUnitName=c.name; };
+    img.ondragstart=()=>{ draggedUnitIndex=originalIdx; draggedUnitName=c.name; };
 div.onclick=()=>{
       // ★対象選択モード中
       if(selectTargetMode && (selectTargetMode.type==="myUnit"||selectTargetMode.type==="anyUnit")){
