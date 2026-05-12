@@ -153,7 +153,8 @@ const cards = {
 "エンラージ":{cost:1,type:"spell",attr:"fire",effect:"A+2_H+1"},
 "炎の加護":{cost:1,type:"spell",attr:"fire",effect:"TURN_ALL_A+1_L_DMGX"},
 "フェニックスリバース":{cost:3,type:"spell",attr:"fire",effect:"REVIVE_TOP"},
-"灼熱地獄":{cost:2,type:"spell",attr:"fire",effect:"PERM_SPELL_FIRE_OVERFLOW",durability:5},
+"灼熱地獄":{cost:1,type:"spell",attr:"fire",effect:"PERM_SPELL_FIRE_OVERFLOW",durability:3
+},
 
 //💧水
 "ウォータードロップ":{cost:1,atk:1,hp:3,type:"unit",attr:"water"},
@@ -207,7 +208,7 @@ const cards = {
 "ボルトレイジ":{cost:2,type:"spell",attr:"thunder",effect:"TURN_ALL_A+2"},
 "プラズマバースト":{cost:2,type:"spell",attr:"thunder",effect:"DES_COST2_DRAW"},
 "サンダーボム":{cost:4,type:"spell",attr:"thunder",effect:"ALL_UNIT_DMG4"},
-"ハイボルテージゾーン":{cost:2,type:"spell",attr:"thunder",effect:"PERM_SPELL_THUNDER_NOREFLECT",durability:5},
+"ハイボルテージゾーン":{cost:1,type:"spell",attr:"thunder",effect:"PERM_SPELL_THUNDER_NOREFLECT",durability:3},
 
 //🌿森
 "フォレストラビット":{cost:1,atk:1,hp:2,type:"unit",attr:"forest",effect:"SUM_UNIT_A_PERM+1"},
@@ -234,7 +235,7 @@ const cards = {
 "大地の力":{cost:3,type:"spell",attr:"forest",effect:"ALL_A_H_PERM+2"},
 "シードスポーン":{cost:3,type:"spell",attr:"forest",effect:"SUM_H_C3X2"},
 "リーフストーム":{cost:3,type:"spell",attr:"forest",effect:"ALL_UNIT_DMG3_MY_A_H+1"},
-"世界樹の聖域":{cost:2,type:"spell",attr:"forest",effect:"PERM_SPELL_FOREST_BUFF",durability:5},
+"世界樹の聖域":{cost:3,type:"spell",attr:"forest",effect:"PERM_SPELL_FOREST_BUFF",durability:7},
 
 //🌑闇
 "シャドウバット":{cost:2,atk:2,hp:1,type:"unit",attr:"dark",effect:"SUM_R_HAN1_C2"},
@@ -261,7 +262,7 @@ const cards = {
 "ディスカード":{cost:1,type:"spell",attr:"dark",effect:"HAN1_DRAW1"},
 "カースシャドウ":{cost:1,type:"spell",attr:"dark",effect:"A_PERM-3"},
 "デスペレーション":{cost:3,type:"spell",attr:"dark",effect:"OPP_HAND_TO2"},
-"瘴気の迷宮":{cost:2,type:"spell",attr:"dark",effect:"PERM_SPELL_DARK_DEBUFF",durability:5},
+"瘴気の迷宮":{cost:2,type:"spell",attr:"dark",effect:"PERM_SPELL_DARK_DEBUFF",durability:4},
 
 //☠️毒
 "ポイズンインプ":{cost:1,atk:4,hp:2,type:"unit",attr:"poison",effect:"SUM_L_SELF-2"},
@@ -288,7 +289,7 @@ const cards = {
 "禁断の秘薬":{cost:3,type:"spell",attr:"poison",effect:"L_SELF_HALF_DRAW5"},
 "ヴェノムハーベスト":{cost:3,type:"spell",attr:"poison",effect:"UNIT_DES_COST_LHEAL"},
 "トキシックアポカリプス":{cost:4,type:"spell",attr:"poison",effect:"LIFE_5_ALL_DES"},
-"薬草の湿地":{cost:2,type:"spell",attr:"poison",effect:"PERM_SPELL_HERB_HEAL",durability:5},
+"薬草の湿地":{cost:3,type:"spell",attr:"poison",effect:"PERM_SPELL_HERB_HEAL",durability:7},
 
 //⚙️鉄
 "ギアスカウト":{cost:1,atk:1,hp:1,type:"unit",attr:"steel",effect:"SUM_TOKEN1"},
@@ -315,7 +316,7 @@ const cards = {
 "チェーンリアクション":{cost:3,type:"spell",attr:"steel",effect:"IRON_COUNT_ALL_DMG1"},
 "メガギアフュージョン":{cost:3,type:"spell",attr:"steel",effect:"FUSION_IRON2"},
 "オーバーロード":{cost:4,type:"spell",attr:"steel",effect:"OVERLOAD_A+3_END_DES_ALL"},
-"機甲要塞都市":{cost:2,type:"spell",attr:"steel",effect:"PERM_SPELL_IRON_FACTORY",durability:5},
+"機甲要塞都市":{cost:3,type:"spell",attr:"steel",effect:"PERM_SPELL_IRON_FACTORY",durability:7},
 
 //汎用
 "ダブルドロー":{cost:1,type:"spell",attr:"neutral",effect:"DRAW2"},
@@ -406,18 +407,20 @@ function discardAll(p){
 
 // ★ライフダメージ（相手プレイヤーへ）
 function damageLife(p, amount){
-  game.life[p]-=amount;
-  if(game.life[p]<=0) game.winner=getOpponent(p);
+  game.life[p]-=amount;
+  if(game.life[p]<=0) game.winner=getOpponent(p);
+  if(amount>0) sendDamagePop(p, amount, true, -1);
 }
 
 // ★場の全ユニットにダメージ（破壊チェック込み）
 function damageAllUnits(targetPlayer, amount, attackerPlayer){
-  const toDestroy=[];
-  game.board[targetPlayer].forEach((u,i)=>{
-    const dmg = u.damageReduce ? Math.min(1, amount) : amount;
-    u.hp -= dmg;
-    if(u.hp<=0) toDestroy.push(i);
-  });
+  const toDestroy=[];
+  game.board[targetPlayer].forEach((u,i)=>{
+    const dmg = u.damageReduce ? Math.min(1, amount) : amount;
+    u.hp -= dmg;
+    if(dmg>0) sendDamagePop(targetPlayer, dmg, false, i);
+    if(u.hp<=0) toDestroy.push(i);
+  });
   // 後ろから削除
 toDestroy.reverse().forEach(i=>{
     const dead=game.board[targetPlayer][i];
@@ -590,14 +593,14 @@ function triggerSummonEffect(unit, p, socket, io){
         if(_s1&&d) _s1.emit("message",`相手の手札「${d}」が捨て場に送られました`);
       }
       break;
-    case "SUM_R_HAN1_C2":
-      if(game.hands[op].length>=2){
+    case "SUM_R_HAN1_C3":
+      if(game.hands[op].length>=3){
         const d2=discardRandom(op);
         addLog(p,`「${unit.name}」召喚時効果：相手手札「${d2||"なし"}」をランダム破棄`);
         const _s1c2=io.sockets.sockets.get(p);
         if(_s1c2&&d2) _s1c2.emit("message",`相手の手札「${d2}」が捨て場に送られました`);
       }else{
-        addLog(p,`「${unit.name}」召喚時効果：相手の手札が1枚以下のため不発`);
+        addLog(p,`「${unit.name}」召喚時効果：相手の手札が3枚以下のため不発`);
       }
       break;
     case "SUM_OPP_E-1":
@@ -796,13 +799,13 @@ function processSpellEffect(cardName, p, socket){
     case "HAN1_DRAW1":
       { draw(p);
         addLog(p,`「${cardName}」で1枚ドロー`);
-        if(game.hands[op].length>=2){
+        if(game.hands[op].length>=3){
           const discarded=discardRandom(op);
           addLog(p,`「${cardName}」で相手手札「${discarded||"なし"}」を破棄`);
           const _s2=io.sockets.sockets.get(p);
           if(_s2&&discarded) _s2.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
         }else{
-          addLog(p,`「${cardName}」：相手の手札が1枚以下のためハンデス不発`);
+          addLog(p,`「${cardName}」：相手の手札が3枚以下のためハンデス不発`);
         }
       }
       return true;
@@ -871,13 +874,13 @@ function processSpellEffect(cardName, p, socket){
       game.maxEnergy[op]=Math.max(0,game.maxEnergy[op]-1);
       game.energy[op]=Math.min(game.energy[op],game.maxEnergy[op]);
       addLog(p,`「${cardName}」で相手エネルギー-1`);
-      if(game.hands[op].length>=2){
+      if(game.hands[op].length>=3){
         const discarded=discardRandom(op);
         addLog(p,`「${cardName}」で相手手札「${discarded||"なし"}」破棄`);
         const _s3=io.sockets.sockets.get(p);
         if(_s3&&discarded) _s3.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
       }else{
-        addLog(p,`「${cardName}」：相手の手札が1枚以下のためハンデス不発`);
+        addLog(p,`「${cardName}」：相手の手札が3枚以下のためハンデス不発`);
       }
       return true;
     case "L_SELF-2_ALL_DMG4":
@@ -1153,10 +1156,16 @@ function processSpellEffect(cardName, p, socket){
         game.board[p].forEach(u=>{u.atk+=1;u.hp+=1;});
         addLog(p,`「${cardName}」：場の全ユニットATK/HP+1`);
       }
-      // 機甲要塞都市：場のギアトークン全体ATK+1
+      // 機甲要塞都市：場のギアトークン全体ATK+1、発動時ギギアトークン召喚
       if(eff==="PERM_SPELL_IRON_FACTORY"){
         game.board[p].forEach(u=>{if(u.name==="ギアトークン"){u.atk+=1;}});
         addLog(p,`「${cardName}」：場のギアトークンATK+1`);
+        if(game.board[p].length<3){
+          const gigaToken={name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true};
+          game.board[p].push(gigaToken);
+          applyFieldSpellOnSummon(gigaToken, p);
+          addLog(p,`「${cardName}」：ギギアトークンを召喚`);
+        }
       }
       // 瘴気の迷宮：相手場の全ユニットATK-1
       if(eff==="PERM_SPELL_DARK_DEBUFF"){
@@ -1325,6 +1334,44 @@ function destroyFieldSpell(ownerPlayer){
   }
   addLog(ownerPlayer,`フィールドスペル「${fs.name}」が破壊されました`);
   delete game.fieldSpell[ownerPlayer];
+}
+
+// ★ダメージポップアップ送信
+function sendDamagePop(targetPlayerId, amount, isLife, unitIdx){
+  // ★重複排除：同じsocket.idに2回送らない
+  const sent=new Set();
+  [game.player1, game.player2].forEach(id=>{
+    if(!id) return;
+    if(sent.has(id)) return;
+    sent.add(id);
+    const s=io.sockets.sockets.get(id);
+    if(!s) return;
+    const isEnemy=(id!==targetPlayerId);
+    s.emit("damagePop",{amount, isLife, unitIdx, isEnemy});
+  });
+}
+
+// ★反撃ダメージポップアップ送信
+// 攻撃者の画面：自分のmyUnitsのattackerUnitIdx番目に表示
+// 防御者の画面：相手のenemyUnitsのattackerUnitIdx番目に表示
+function sendDamagePopAttacker(attackerPlayerId, amount, attackerUnitIdx){
+  // ★重複排除：同じsocket.idに2回送らない
+  const sent=new Set();
+  [game.player1, game.player2].forEach(id=>{
+    if(!id) return;
+    if(sent.has(id)) return;
+    sent.add(id);
+    const s=io.sockets.sockets.get(id);
+    if(!s) return;
+    const iAmAttacker=(id===attackerPlayerId);
+    s.emit("damagePop",{
+      amount,
+      isLife:false,
+      unitIdx:attackerUnitIdx,
+      isEnemy:!iAmAttacker,
+      isCounter:true
+    });
+  });
 }
 
 // ★効果演出送信
@@ -1570,6 +1617,7 @@ const op=getOpponent(socket.id);
         const fs=game.fieldSpell[op];
         const atkPowerFS=isDenkoSecond?Math.floor(atk.atk/2):atk.atk;
         fs.durability-=atkPowerFS;
+        if(atkPowerFS>0) sendDamagePop(op, atkPowerFS, false, -2); // -2=フィールドスペル
         addLog(socket.id,`「${atk.name}」がフィールドスペル「${fs.name}」に${atkPowerFS}ダメージ（残耐久${Math.max(0,fs.durability)}）`);
         if(fs.durability<=0){
           destroyFieldSpell(op);
@@ -1586,13 +1634,13 @@ const op=getOpponent(socket.id);
             addLog(socket.id,`「${atk.name}」攻撃時効果：相手ライフ-1`);
           }
           if(atkCard.attackEffect==="HAN1"){
-            if(game.hands[op].length>=2){
+            if(game.hands[op].length>=3){
               const discarded=discardRandom(op);
               addLog(socket.id,`「${atk.name}」攻撃時効果：相手手札「${discarded||"なし"}」をランダム破棄`);
               const _sh=io.sockets.sockets.get(socket.id);
               if(_sh&&discarded) _sh.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
             }else{
-              addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が1枚以下のため不発`);
+              addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が3枚以下のため不発`);
             }
           }
           if(atkCard.attackEffect==="ATTACK_HEAL_DMG"){
@@ -1658,6 +1706,10 @@ const op=getOpponent(socket.id);
         def.hp-=actualAtkDmg;
         atk.hp-=actualDefDmg;
 
+        // ★ダメージポップアップ（攻撃ダメージ：防御ユニット上）
+        if(actualAtkDmg>0) sendDamagePop(op, actualAtkDmg, false, data.t);
+        // ★反撃ダメージ：sendDamagePopAttackerのみで送信（重複なし）
+        if(actualDefDmg>0) sendDamagePopAttacker(socket.id, actualDefDmg, data.a);
         addLog(socket.id,`「${atk.name}」で「${def.name}」に攻撃（${actualAtkDmg}ダメージ、反撃${actualDefDmg}ダメージ）`);
         // ★被弾エフェクト：防御側プレイヤーに送信
         { const atkAttrForHit=getAttr(atk.name)||"neutral";
@@ -1725,10 +1777,9 @@ const op=getOpponent(socket.id);
 }else{
         const atkPower=isDenkoSecond?Math.floor(atk.atk/2):atk.atk;
         const dmg=atkPower;
-        game.life[op]-=dmg;
+        // ★damageLifeを使う（内部でsendDamagePopを1回だけ送信）
+        damageLife(op, dmg);
         addLog(socket.id,`「${atk.name}」でプレイヤーに直接攻撃（${dmg}ダメージ、相手ライフ${game.life[op]}）`);
-        if(game.life[op]<=0) game.winner=socket.id;
-        // ★直接攻撃：hitEffectに攻撃者情報を含める
         { const opSockD=io.sockets.sockets.get(op);
           if(opSockD) opSockD.emit("hitEffect",{targetIdx:-1, attr:getAttr(atk.name)||"neutral", attackerIdx:data.a, hasAttackAnim:true, isDirect:true});
         }
