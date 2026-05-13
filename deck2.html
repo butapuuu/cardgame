@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+
+<script>
+  if(/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)){
+    location.replace("deck1_sp.html");
+  }
+</script>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>デッキ構築 - Player 2</title>
@@ -648,7 +655,7 @@ const cardDataList=[
   {name:"禁断の秘薬",attr:"poison",type:"spell",cost:3},
   {name:"ヴェノムハーベスト",attr:"poison",type:"spell",cost:3},
   {name:"トキシックアポカリプス",attr:"poison",type:"spell",cost:4},
-  {name:"薬草の湿地",attr:"poison",type:"field",cost:3},
+  {name:"薬草の湿地",attr:"poison",type:"field",cost:2},
   // 鉄
   {name:"ギアスカウト",attr:"steel",type:"unit",cost:1},
   {name:"プロトタイプユニット",attr:"steel",type:"unit",cost:1},

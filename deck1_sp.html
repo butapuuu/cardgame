@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>デッキ構築 P1</title>
+<style>
+*{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+:root{
+  --bg:#0d1a0d; --bg2:#0e1c0e; --border:#2a4a2a;
+  --bright:#2a8a2a; --accent:#88ff88; --accent2:#ffe066; --dim:#4a8a4a;
+}
+html,body{ width:100%;height:100%;background:var(--bg);color:#ccc;font-family:'Segoe UI',sans-serif;overflow:hidden; }
+#root{ display:flex;flex-direction:column;width:100vw;height:100vh;overflow:hidden; }
+
+/* ヘッダー */
+#hdr{
+  background:linear-gradient(135deg,#0a180a,#162816);
+  border-bottom:1px solid var(--border);
+  padding:5px 8px;flex-shrink:0;
+  box-shadow:0 2px 10px rgba(0,0,0,0.5);
+  display:flex;flex-direction:column;gap:4px;
+}
+.hdr1{ display:flex;align-items:center;gap:5px; }
+.hdr1 h2{ font-size:12px;color:var(--accent);letter-spacing:2px;font-weight:bold;text-shadow:0 0 10px rgba(100,220,100,0.4);white-space:nowrap; }
+.spl{ color:#66aa66;font-size:10px;text-decoration:none;border:1px solid var(--border);border-radius:4px;padding:2px 6px;background:rgba(0,80,0,0.3);white-space:nowrap; }
+#dcbar{ display:flex;align-items:center;gap:6px;margin-left:auto; }
+.dc-l{ font-size:8px;color:var(--dim);letter-spacing:1px; }
+#cv{ font-size:18px;font-weight:bold;color:var(--accent);text-shadow:0 0 8px rgba(100,255,100,0.4);line-height:1; }
+.dc-m{ font-size:10px;color:#3a6a3a; }
+.ctrl{ display:flex;gap:3px;align-items:center; }
+.ctrl input[type=text]{ flex:1;min-width:70px;background:#0a140a;border:1px solid var(--border);border-radius:4px;color:#aaddaa;padding:3px 6px;font-size:10px; }
+.ctrl input::placeholder{ color:#3a5a3a; }
+.ctrl select{ background:#0a140a;border:1px solid var(--border);border-radius:4px;color:#aaddaa;padding:3px 5px;font-size:10px;max-width:82px; }
+.hb{ padding:4px 7px;border-radius:4px;font-size:10px;font-weight:bold;cursor:pointer;border:none;white-space:nowrap;flex-shrink:0; }
+.hbg{background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:var(--accent);border:1px solid var(--bright);}
+.hbb{background:linear-gradient(135deg,#0a1a2a,#1a2a4a);color:#88aaff;border:1px solid #2a4a8a;}
+.hbr{background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;border:1px solid #8a2222;}
+
+/* デッキグリッド（20枠全表示） */
+#dsec{ flex-shrink:0;background:linear-gradient(180deg,#0a140a,#0e180e);border-bottom:2px solid var(--border);padding:3px 5px; }
+#dgrid{ display:grid;grid-template-columns:repeat(10,1fr);gap:2px; }
+.dslot{ aspect-ratio:0.72;border-radius:3px;border:1px solid #1a3a1a;background:#0a100a;position:relative;overflow:hidden;cursor:pointer;transition:transform 0.1s; }
+.dslot:active{ transform:scale(0.94); }
+.dslot img{ width:100%;height:100%;object-fit:cover;display:block; }
+.dslot.empty{ background:rgba(255,255,255,0.015);border:1px dashed rgba(255,255,255,0.07);cursor:default; }
+.dslot .rmbg{ position:absolute;top:0;right:0;background:rgba(180,0,0,0.88);color:#fff;font-size:7px;font-weight:bold;width:12px;height:12px;display:none;align-items:center;justify-content:center;border-radius:0 2px 0 3px; }
+.dslot:not(.empty) .rmbg{ display:flex; }
+
+/* フィルター */
+#fsec{ flex-shrink:0;background:rgba(0,0,0,0.5);border-bottom:1px solid var(--border);padding:3px 5px;display:flex;flex-direction:column;gap:2px; }
+.fr{ display:flex;gap:2px;align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:1px; }
+.fr::-webkit-scrollbar{ display:none; }
+.fl{ font-size:8px;color:var(--dim);letter-spacing:1px;min-width:26px;flex-shrink:0; }
+#srch{ flex:1;min-width:50px;max-width:150px;background:#0a140a;border:1px solid var(--border);border-radius:4px;color:#aaddaa;padding:3px 5px;font-size:10px; }
+#srch::placeholder{ color:#3a5a3a; }
+.fb{ padding:2px 6px;border-radius:9px;font-size:9px;font-weight:bold;cursor:pointer;border:1px solid #2a3a2a;background:#0e180e;color:#555;white-space:nowrap;flex-shrink:0;transition:all 0.12s; }
+.fb.active{ background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:var(--accent);border-color:var(--bright); }
+.fb.active[data-attr=fire]{background:linear-gradient(135deg,#2a0a00,#4a1800);color:#ffaa66;border-color:#aa4400;}
+.fb.active[data-attr=water]{background:linear-gradient(135deg,#001a2a,#002a4a);color:#66aaff;border-color:#0044aa;}
+.fb.active[data-attr=thunder]{background:linear-gradient(135deg,#1a1a00,#2a2a00);color:#ffff44;border-color:#aaaa00;}
+.fb.active[data-attr=forest]{background:linear-gradient(135deg,#001a00,#002a00);color:#88ff44;border-color:#00aa00;}
+.fb.active[data-attr=dark]{background:linear-gradient(135deg,#0a001a,#18003a);color:#cc88ff;border-color:#6600cc;}
+.fb.active[data-attr=poison]{background:linear-gradient(135deg,#001a00,#003000);color:#aaff44;border-color:#44cc00;}
+.fb.active[data-attr=steel]{background:linear-gradient(135deg,#1a1a1a,#2a2a2a);color:#ccccdd;border-color:#7777aa;}
+.fb.active[data-attr=neutral]{background:linear-gradient(135deg,#1a1a0a,#2a2a1a);color:#ddddaa;border-color:#888844;}
+
+/* カードプール */
+#psec{ flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 5px;min-height:0; }
+#pool{ display:grid;grid-template-columns:repeat(5,1fr);gap:3px; }
+.pc{ position:relative;cursor:pointer;border-radius:3px;overflow:hidden;aspect-ratio:0.72;background:#0a100a;border:1px solid transparent;transition:transform 0.1s; }
+.pc:active{ transform:scale(0.93); }
+.pc img{ width:100%;height:100%;object-fit:cover;display:block; }
+.pc .pcb{ position:absolute;bottom:0;right:0;background:rgba(0,0,0,0.88);color:var(--accent2);font-size:8px;font-weight:bold;padding:1px 3px;border-radius:2px 0 0 0; }
+.pc.in1{ border-color:#44aa44; }
+.pc.in2{ border-color:var(--accent2); }
+.pc .limb{ position:absolute;top:0;left:0;background:rgba(200,0,0,0.88);color:#fff;font-size:6px;font-weight:bold;padding:1px 3px;border-radius:0 0 3px 0; }
+
+/* プレビューモーダル */
+#pmod{ display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:2000;justify-content:center;align-items:center;flex-direction:column;gap:8px; }
+#pmod.open{ display:flex; }
+#pmod img{ width:70%;max-width:260px;border-radius:10px;box-shadow:0 0 30px rgba(0,0,0,0.9); }
+#pmname{ font-size:13px;color:#88aa88;letter-spacing:1px;text-align:center; }
+#pminfo{ font-size:11px;color:#558855;text-align:center; }
+
+/* トースト */
+#toast{ display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(20,50,20,0.95);color:var(--accent);border:1px solid var(--bright);border-radius:8px;padding:7px 16px;font-size:11px;letter-spacing:0.5px;box-shadow:0 0 14px rgba(40,180,40,0.4);z-index:3000;white-space:nowrap;max-width:90vw;text-align:center; }
+</style>
+</head>
+<body>
+<div id="pmod" onclick="this.classList.remove('open')">
+  <img id="pmimg" src=""><div id="pmname"></div><div id="pminfo"></div>
+</div>
+<div id="toast"></div>
+<div id="root">
+  <!-- ヘッダー -->
+  <div id="hdr">
+    <div class="hdr1">
+      <h2>⚔ DECK BUILDER — P1</h2>
+      <a class="spl" href="index.html">← GAME</a>
+      <a class="spl" href="deck2.html">P2 →</a>
+      <div id="dcbar"><div class="dc-l">DECK</div><div><span id="cv">0</span><span class="dc-m"> / 20</span></div></div>
+    </div>
+    <div class="ctrl">
+      <input type="text" id="dname" placeholder="デッキ名..." maxlength="20">
+      <select id="dslot">
+        <option value="0">SLOT 1</option><option value="1">SLOT 2</option><option value="2">SLOT 3</option>
+        <option value="3">SLOT 4</option><option value="4">SLOT 5</option><option value="5">SLOT 6</option>
+        <option value="6">SLOT 7</option><option value="7">SLOT 8</option><option value="8">SLOT 9</option>
+        <option value="9">SLOT 10</option>
+      </select>
+      <button class="hb hbg" onclick="loadSlot()">📂</button>
+      <button class="hb hbg" onclick="save()">💾</button>
+      <button class="hb hbb" onclick="copyDeck()">⧉</button>
+      <button class="hb hbr" onclick="clearDeck()">🗑</button>
+    </div>
+  </div>
+  <!-- デッキ20枠 -->
+  <div id="dsec"><div id="dgrid"></div></div>
+  <!-- フィルター -->
+  <div id="fsec">
+    <div class="fr">
+      <span class="fl">SRCH</span>
+      <input type="text" id="srch" placeholder="カード名検索..." oninput="renderCards()">
+    </div>
+    <div class="fr">
+      <span class="fl">ATTR</span>
+      <button class="fb active" data-attr="all" onclick="sf('attr','all',this)">ALL</button>
+      <button class="fb" data-attr="fire" onclick="sf('attr','fire',this)">🔥火</button>
+      <button class="fb" data-attr="water" onclick="sf('attr','water',this)">💧水</button>
+      <button class="fb" data-attr="thunder" onclick="sf('attr','thunder',this)">⚡雷</button>
+      <button class="fb" data-attr="forest" onclick="sf('attr','forest',this)">🌿森</button>
+      <button class="fb" data-attr="dark" onclick="sf('attr','dark',this)">🌑闇</button>
+      <button class="fb" data-attr="poison" onclick="sf('attr','poison',this)">☠毒</button>
+      <button class="fb" data-attr="steel" onclick="sf('attr','steel',this)">⚙鉄</button>
+      <button class="fb" data-attr="neutral" onclick="sf('attr','neutral',this)">◈汎用</button>
+    </div>
+    <div class="fr">
+      <span class="fl">TYPE</span>
+      <button class="fb active" data-type="all" onclick="sf('type','all',this)">ALL</button>
+      <button class="fb" data-type="unit" onclick="sf('type','unit',this)">UNIT</button>
+      <button class="fb" data-type="spell" onclick="sf('type','spell',this)">SPELL</button>
+      <button class="fb" data-type="field" onclick="sf('type','field',this)">FIELD</button>
+      <span class="fl" style="margin-left:4px;">COST</span>
+      <button class="fb active" data-cost="all" onclick="sf('cost','all',this)">ALL</button>
+      <button class="fb" data-cost="1" onclick="sf('cost','1',this)">1</button>
+      <button class="fb" data-cost="2" onclick="sf('cost','2',this)">2</button>
+      <button class="fb" data-cost="3" onclick="sf('cost','3',this)">3</button>
+      <button class="fb" data-cost="4" onclick="sf('cost','4',this)">4</button>
+      <button class="fb" data-cost="5" onclick="sf('cost','5',this)">5</button>
+    </div>
+  </div>
+  <!-- カードプール -->
+  <div id="psec"><div id="pool"></div></div>
+</div>
+<script>
+const CDL=[
+  {name:"フレイムスパーク",attr:"fire",type:"unit",cost:1},{name:"ファイアウルフ",attr:"fire",type:"unit",cost:1},{name:"ブレイズリザード",attr:"fire",type:"unit",cost:1},{name:"マグマウルフ",attr:"fire",type:"unit",cost:2},{name:"フレイムナイト",attr:"fire",type:"unit",cost:2},{name:"アッシュソルジャー",attr:"fire",type:"unit",cost:2},{name:"フレイムレオン",attr:"fire",type:"unit",cost:2},{name:"ボルケーノタートル",attr:"fire",type:"unit",cost:3},{name:"インフェルノドラゴン",attr:"fire",type:"unit",cost:3},{name:"バーンアウト",attr:"fire",type:"unit",cost:3},{name:"フレイムパージャー",attr:"fire",type:"unit",cost:3},{name:"ブレイズフェニックス",attr:"fire",type:"unit",cost:4},{name:"フレイムエンペラー",attr:"fire",type:"unit",cost:4},{name:"メガフレアドラゴン",attr:"fire",type:"unit",cost:5},
+  {name:"フレイムバーン",attr:"fire",type:"spell",cost:1},{name:"ファイアボール",attr:"fire",type:"spell",cost:2},{name:"フレイムストーム",attr:"fire",type:"spell",cost:2},{name:"業火の裁き",attr:"fire",type:"spell",cost:4},{name:"バーニングソウル",attr:"fire",type:"spell",cost:2},{name:"スカーチングレイン",attr:"fire",type:"spell",cost:2},{name:"エンラージ",attr:"fire",type:"spell",cost:1},{name:"炎の加護",attr:"fire",type:"spell",cost:1},{name:"フェニックスリバース",attr:"fire",type:"spell",cost:3},{name:"灼熱地獄",attr:"fire",type:"field",cost:1},
+  {name:"ウォータードロップ",attr:"water",type:"unit",cost:1},{name:"アクアフィッシュ",attr:"water",type:"unit",cost:1},{name:"アイスウォリアー",attr:"water",type:"unit",cost:2},{name:"エナジーカラパス",attr:"water",type:"unit",cost:2},{name:"クリスタルシェル",attr:"water",type:"unit",cost:2},{name:"フロストビースト",attr:"water",type:"unit",cost:3},{name:"アイスガーディアン",attr:"water",type:"unit",cost:3},{name:"バーストパファー",attr:"water",type:"unit",cost:3},{name:"トレントサーペント",attr:"water",type:"unit",cost:3},{name:"アクアドラゴン",attr:"water",type:"unit",cost:4},{name:"オーシャンナイト",attr:"water",type:"unit",cost:4},{name:"テンペストシャーク",attr:"water",type:"unit",cost:4},{name:"タイダルリヴァイアサン",attr:"water",type:"unit",cost:5},{name:"フローズンキング",attr:"water",type:"unit",cost:4},
+  {name:"フリーズショット",attr:"water",type:"spell",cost:1},{name:"海の恵み",attr:"water",type:"spell",cost:1},{name:"アクアリターン",attr:"water",type:"spell",cost:1},{name:"激流",attr:"water",type:"spell",cost:2},{name:"アイシクルドレイン",attr:"water",type:"spell",cost:3},{name:"大津波",attr:"water",type:"spell",cost:4},{name:"ウォーターカーテン",attr:"water",type:"spell",cost:2},{name:"クリスタルバリア",attr:"water",type:"spell",cost:2},{name:"エナジーブースト",attr:"water",type:"spell",cost:3},{name:"深海の神殿",attr:"water",type:"field",cost:2},
+  {name:"サンダービート",attr:"thunder",type:"unit",cost:1},{name:"スパークマウス",attr:"thunder",type:"unit",cost:1},{name:"ライトニングラプター",attr:"thunder",type:"unit",cost:2},{name:"ボルトウォリアー",attr:"thunder",type:"unit",cost:4},{name:"ボルトホーク",attr:"thunder",type:"unit",cost:2},{name:"ライトニングウルフ",attr:"thunder",type:"unit",cost:2},{name:"スパークレパード",attr:"thunder",type:"unit",cost:2},{name:"エレキドラゴン",attr:"thunder",type:"unit",cost:3},{name:"プラズマメイジ",attr:"thunder",type:"unit",cost:3},{name:"ボルトチェンジャー",attr:"thunder",type:"unit",cost:3},{name:"サンダーランページ",attr:"thunder",type:"unit",cost:3},{name:"サンダーロード",attr:"thunder",type:"unit",cost:4},{name:"ストームタイタン",attr:"thunder",type:"unit",cost:5},{name:"ボルトエンペラー",attr:"thunder",type:"unit",cost:4},
+  {name:"スピードドロー",attr:"thunder",type:"spell",cost:1},{name:"エレキサーキット",attr:"thunder",type:"spell",cost:1},{name:"チェインライトニング",attr:"thunder",type:"spell",cost:2},{name:"サンダーストライク",attr:"thunder",type:"spell",cost:3},{name:"稲妻の速攻",attr:"thunder",type:"spell",cost:1},{name:"エナジーチャージ",attr:"thunder",type:"spell",cost:2},{name:"ボルトレイジ",attr:"thunder",type:"spell",cost:2},{name:"プラズマバースト",attr:"thunder",type:"spell",cost:2},{name:"サンダーボム",attr:"thunder",type:"spell",cost:4},{name:"ハイボルテージゾーン",attr:"thunder",type:"field",cost:1},
+  {name:"フォレストラビット",attr:"forest",type:"unit",cost:1},{name:"グリーンナイト",attr:"forest",type:"unit",cost:2},{name:"ウッドゴーレム",attr:"forest",type:"unit",cost:2},{name:"グロウコア",attr:"forest",type:"unit",cost:1},{name:"アーマードライノス",attr:"forest",type:"unit",cost:3},{name:"フォレストビースト",attr:"forest",type:"unit",cost:3},{name:"モスストーン",attr:"forest",type:"unit",cost:3},{name:"フォレストエルフ",attr:"forest",type:"unit",cost:3},{name:"フォレストスイーパー",attr:"forest",type:"unit",cost:3},{name:"エンシェントツリー",attr:"forest",type:"unit",cost:4},{name:"ジャングルタイラント",attr:"forest",type:"unit",cost:4},{name:"ワイルドベア",attr:"forest",type:"unit",cost:4},{name:"グリーンドラゴン",attr:"forest",type:"unit",cost:5},{name:"ネイチャーロード",attr:"forest",type:"unit",cost:3},
+  {name:"シードバースト",attr:"forest",type:"spell",cost:2},{name:"グロウス",attr:"forest",type:"spell",cost:2},{name:"リンカーネーション",attr:"forest",type:"spell",cost:2},{name:"森の恵み",attr:"forest",type:"spell",cost:1},{name:"ナチュラルアーマー",attr:"forest",type:"spell",cost:2},{name:"根の呪縛",attr:"forest",type:"spell",cost:2},{name:"大地の力",attr:"forest",type:"spell",cost:3},{name:"シードスポーン",attr:"forest",type:"spell",cost:3},{name:"リーフストーム",attr:"forest",type:"spell",cost:3},{name:"世界樹の聖域",attr:"forest",type:"field",cost:3},
+  {name:"シャドウバット",attr:"dark",type:"unit",cost:2},{name:"ダークスライム",attr:"dark",type:"unit",cost:1},{name:"シャドウアサシン",attr:"dark",type:"unit",cost:3},{name:"ダークナイト",attr:"dark",type:"unit",cost:2},{name:"ナイトメアビースト",attr:"dark",type:"unit",cost:1},{name:"アビスナイト",attr:"dark",type:"unit",cost:3},{name:"ナイトリカー",attr:"dark",type:"unit",cost:3},{name:"ダークサイフォナー",attr:"dark",type:"unit",cost:3},{name:"カースドラゴン",attr:"dark",type:"unit",cost:4},{name:"ヘルハウンド",attr:"dark",type:"unit",cost:4},{name:"ナイトテラー",attr:"dark",type:"unit",cost:4},{name:"ダークロード",attr:"dark",type:"unit",cost:5},{name:"シャドウキング",attr:"dark",type:"unit",cost:4},{name:"アビスウォール",attr:"dark",type:"unit",cost:2},
+  {name:"ダークブラスト",attr:"dark",type:"spell",cost:2},{name:"マインドコントロール",attr:"dark",type:"spell",cost:2},{name:"ソウルトレード",attr:"dark",type:"spell",cost:2},{name:"エナジーカース",attr:"dark",type:"spell",cost:2},{name:"リセット",attr:"dark",type:"spell",cost:4},{name:"ソウルドレイン",attr:"dark",type:"spell",cost:3},{name:"ディスカード",attr:"dark",type:"spell",cost:1},{name:"カースシャドウ",attr:"dark",type:"spell",cost:1},{name:"デスペレーション",attr:"dark",type:"spell",cost:3},{name:"瘴気の迷宮",attr:"dark",type:"field",cost:2},
+  {name:"ポイズンインプ",attr:"poison",type:"unit",cost:1},{name:"トキシックスライム",attr:"poison",type:"unit",cost:1},{name:"トキシックビースト",attr:"poison",type:"unit",cost:2},{name:"プラーグハウンド",attr:"poison",type:"unit",cost:2},{name:"ブライトレッチ",attr:"poison",type:"unit",cost:2},{name:"ポイズンドレイン",attr:"poison",type:"unit",cost:3},{name:"マッドサイエンティスト",attr:"poison",type:"unit",cost:3},{name:"ヴェノムアルケミスト",attr:"poison",type:"unit",cost:3},{name:"マイアズマウォーカー",attr:"poison",type:"unit",cost:3},{name:"ヴェノムロード",attr:"poison",type:"unit",cost:4},{name:"ベインブリンガー",attr:"poison",type:"unit",cost:4},{name:"ポイズンナイト",attr:"poison",type:"unit",cost:4},{name:"コラプトジャイアント",attr:"poison",type:"unit",cost:4},{name:"トキシックドラゴン",attr:"poison",type:"unit",cost:5},
+  {name:"インジェクション",attr:"poison",type:"spell",cost:1},{name:"サクリファイス",attr:"poison",type:"spell",cost:1},{name:"劇薬調合",attr:"poison",type:"spell",cost:1},{name:"ポイズンスパイク",attr:"poison",type:"spell",cost:3},{name:"解毒剤",attr:"poison",type:"spell",cost:2},{name:"ペインシェア",attr:"poison",type:"spell",cost:1},{name:"禁断の秘薬",attr:"poison",type:"spell",cost:3},{name:"ヴェノムハーベスト",attr:"poison",type:"spell",cost:3},{name:"トキシックアポカリプス",attr:"poison",type:"spell",cost:4},{name:"薬草の湿地",attr:"poison",type:"field",cost:2},
+  {name:"ギアスカウト",attr:"steel",type:"unit",cost:1},{name:"プロトタイプユニット",attr:"steel",type:"unit",cost:1},{name:"メタルブルート",attr:"steel",type:"unit",cost:2},{name:"ギアコンバーター",attr:"steel",type:"unit",cost:2},{name:"スチールブレイバー",attr:"steel",type:"unit",cost:2},{name:"スチールビースト",attr:"steel",type:"unit",cost:3},{name:"オートマトンファクトリー",attr:"steel",type:"unit",cost:3},{name:"メカニカルアーチャー",attr:"steel",type:"unit",cost:3},{name:"ヘビィタンク",attr:"steel",type:"unit",cost:3},{name:"ギアドレイク",attr:"steel",type:"unit",cost:4},{name:"ギアタイタン",attr:"steel",type:"unit",cost:4},{name:"フェルムマスター",attr:"steel",type:"unit",cost:4},{name:"アイアンレイダー",attr:"steel",type:"unit",cost:4},{name:"メガコンストラクト",attr:"steel",type:"unit",cost:5},
+  {name:"リサイクル",attr:"steel",type:"spell",cost:2},{name:"緊急生産",attr:"steel",type:"spell",cost:2},{name:"スクラップ&ビルド",attr:"steel",type:"spell",cost:2},{name:"自爆装置",attr:"steel",type:"spell",cost:2},{name:"装甲強化",attr:"steel",type:"spell",cost:2},{name:"ギアリペア",attr:"steel",type:"spell",cost:2},{name:"チェーンリアクション",attr:"steel",type:"spell",cost:3},{name:"メガギアフュージョン",attr:"steel",type:"spell",cost:3},{name:"オーバーロード",attr:"steel",type:"spell",cost:4},{name:"機甲要塞都市",attr:"steel",type:"field",cost:3},
+  {name:"ダブルドロー",attr:"neutral",type:"spell",cost:1},{name:"浄化の光",attr:"neutral",type:"spell",cost:2},{name:"リバース",attr:"neutral",type:"spell",cost:3},{name:"崩壊",attr:"neutral",type:"spell",cost:1},
+];
+const LIMITED=["マインドコントロール"];
+const SK="decks_p1", LK="deck1";
+let deck=[], filters={attr:"all",type:"all",cost:"all"};
+function hira(s){return s.replace(/[ァ-ン]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));}
+function sf(k,v,btn){
+  filters[k]=v;
+  document.querySelectorAll(`.fb[data-${k}]`).forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active"); renderCards();
+}
+function lp(el,name,cd){
+  let t=null;
+  el.addEventListener("touchstart",()=>{t=setTimeout(()=>{
+    document.getElementById("pmimg").src="images/"+name+".png";
+    document.getElementById("pmname").innerText=name;
+    const d=cd||CDL.find(x=>x.name===name);
+    document.getElementById("pminfo").innerText=d?(d.type==="unit"?"[ユニット] コスト"+d.cost+" ATK"+(d.atk||"?")+" HP"+(d.hp||"?"):"["+d.type.toUpperCase()+"] コスト"+d.cost):"";
+    document.getElementById("pmod").classList.add("open");
+  },450);});
+  el.addEventListener("touchend",()=>clearTimeout(t));
+  el.addEventListener("touchmove",()=>clearTimeout(t));
+}
+function renderDeck(){
+  const g=document.getElementById("dgrid"); g.innerHTML="";
+  for(let i=0;i<20;i++){
+    const s=document.createElement("div");
+    if(i<deck.length){
+      s.className="dslot";
+      const img=document.createElement("img"); img.src="images/"+deck[i]+".png"; img.loading="lazy";
+      const rm=document.createElement("div"); rm.className="rmbg"; rm.innerText="✕";
+      s.appendChild(img); s.appendChild(rm);
+      const idx=i;
+      s.ontouchend=(e)=>{e.preventDefault();deck.splice(idx,1);renderDeck();renderCards();};
+      lp(s,deck[i]);
+    }else{ s.className="dslot empty"; }
+    g.appendChild(s);
+  }
+  const cv=document.getElementById("cv");
+  cv.innerText=deck.length;
+  cv.style.color=deck.length===20?"#88ff88":deck.length>0?"#ffe066":"#4a8a4a";
+}
+function renderCards(){
+  const p=document.getElementById("pool"); p.innerHTML="";
+  const kw=document.getElementById("srch").value;
+  CDL.filter(cd=>{
+    if(filters.attr!=="all"&&cd.attr!==filters.attr)return false;
+    if(filters.type!=="all"&&cd.type!==filters.type)return false;
+    if(filters.cost!=="all"&&cd.cost!==parseInt(filters.cost))return false;
+    if(kw&&!hira(cd.name).includes(hira(kw)))return false;
+    return true;
+  }).forEach(cd=>{
+    const n=deck.filter(x=>x===cd.name).length;
+    const d=document.createElement("div");
+    d.className="pc"+(n===1?" in1":n>=2?" in2":"");
+    const img=document.createElement("img"); img.src="images/"+cd.name+".png"; img.loading="lazy"; img.onerror=()=>{img.style.display="none";};
+    if(n>0){const b=document.createElement("div");b.className="pcb";b.innerText="×"+n;d.appendChild(b);}
+    if(LIMITED.includes(cd.name)){const l=document.createElement("div");l.className="limb";l.innerText="制限";d.appendChild(l);}
+    d.appendChild(img);
+    d.ontouchend=(e)=>{
+      e.preventDefault();
+      if(deck.length>=20){showToast("デッキは20枚まで");return;}
+      const cnt=deck.filter(x=>x===cd.name).length;
+      if(LIMITED.includes(cd.name)&&cnt>=1){showToast("「"+cd.name+"」は制限カードのため1枚まで");return;}
+      if(cnt>=2){showToast("同名カードは2枚まで");return;}
+      deck.push(cd.name); renderDeck(); renderCards();
+    };
+    lp(d,cd.name,cd); p.appendChild(d);
+  });
+}
+function save(){
+  if(deck.length!==20){showToast("20枚必要です（現在"+deck.length+"枚）");return;}
+  const attrs=new Set(); deck.forEach(n=>{const c=CDL.find(x=>x.name===n);if(c&&c.attr!=="neutral")attrs.add(c.attr);});
+  if(attrs.size>1){showToast("属性は1種類のみです");return;}
+  const slot=parseInt(document.getElementById("dslot").value);
+  const name=document.getElementById("dname").value.trim()||("DECK "+(slot+1));
+  const all=JSON.parse(localStorage.getItem(SK)||"[]");
+  while(all.length<=slot)all.push(null);
+  all[slot]={name,cards:[...deck]};
+  localStorage.setItem(SK,JSON.stringify(all)); localStorage.setItem(LK,JSON.stringify(deck));
+  showToast("SLOT "+(slot+1)+"「"+name+"」を保存しました");
+}
+function loadSlot(){
+  const slot=parseInt(document.getElementById("dslot").value);
+  const all=JSON.parse(localStorage.getItem(SK)||"[]");
+  if(!all[slot]){showToast("SLOT "+(slot+1)+"にデータがありません");return;}
+  const d=all[slot]; deck=[...d.cards]; document.getElementById("dname").value=d.name||"";
+  renderDeck(); renderCards(); showToast("「"+d.name+"」を読み込みました");
+}
+function clearDeck(){
+  if(!confirm("デッキをクリアしますか？"))return; deck=[]; renderDeck(); renderCards();
+}
+function copyDeck(){
+  if(deck.length===0){showToast("デッキが空です");return;}
+  const all=JSON.parse(localStorage.getItem(SK)||"[]");
+  const opts=[];
+  for(let i=0;i<10;i++)opts.push("SLOT "+(i+1)+(all[i]?" ["+(all[i].name||"名称未設定")+"]":"(空)"));
+  const ch=prompt("コピー先スロット（1〜10）:\n"+opts.map((o,i)=>(i+1)+": "+o).join("\n"));
+  if(!ch)return; const dest=parseInt(ch)-1;
+  if(isNaN(dest)||dest<0||dest>9){showToast("無効なスロット番号");return;}
+  const sn=document.getElementById("dname").value.trim()||"DECK";
+  while(all.length<=dest)all.push(null);
+  all[dest]={name:sn+"_COPY",cards:[...deck]};
+  localStorage.setItem(SK,JSON.stringify(all)); showToast("SLOT "+(dest+1)+"にコピーしました");
+}
+function showToast(msg){const t=document.getElementById("toast");t.innerText=msg;t.style.display="block";clearTimeout(t._t);t._t=setTimeout(()=>t.style.display="none",2500);}
+// 初期化
+try{const s=localStorage.getItem(LK);if(s)deck=JSON.parse(s);}catch(e){}
+renderDeck(); renderCards();
+</script>
+</body>
+</html>
