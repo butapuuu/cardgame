@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta charset="utf-8">
+<title>Elemon SP</title>
+<style>
+*{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+
+:root{
+  --field-bg:rgba(0,80,0,0.35);
+  --field-border:#2d6a2d;
+  --enemy-field-bg:rgba(80,0,0,0.25);
+  --enemy-field-border:#6a2d2d;
+}
+
+html,body{
+  width:100%; height:100%;
+  overflow:hidden;
+  background:#1a2a1a;
+  color:#eee;
+  font-family:sans-serif;
+  transition:background 0.8s;
+}
+
+/* ===== メインレイアウト：縦方向に全画面 ===== */
+#gameRoot{
+  display:flex;
+  flex-direction:column;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+  position:relative;
+}
+
+/* ===== ヘッダー ===== */
+#spHeader{
+  background:rgba(0,0,0,0.6);
+  border-bottom:1px solid #333;
+  padding:4px 8px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+  flex-shrink:0;
+  min-height:36px;
+}
+#spHeader button{
+  background:linear-gradient(135deg,#1a2a1a,#2a3a2a);
+  color:#aaddaa;
+  border:1px solid #3a6a3a;
+  border-radius:5px;
+  padding:4px 10px;
+  font-size:11px;
+  font-weight:bold;
+  cursor:pointer;
+  white-space:nowrap;
+}
+#spHeader select{
+  background:#0e1a0e;
+  color:#aaddaa;
+  border:1px solid #3a6a3a;
+  border-radius:5px;
+  padding:3px 6px;
+  font-size:11px;
+  max-width:100px;
+}
+#spTurnLabel{
+  font-size:12px;
+  font-weight:bold;
+  color:#ffe066;
+  margin-left:auto;
+}
+#spWinner{
+  font-size:12px;
+  font-weight:bold;
+  color:#ff6666;
+}
+
+/* ===== プレイマット（縦スクロールなし） ===== */
+#spMat{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  padding:2px 4px;
+  gap:2px;
+}
+
+/* ===== 相手情報バー ===== */
+.sp-info-bar{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:2px 4px;
+  background:rgba(0,0,0,0.4);
+  border-radius:6px;
+  flex-shrink:0;
+}
+.sp-life-badge{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  background:radial-gradient(circle at 40% 35%,#5a1a1a,#1a0808);
+  border:2px solid #cc4444;
+  border-radius:50%;
+  width:44px;height:44px;
+  justify-content:center;
+  box-shadow:0 0 8px rgba(200,50,50,0.4);
+}
+.sp-life-badge .lv{ font-size:16px;font-weight:bold;color:#ffaaaa;line-height:1; }
+.sp-life-badge .ll{ font-size:7px;color:#cc6666;letter-spacing:1px; }
+.sp-energy-badge{
+  background:linear-gradient(135deg,#0a1a2a,#0d2a3a);
+  border:1px solid #2266aa;
+  border-radius:6px;
+  padding:2px 8px;
+  text-align:center;
+  box-shadow:0 0 6px rgba(40,120,200,0.3);
+}
+.sp-energy-badge .el{ font-size:7px;color:#4488cc;letter-spacing:1px; }
+.sp-energy-badge .ev{ font-size:12px;font-weight:bold;color:#88ccff; }
+
+/* デッキ・捨て場（小） */
+.sp-deck-grave{
+  display:flex;
+  gap:4px;
+  align-items:center;
+}
+.sp-deck-pile{
+  position:relative;
+  width:32px;
+}
+.sp-deck-pile img{
+  width:32px;border-radius:3px;
+  box-shadow:1px 1px 0 #222,2px 2px 0 #111,3px 3px 0 #080808,0 4px 8px rgba(0,0,0,0.7);
+}
+.sp-deck-pile .sp-deck-count{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  color:#fff;font-size:10px;font-weight:bold;
+  text-shadow:0 0 4px #000,0 0 8px #000;
+  pointer-events:none;z-index:10;
+}
+.sp-grave-pile{
+  position:relative;
+  width:32px;
+  cursor:pointer;
+}
+.sp-grave-pile img{
+  width:32px;border-radius:3px;
+  box-shadow:0 1px 4px #000;
+}
+.sp-grave-pile .sp-grave-empty{
+  width:32px;height:46px;
+  border:1px solid rgba(180,140,80,0.4);
+  border-radius:3px;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(180,140,80,0.4);
+  font-size:6px;letter-spacing:1px;font-weight:bold;
+}
+.sp-grave-pile .sp-grave-count{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  color:#fff;font-size:10px;font-weight:bold;
+  text-shadow:0 0 4px #000;pointer-events:none;z-index:10;
+}
+
+/* ===== 相手手札エリア ===== */
+#spEnemyHand{
+  display:flex;
+  gap:2px;
+  justify-content:center;
+  flex-shrink:0;
+  padding:1px 0;
+  min-height:28px;
+}
+#spEnemyHand img{
+  width:22px;border-radius:2px;
+  box-shadow:0 1px 3px #000;
+}
+
+/* ===== フィールド共通 ===== */
+.sp-field{
+  flex:1;
+  background:var(--field-bg);
+  border:2px solid var(--field-border);
+  border-radius:8px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 70px;
+  min-height:0;
+  position:relative;
+  transition:background 0.8s,border-color 0.8s;
+}
+.sp-field.enemy-field{
+  background:var(--enemy-field-bg);
+  border-color:var(--enemy-field-border);
+}
+.sp-unit-slots{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex:0 0 auto;
+}
+.sp-unit-slot-empty{
+  width:56px;height:82px;
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:5px;
+  background:rgba(255,255,255,0.02);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.sp-unit-slot-empty::before{
+  content:"UNIT";
+  font-size:7px;color:rgba(255,255,255,0.15);
+  letter-spacing:2px;font-weight:bold;pointer-events:none;
+}
+/* FSスロット：絶対配置で両フィールド共通 */
+.sp-fs-slot{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:60px;
+  height:82px;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,215,0,0.4);
+  border-radius:5px;
+  background:rgba(255,215,0,0.03);
+}
+.sp-fs-slot::before{
+  content:"FIELD";
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  font-size:7px;color:rgba(255,215,0,0.25);
+  letter-spacing:2px;pointer-events:none;font-weight:bold;
+}
+.sp-fs-slot:not(:empty)::before{ display:none; }
+/* 自分フィールドのFSは左端 */
+#spMyField>.sp-fs-slot{ left:6px; }
+/* 相手フィールドのFSは右端 */
+#spEnemyField>.sp-fs-slot{ right:6px; }
+
+/* ===== カード ===== */
+.sp-card{
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  position:relative;
+  flex-shrink:0;
+  transition:transform 0.15s;
+}
+.sp-card:active{ transform:scale(0.95); }
+.sp-card img{ width:56px;border-radius:4px;box-shadow:0 2px 5px #000; }
+.sp-card .sp-stat{
+  font-size:9px;color:#ffe066;
+  margin-top:1px;
+  background:rgba(0,0,0,0.7);
+  border-radius:2px;padding:1px 3px;
+  white-space:nowrap;
+}
+.sp-card.selected img{ outline:3px solid #ff4444;border-radius:4px; }
+
+/* ===== 直接攻撃ゾーン ===== */
+#spDirectZone{
+  background:linear-gradient(135deg,rgba(80,0,0,0.25),rgba(120,0,0,0.15));
+  border:1px solid rgba(180,60,60,0.4);
+  border-radius:5px;
+  height:28px;
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(220,100,100,0.7);
+  font-size:9px;font-weight:bold;letter-spacing:2px;
+  cursor:pointer;
+  flex-shrink:0;
+  transition:all 0.2s;
+}
+#spDirectZone.active{
+  background:linear-gradient(135deg,rgba(160,20,20,0.4),rgba(100,0,0,0.3));
+  border-color:rgba(255,80,80,0.7);
+  color:rgba(255,150,150,0.95);
+}
+
+/* ===== 自分情報バー ===== */
+#spMyInfoBar{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:2px 4px;
+  background:rgba(0,0,0,0.4);
+  border-radius:6px;
+  flex-shrink:0;
+}
+
+/* ===== 手札エリア ===== */
+#spHandArea{
+  flex-shrink:0;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  min-height:90px;
+  padding:0 8px 4px;
+  position:relative;
+  overflow:visible;
+}
+
+/* ===== ボタンエリア ===== */
+#spBtnArea{
+  display:flex;
+  gap:6px;
+  padding:4px 6px;
+  flex-shrink:0;
+}
+#spEndTurnBtn{
+  flex:1;
+  background:linear-gradient(135deg,#0d2a0d,#1a4a1a);
+  color:#88ff88;
+  border:1px solid #2a8a2a;
+  border-radius:7px;
+  padding:8px;
+  font-size:12px;font-weight:bold;letter-spacing:1px;
+  cursor:pointer;
+  box-shadow:0 0 8px rgba(40,180,40,0.3);
+}
+#spSurrenderBtn{
+  flex:1;
+  background:linear-gradient(135deg,#2a0808,#4a1212);
+  color:#ff8888;
+  border:1px solid #8a2222;
+  border-radius:7px;
+  padding:8px;
+  font-size:12px;font-weight:bold;letter-spacing:1px;
+  cursor:pointer;
+}
+
+/* ===== モーダル共通 ===== */
+.sp-modal{
+  display:none;
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.8);
+  z-index:1000;
+  justify-content:center;align-items:center;
+}
+.sp-modal.open{ display:flex; }
+.sp-modal-inner{
+  background:#1e1e2e;
+  border:1px solid #555;
+  border-radius:10px;
+  padding:16px;
+  width:90%;max-width:400px;
+  max-height:80vh;
+  overflow-y:auto;
+}
+.sp-modal-inner h3{ color:#ffe066;margin-bottom:10px;font-size:14px; }
+.sp-modal-close{
+  margin-top:10px;
+  background:#444;color:#eee;
+  border:1px solid #666;border-radius:6px;
+  padding:6px 18px;cursor:pointer;font-size:12px;
+  width:100%;
+}
+
+/* ===== カードプレビューモーダル ===== */
+#spPreviewModal .sp-modal-inner{
+  background:transparent;border:none;
+  display:flex;align-items:center;justify-content:center;
+}
+#spPreviewModal img{ width:220px;border-radius:10px;box-shadow:0 0 20px #000; }
+
+/* ===== ターン交代 ===== */
+#spTurnChangeOverlay{
+  position:fixed;top:0;left:-100%;
+  width:100%;height:100%;
+  z-index:3000;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+#spTurnChangeOverlay img{
+  width:85%;max-width:340px;
+  filter:drop-shadow(0 0 20px rgba(255,200,50,0.8));
+}
+.sp-turn-change-anim{
+  animation:spTurnChangeSlide 1.4s cubic-bezier(0.22,1,0.36,1) forwards !important;
+}
+@keyframes spTurnChangeSlide{
+  0%{left:-100%;opacity:0;}
+  15%{left:0%;opacity:1;}
+  75%{left:0%;opacity:1;}
+  100%{left:100%;opacity:0;}
+}
+
+/* ===== ドローアニメーション ===== */
+#spDrawCardAnim{
+  position:fixed;pointer-events:none;z-index:2500;
+  display:none;border-radius:7px;
+  box-shadow:0 0 16px rgba(255,220,100,0.8);width:52px;
+}
+#spDrawCardAnimFront{
+  position:fixed;pointer-events:none;z-index:2500;
+  display:none;border-radius:7px;
+  box-shadow:0 0 24px rgba(255,220,100,0.9);width:180px;
+}
+
+/* ===== ダメージポップ ===== */
+@keyframes spDamagePopAnim{
+  0%{transform:translate(-50%,-150%) scale(0.5);opacity:0;}
+  15%{transform:translate(-50%,-180%) scale(1.3);opacity:1;}
+  40%{transform:translate(-50%,-200%) scale(1.0);opacity:1;}
+  100%{transform:translate(-50%,-280%) scale(0.8);opacity:0;}
+}
+.sp-damage-pop{
+  position:fixed;pointer-events:none;z-index:1800;
+  font-family:Georgia,serif;font-weight:bold;
+  text-shadow:0 0 8px rgba(0,0,0,0.9);
+  animation:spDamagePopAnim 1.2s ease-out forwards;
+  white-space:nowrap;
+}
+.sp-damage-pop.dmg-unit{font-size:22px;color:#ff4444;}
+.sp-damage-pop.dmg-life{font-size:28px;color:#ff2222;text-shadow:0 0 10px rgba(255,0,0,0.8);}
+.sp-damage-pop.dmg-enemy{color:#ffaa00;}
+
+/* ===== エフェクトポップ ===== */
+@keyframes spPopIn{
+  0%{transform:translate(-50%,-50%) scale(0.3);opacity:0;}
+  60%{transform:translate(-50%,-50%) scale(1.1);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:1;}
+}
+
+/* ===== 画面シェイク ===== */
+@keyframes spScreenShake{
+  0%{transform:translate(0,0);}
+  15%{transform:translate(-5px,-3px);}
+  30%{transform:translate(5px,3px);}
+  45%{transform:translate(-4px,2px);}
+  60%{transform:translate(4px,-2px);}
+  75%{transform:translate(-2px,1px);}
+  100%{transform:translate(0,0);}
+}
+.sp-shaking{animation:spScreenShake 0.4s ease-in-out;}
+
+/* ===== 勝敗オーバーレイ ===== */
+#spResultOverlay{
+  display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.75);z-index:2000;
+  justify-content:center;align-items:center;cursor:pointer;
+}
+#spResultOverlay img{max-width:80%;max-height:60%;}
+
+/* ===== セレクトターゲット通知 ===== */
+#spTargetNotice{
+  position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(0,0,0,0.9);color:#ffe066;
+  padding:12px 20px;border-radius:8px;font-size:13px;
+  z-index:500;border:2px solid #ffe066;text-align:center;
+  pointer-events:none;display:none;
+  max-width:90vw;
+}
+</style>
+</head>
+<body>
+
+<!-- ドローアニメーション -->
+<img id="spDrawCardAnim" src="images/card_back.png">
+<img id="spDrawCardAnimFront" src="images/card_back.png">
+
+<!-- ターン交代 -->
+<div id="spTurnChangeOverlay">
+  <img src="images/TURN CHANGE.png" alt="TURN CHANGE">
+</div>
+
+<!-- 勝敗オーバーレイ -->
+<div id="spResultOverlay" onclick="spCloseResult()">
+  <img id="spResultImg" src="">
+</div>
+
+<!-- セレクトターゲット通知 -->
+<div id="spTargetNotice"></div>
+
+<!-- カードプレビューモーダル -->
+<div class="sp-modal" id="spPreviewModal" onclick="this.classList.remove('open')">
+  <div class="sp-modal-inner">
+    <img id="spPreviewImg" src="">
+  </div>
+</div>
+
+<!-- 捨て場モーダル -->
+<div class="sp-modal" id="spGraveModal">
+  <div class="sp-modal-inner">
+    <h3 id="spGraveModalTitle">🪦 捨て場</h3>
+    <div id="spGraveModalCards" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    <button class="sp-modal-close" onclick="document.getElementById('spGraveModal').classList.remove('open')">閉じる</button>
+  </div>
+</div>
+
+<!-- ログモーダル -->
+<div class="sp-modal" id="spLogModal">
+  <div class="sp-modal-inner">
+    <h3>📜 ゲームログ</h3>
+    <div id="spLogModalContent" style="font-size:12px;color:#ccc;line-height:1.7;"></div>
+    <button class="sp-modal-close" onclick="document.getElementById('spLogModal').classList.remove('open')">閉じる</button>
+  </div>
+</div>
+
+<!-- 全体レイアウト -->
+<div id="gameRoot">
+
+  <!-- ヘッダー -->
+  <div id="spHeader">
+    <button onclick="spSelectPlayer(1)">P1参加</button>
+    <select id="spDeckSelectP1"><option value="-1">デッキ</option></select>
+    <button onclick="spSelectPlayer(2)">P2参加</button>
+    <select id="spDeckSelectP2"><option value="-1">デッキ</option></select>
+    <button onclick="spReset()" style="background:linear-gradient(135deg,#2a1a00,#4a3000);color:#ffcc66;border-color:#aa6600;">▶START</button>
+    <button onclick="window.open('deck1.html','_blank')" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border-color:#2a4a6a;">P1 DECK</button>
+    <button onclick="window.open('deck2.html','_blank')" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border-color:#2a4a6a;">P2 DECK</button>
+    <span id="spTurnLabel"></span>
+    <span id="spWinner"></span>
+  </div>
+
+  <!-- プレイマット -->
+  <div id="spMat">
+
+    <!-- 相手情報バー：左=デッキ・捨て場、右=ライフ・エネルギー・LOG -->
+    <div class="sp-info-bar" id="spEnemyInfoBar">
+      <div class="sp-deck-grave">
+        <!-- 相手捨て場（左） -->
+        <div class="sp-grave-pile" onclick="spShowGrave('enemy')" id="spEnemyGravePile">
+          <div class="sp-grave-empty" id="spEnemyGraveEmpty">GRV</div>
+        </div>
+        <!-- 相手デッキ -->
+        <div class="sp-deck-pile">
+          <img src="images/card_back.png" id="spEnemyDeckImg">
+          <div class="sp-deck-count" id="spEnemyDeck">-</div>
+        </div>
+      </div>
+      <!-- ログボタン -->
+      <button onclick="spOpenLog()" style="background:rgba(0,0,0,0.5);color:#aaa;border:1px solid #444;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;">LOG</button>
+      <!-- 右寄せ：ライフ・エネルギー -->
+      <div style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+        <div class="sp-energy-badge">
+          <div class="el">ENERGY</div>
+          <div class="ev" id="spEnemyEnergy">-/-</div>
+        </div>
+        <div class="sp-life-badge">
+          <span class="lv" id="spEnemyLife">-</span>
+          <span class="ll">LIFE</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 相手手札（裏向き） -->
+    <div id="spEnemyHand"></div>
+
+    <!-- 直接攻撃ゾーン（相手の場より上・PC版と同じ位置関係） -->
+    <div id="spDirectZone" onclick="spDirectAttack()">⚔ DIRECT ATTACK</div>
+
+    <!-- 相手フィールド：ユニットをFSスロットに近づけるためjustify-content:flex-end -->
+    <div class="sp-field enemy-field" id="spEnemyField">
+      <div class="sp-unit-slots" id="spEnemyUnits">
+        <div class="sp-unit-slot-empty"></div>
+        <div class="sp-unit-slot-empty"></div>
+        <div class="sp-unit-slot-empty"></div>
+      </div>
+      <div class="sp-fs-slot" id="spEnemyFieldSpell"></div>
+    </div>
+
+    <!-- 自分フィールド -->
+    <div class="sp-field" id="spMyField">
+      <div class="sp-fs-slot" id="spMyFieldSpell"></div>
+      <div class="sp-unit-slots" id="spMyUnits">
+        <div class="sp-unit-slot-empty"></div>
+        <div class="sp-unit-slot-empty"></div>
+        <div class="sp-unit-slot-empty"></div>
+      </div>
+    </div>
+
+    <!-- 自分情報バー：左=ライフ・エネルギー、右=デッキ・捨て場 -->
+    <div class="sp-info-bar" id="spMyInfoBar">
+      <div class="sp-life-badge">
+        <span class="lv" id="spMyLife">-</span>
+        <span class="ll">LIFE</span>
+      </div>
+      <div class="sp-energy-badge">
+        <div class="el">ENERGY</div>
+        <div class="ev" id="spMyEnergy">-/-</div>
+      </div>
+      <!-- 右寄せ：デッキ・捨て場 -->
+      <div style="margin-left:auto;display:flex;align-items:center;">
+        <div class="sp-deck-grave">
+          <!-- 自分デッキ -->
+          <div class="sp-deck-pile">
+            <img src="images/card_back.png" id="spMyDeckImg">
+            <div class="sp-deck-count" id="spMyDeck">-</div>
+          </div>
+          <!-- 自分捨て場（右端） -->
+          <div class="sp-grave-pile" onclick="spShowGrave('my')" id="spMyGravePile">
+            <div class="sp-grave-empty" id="spMyGraveEmpty">GRV</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 手札 -->
+    <div id="spHandArea"></div>
+
+    <!-- ボタン -->
+    <div id="spBtnArea">
+      <button id="spEndTurnBtn" onclick="spEndTurn()">TURN END</button>
+      <button id="spSurrenderBtn" onclick="spSurrender()">SURRENDER</button>
+    </div>
+
+  </div><!-- /spMat -->
+</div><!-- /gameRoot -->
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket=io();
+
+// ===== BGM・SE =====
+const BGM_SP=new Audio("sounds/BGM.mp3");
+BGM_SP.volume=0.12;
+const BGM_WIN_SP=new Audio("sounds/勝利.mp3"); BGM_WIN_SP.volume=0.8;
+const BGM_LOSE_SP=new Audio("sounds/敗北.mp3"); BGM_LOSE_SP.volume=0.8;
+let spBgmStarted=false,spResultShown=false;
+let spBgmCtx=null,spBgmSrc=null,spBgmBuf=null;
+
+async function spStartBGM(){
+  if(spBgmStarted)return; spBgmStarted=true;
+  try{
+    spBgmCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const res=await fetch("sounds/BGM.mp3");
+    const ab=await res.arrayBuffer();
+    spBgmBuf=await spBgmCtx.decodeAudioData(ab);
+    spBgmSrc=spBgmCtx.createBufferSource();
+    spBgmSrc.buffer=spBgmBuf; spBgmSrc.loop=true;
+    const g=spBgmCtx.createGain(); g.gain.value=0.12;
+    spBgmSrc.connect(g); g.connect(spBgmCtx.destination);
+    spBgmSrc.start(0);
+  }catch(e){ BGM_SP.loop=true; BGM_SP.play().catch(()=>{}); }
+}
+function spStopBGM(){
+  if(spBgmSrc){try{spBgmSrc.stop();}catch(e){} spBgmSrc=null;}
+  if(spBgmCtx){try{spBgmCtx.close();}catch(e){} spBgmCtx=null;}
+  spBgmBuf=null; BGM_SP.pause(); BGM_SP.currentTime=0; spBgmStarted=false;
+}
+
+const SP_SE={
+  spell:new Audio("sounds/spell.mp3"),
+  effect:new Audio("sounds/effect.mp3"),
+  draw:new Audio("sounds/draw.mp3"),
+  summon:new Audio("sounds/summon.mp3"),
+  atk:{
+    fire:new Audio("sounds/attack_fire.mp3"),water:new Audio("sounds/attack_water.mp3"),
+    thunder:new Audio("sounds/attack_thunder.mp3"),forest:new Audio("sounds/attack_forest.mp3"),
+    dark:new Audio("sounds/attack_dark.mp3"),poison:new Audio("sounds/attack_poison.mp3"),
+    steel:new Audio("sounds/attack_steel.mp3"),neutral:new Audio("sounds/attack_fire.mp3")
+  }
+};
+Object.values(SP_SE).forEach(v=>{if(v instanceof Audio)v.volume=1.0;});
+Object.values(SP_SE.atk).forEach(v=>{v.volume=1.0;});
+SP_SE.draw.volume=0.9;
+const SE_TC_SP=new Audio("sounds/turn_change.mp3"); SE_TC_SP.volume=1.0;
+function spPlaySE(se){if(!se)return;se.currentTime=0;se.play().catch(()=>{});}
+
+// ===== 状態 =====
+let spSelectedUnitIndex=null, spSelectedUnitName=null;
+let spSelectTargetMode=null;
+let spLatestState={};
+let spMyGraveData=[], spEnemyGraveData=[], spAllLogs=[];
+let spPrevMyDeckCount=null, spPrevEnemyDeckCount=null;
+let spPrevMyBoardCount=null, spPrevEnemyBoardCount=null;
+let spPrevAllLogsLen=0;
+let spPendingAttackerIndex=null;
+let spHitActiveMy=false, spHitActiveEnemy=false;
+let spHitMyTimer=null, spHitEnemyTimer=null;
+let _spTurnChangeFinishTime=0;
+let _spPrevTurn=null;
+let _spLastDisplayedLogs=[];
+
+// ===== 属性カラーマップ =====
+const SP_ATTR_COLORS={
+  fire:{body:"#2a1010",fieldBg:"rgba(180,40,0,0.25)",fieldBorder:"#8a3a2a",enemyBg:"rgba(120,0,0,0.25)",enemyBorder:"#6a2020"},
+  water:{body:"#0e1a2a",fieldBg:"rgba(0,60,150,0.25)",fieldBorder:"#2a4a8a",enemyBg:"rgba(0,30,100,0.25)",enemyBorder:"#1a3060"},
+  thunder:{body:"#1a1a10",fieldBg:"rgba(150,130,0,0.25)",fieldBorder:"#7a7020",enemyBg:"rgba(100,80,0,0.25)",enemyBorder:"#605010"},
+  forest:{body:"#0e1e0e",fieldBg:"rgba(0,100,0,0.30)",fieldBorder:"#2a6a2a",enemyBg:"rgba(0,60,0,0.25)",enemyBorder:"#1a4a1a"},
+  dark:{body:"#12091a",fieldBg:"rgba(60,0,100,0.28)",fieldBorder:"#4a2a7a",enemyBg:"rgba(40,0,70,0.25)",enemyBorder:"#301a5a"},
+  poison:{body:"#071a00",fieldBg:"rgba(150,255,50,0.25)",fieldBorder:"#aaff33",enemyBg:"rgba(100,220,20,0.25)",enemyBorder:"#88dd22"},
+  steel:{body:"#18181e",fieldBg:"rgba(130,130,150,0.30)",fieldBorder:"#707088",enemyBg:"rgba(90,90,110,0.28)",enemyBorder:"#505068"},
+  neutral:{body:"#1a2a1a",fieldBg:"rgba(0,80,0,0.35)",fieldBorder:"#2d6a2d",enemyBg:"rgba(80,0,0,0.25)",enemyBorder:"#6a2d2d"}
+};
+const _spClientAttrMap={
+  "フレイムスパーク":"fire","ファイアウルフ":"fire","ブレイズリザード":"fire","マグマウルフ":"fire","フレイムナイト":"fire","アッシュソルジャー":"fire","フレイムレオン":"fire","ボルケーノタートル":"fire","インフェルノドラゴン":"fire","バーンアウト":"fire","フレイムパージャー":"fire","ブレイズフェニックス":"fire","フレイムエンペラー":"fire","メガフレアドラゴン":"fire",
+  "ウォータードロップ":"water","アクアフィッシュ":"water","アイスウォリアー":"water","エナジーカラパス":"water","クリスタルシェル":"water","フロストビースト":"water","アイスガーディアン":"water","バーストパファー":"water","トレントサーペント":"water","アクアドラゴン":"water","オーシャンナイト":"water","テンペストシャーク":"water","タイダルリヴァイアサン":"water","フローズンキング":"water",
+  "サンダービート":"thunder","スパークマウス":"thunder","ライトニングラプター":"thunder","ボルトウォリアー":"thunder","ボルトホーク":"thunder","ライトニングウルフ":"thunder","スパークレパード":"thunder","エレキドラゴン":"thunder","プラズマメイジ":"thunder","ボルトチェンジャー":"thunder","サンダーランページ":"thunder","サンダーロード":"thunder","ストームタイタン":"thunder","ボルトエンペラー":"thunder",
+  "フォレストラビット":"forest","グリーンナイト":"forest","ウッドゴーレム":"forest","グロウコア":"forest","アーマードライノス":"forest","フォレストビースト":"forest","モスストーン":"forest","フォレストエルフ":"forest","フォレストスイーパー":"forest","エンシェントツリー":"forest","ジャングルタイラント":"forest","ワイルドベア":"forest","グリーンドラゴン":"forest","ネイチャーロード":"forest",
+  "シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark",
+  "ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison",
+  "ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel",
+  "ギアトークン":"steel","ギギアトークン":"steel","ギギギアトークン":"steel","シードトークン":"forest"
+};
+function spGetClientAttr(name){return _spClientAttrMap[name]||"neutral";}
+
+const _spBaseAtkMap={
+  "フレイムスパーク":2,"ファイアウルフ":3,"ブレイズリザード":2,"マグマウルフ":3,"フレイムナイト":3,"アッシュソルジャー":3,"フレイムレオン":4,"ボルケーノタートル":3,"インフェルノドラゴン":5,"バーンアウト":5,"フレイムパージャー":4,"ブレイズフェニックス":4,"フレイムエンペラー":5,"メガフレアドラゴン":8,
+  "ウォータードロップ":1,"アクアフィッシュ":2,"アイスウォリアー":3,"エナジーカラパス":2,"クリスタルシェル":1,"フロストビースト":4,"アイスガーディアン":3,"バーストパファー":2,"トレントサーペント":2,"アクアドラゴン":4,"オーシャンナイト":5,"テンペストシャーク":6,"タイダルリヴァイアサン":5,"フローズンキング":3,
+  "サンダービート":2,"スパークマウス":1,"ライトニングラプター":3,"ボルトウォリアー":6,"ボルトホーク":3,"ライトニングウルフ":3,"スパークレパード":4,"エレキドラゴン":5,"プラズマメイジ":4,"ボルトチェンジャー":3,"サンダーランページ":3,"サンダーロード":6,"ストームタイタン":7,"ボルトエンペラー":5,
+  "フォレストラビット":1,"グリーンナイト":3,"ウッドゴーレム":1,"グロウコア":2,"アーマードライノス":2,"フォレストビースト":3,"モスストーン":4,"フォレストエルフ":4,"フォレストスイーパー":3,"エンシェントツリー":3,"ジャングルタイラント":5,"ワイルドベア":4,"グリーンドラゴン":6,"ネイチャーロード":3,
+  "シャドウバット":2,"ダークスライム":1,"シャドウアサシン":4,"ダークナイト":3,"ナイトメアビースト":2,"アビスナイト":4,"ナイトリカー":4,"ダークサイフォナー":3,"カースドラゴン":4,"ヘルハウンド":6,"ナイトテラー":5,"ダークロード":7,"シャドウキング":4,"アビスウォール":2,
+  "ポイズンインプ":4,"トキシックスライム":2,"トキシックビースト":5,"プラーグハウンド":3,"ブライトレッチ":4,"ポイズンドレイン":3,"マッドサイエンティスト":3,"ヴェノムアルケミスト":0,"マイアズマウォーカー":5,"ヴェノムロード":4,"ベインブリンガー":4,"ポイズンナイト":6,"コラプトジャイアント":5,"トキシックドラゴン":0,
+  "ギアスカウト":1,"プロトタイプユニット":1,"メタルブルート":2,"ギアコンバーター":2,"スチールブレイバー":3,"スチールビースト":5,"オートマトンファクトリー":2,"メカニカルアーチャー":4,"ヘビィタンク":4,"ギアドレイク":5,"ギアタイタン":4,"フェルムマスター":4,"アイアンレイダー":4,"メガコンストラクト":0,
+  "ギアトークン":1,"ギギアトークン":2,"ギギギアトークン":3,"シードトークン":1
+};
+function spGetBaseAtk(name){return _spBaseAtkMap[name]??null;}
+
+// ===== 属性カラー適用 =====
+function spApplyAttrColor(attr){
+  const c=SP_ATTR_COLORS[attr]||SP_ATTR_COLORS.neutral;
+  document.body.style.background=c.body;
+  const r=document.documentElement;
+  r.style.setProperty("--field-bg",c.fieldBg);
+  r.style.setProperty("--field-border",c.fieldBorder);
+  r.style.setProperty("--enemy-field-bg",c.enemyBg);
+  r.style.setProperty("--enemy-field-border",c.enemyBorder);
+}
+
+// ===== デッキ検出 =====
+function spDetectDeckAttr(deck){
+  if(!deck||deck.length===0)return"neutral";
+  const counts={};
+  deck.forEach(name=>{const a=_spClientAttrMap[name];if(a)counts[a]=(counts[a]||0)+1;});
+  let maxA="neutral",maxN=0;
+  Object.entries(counts).forEach(([a,n])=>{if(n>maxN){maxN=n;maxA=a;}});
+  return maxA;
+}
+
+// ===== デッキ選択 =====
+function spLoadDeckOptions(){
+  [1,2].forEach(pn=>{
+    const sel=document.getElementById("spDeckSelectP"+pn);
+    if(!sel)return;
+    const all=JSON.parse(localStorage.getItem("decks_p"+pn)||"[]");
+    sel.innerHTML="<option value='-1'>デッキ</option>";
+    all.forEach((d,i)=>{
+      if(!d)return;
+      const opt=document.createElement("option");
+      opt.value=i; opt.innerText="["+(i+1)+"]"+(d.name||"");
+      sel.appendChild(opt);
+    });
+  });
+}
+spLoadDeckOptions();
+
+function spSelectPlayer(num){
+  const sel=document.getElementById("spDeckSelectP"+num);
+  const slotIdx=parseInt(sel.value,10);
+  let deck;
+  if(slotIdx>=0){
+    const all=JSON.parse(localStorage.getItem("decks_p"+num)||"[]");
+    deck=(all[slotIdx]&&all[slotIdx].cards)||[];
+  }else{
+    deck=JSON.parse(localStorage.getItem("deck"+num)||"[]");
+  }
+  if(!deck||deck.length===0){alert("デッキを選択してください");return;}
+  socket.emit("join",{player:num,deck});
+  spApplyAttrColor(spDetectDeckAttr(deck));
+  spStartBGM();
+}
+
+// ===== ゲーム操作 =====
+function spReset(){
+  socket.emit("action",{type:"reset"});
+  _spLastDisplayedLogs=[];spPrevAllLogsLen=0;spAllLogs=[];
+  spResultShown=false; spStopBGM(); spStartBGM();
+}
+function spEndTurn(){spClearSelection();socket.emit("action",{type:"end_turn"});}
+function spSurrender(){if(!confirm("本当に降参しますか？"))return;socket.emit("action",{type:"surrender"});}
+
+function spClearSelection(){
+  spSelectedUnitIndex=null;spSelectedUnitName=null;
+  document.querySelectorAll("#spMyUnits .sp-card").forEach(el=>el.classList.remove("selected"));
+}
+
+function spDirectAttack(){
+  if(spSelectedUnitIndex===null)return;
+  if(!confirm(spSelectedUnitName+" でプレイヤーに直接攻撃？"))return;
+  const atkIdx=spSelectedUnitIndex;
+  spClearSelection();
+  spPlayAttackAnim(atkIdx, null, true);
+  setTimeout(()=>socket.emit("action",{type:"attack",a:atkIdx}), 200);
+}
+
+// ===== 攻撃アニメーション（PC版と同等） =====
+function spPlayAttackAnim(attackerIdx, targetIdx, isDirect){
+  const myContainer=document.getElementById("spMyUnits");
+  if(!myContainer)return;
+  const myCards=myContainer.querySelectorAll(".sp-card");
+  const myBoardLen=spLatestState?.myBoard?.length||0;
+  const displayAtkIdx=myBoardLen>0 ? myBoardLen-1-attackerIdx : attackerIdx;
+  const card=myCards[displayAtkIdx];
+  if(!card)return;
+
+  let dx=0, dy=-100;
+  if(isDirect){
+    dx=0; dy=-180;
+  } else if(targetIdx!==null && targetIdx!==undefined){
+    const atkRect=card.getBoundingClientRect();
+    const enContainer=document.getElementById("spEnemyUnits");
+    if(enContainer){
+      const enCards=enContainer.querySelectorAll(".sp-card");
+      const tgtCard=enCards[targetIdx];
+      if(tgtCard){
+        const tgtRect=tgtCard.getBoundingClientRect();
+        dx=((tgtRect.left+tgtRect.width/2)-(atkRect.left+atkRect.width/2))*0.7;
+        dy=((tgtRect.top+tgtRect.height/2)-(atkRect.top+atkRect.height/2))*0.7;
+      }
+    }
+  }
+
+  card.style.transition="none";
+  card.style.transform="translate(0,0)";
+  void card.offsetWidth;
+  card.style.transition="transform 0.18s ease-out";
+  card.style.transform=`translate(${dx}px,${dy}px)`;
+  setTimeout(()=>{
+    card.style.transition="transform 0.16s ease-in";
+    card.style.transform="translate(0,0)";
+    setTimeout(()=>{ card.style.transition=""; card.style.transform=""; },180);
+  },200);
+}
+
+// ===== 捨て場 =====
+function spShowGrave(side){
+  const data=side==="my"?spMyGraveData:spEnemyGraveData;
+  const title=side==="my"?"🪦 自分の捨て場":"🪦 相手の捨て場";
+  document.getElementById("spGraveModalTitle").innerText=title;
+  const container=document.getElementById("spGraveModalCards");
+  container.innerHTML="";
+  if(!data||data.length===0){container.innerHTML="<div style='color:#888;font-size:12px'>まだカードがありません</div>";return;}
+  data.forEach(c=>{
+    const img=document.createElement("img");
+    img.src="images/"+c.name+".png";
+    img.style.cssText="width:56px;border-radius:4px;box-shadow:0 2px 5px #000;cursor:pointer;";
+    img.onclick=()=>{
+      document.getElementById("spPreviewImg").src="images/"+c.name+".png";
+      document.getElementById("spPreviewModal").classList.add("open");
+    };
+    container.appendChild(img);
+  });
+  document.getElementById("spGraveModal").classList.add("open");
+}
+
+// ===== ログ =====
+function spOpenLog(){
+  document.getElementById("spLogModalContent").innerHTML=
+    spAllLogs.length===0?"まだログがありません":
+    spAllLogs.map(l=>`<div style="border-bottom:1px solid #333;padding:2px 0">${l}</div>`).join("");
+  document.getElementById("spLogModal").classList.add("open");
+}
+
+// ===== 結果 =====
+function spShowResult(isWinner){
+  if(spResultShown)return; spResultShown=true;
+  spStopBGM();
+  document.getElementById("spResultImg").src=isWinner?"images/YouWin.png":"images/YouLose.png";
+  document.getElementById("spResultOverlay").style.display="flex";
+  if(isWinner){BGM_WIN_SP.currentTime=0;BGM_WIN_SP.play().catch(()=>{});}
+  else{BGM_LOSE_SP.currentTime=0;BGM_LOSE_SP.play().catch(()=>{});}
+}
+function spCloseResult(){
+  document.getElementById("spResultOverlay").style.display="none";
+  BGM_WIN_SP.pause();BGM_WIN_SP.currentTime=0;
+  BGM_LOSE_SP.pause();BGM_LOSE_SP.currentTime=0;
+}
+
+// ===== 捨て場パイル描画 =====
+function spRenderGravePile(pileId,emptyId,graveData){
+  const pile=document.getElementById(pileId); if(!pile)return;
+  [...pile.querySelectorAll("img.sp-grave-top")].forEach(el=>el.remove());
+  [...pile.querySelectorAll(".sp-grave-count")].forEach(el=>el.remove());
+  const emptyDiv=document.getElementById(emptyId);
+  if(!graveData||graveData.length===0){if(emptyDiv)emptyDiv.style.display="flex";return;}
+  if(emptyDiv)emptyDiv.style.display="none";
+  const top=graveData[graveData.length-1];
+  const img=document.createElement("img");
+  img.src="images/"+top.name+".png";
+  img.className="sp-grave-top";
+  img.style.cssText="width:32px;border-radius:3px;box-shadow:0 1px 4px #000;display:block;";
+  img.onclick=()=>{
+    document.getElementById("spPreviewImg").src="images/"+top.name+".png";
+    document.getElementById("spPreviewModal").classList.add("open");
+  };
+  pile.insertBefore(img,emptyDiv);
+  const countDiv=document.createElement("div");
+  countDiv.className="sp-grave-count";
+  countDiv.style.cssText="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:10px;font-weight:bold;text-shadow:0 0 4px #000;pointer-events:none;z-index:10;";
+  countDiv.innerText=graveData.length;
+  pile.appendChild(countDiv);
+}
+
+// ===== フィールドスペル描画 =====
+function spRenderFieldSpell(elementId,fsData){
+  const el=document.getElementById(elementId); if(!el)return;
+  if(!fsData||!fsData.name){setTimeout(()=>{const e=document.getElementById(elementId);if(e)e.innerHTML="";},400);return;}
+  el.innerHTML="";
+  const div=document.createElement("div"); div.className="sp-card";
+  const img=document.createElement("img");
+  img.src="images/"+fsData.name+".png";
+  img.style.cssText="width:52px;border-radius:4px;box-shadow:0 2px 5px #000;";
+  img.onerror=()=>{img.style.display="none";};
+  img.onclick=()=>{
+    document.getElementById("spPreviewImg").src="images/"+fsData.name+".png";
+    document.getElementById("spPreviewModal").classList.add("open");
+  };
+  const dur=document.createElement("div"); dur.className="sp-stat";
+  dur.textContent="耐久:"+fsData.durability;
+  div.appendChild(img); div.appendChild(dur);
+  // 相手フィールドスペルへの攻撃
+  if(elementId==="spEnemyFieldSpell"){
+    div.onclick=()=>{
+      if(spSelectedUnitIndex===null){
+        img.onclick(); // プレビュー表示
+        return;
+      }
+      const atkIdx=spSelectedUnitIndex;
+      const atkName=spLatestState?.myBoard?.[atkIdx]?.name||"ユニット";
+      if(!confirm("「"+atkName+"」で「"+fsData.name+"」に攻撃しますか？"))return;
+      // FSへの攻撃アニメーション
+      const myContainer=document.getElementById("spMyUnits");
+      const myCards=myContainer?myContainer.querySelectorAll(".sp-card"):[];
+      const myBoardLen=spLatestState?.myBoard?.length||0;
+      const displayAtkIdx=myBoardLen>0?myBoardLen-1-atkIdx:atkIdx;
+      const atkCardEl=myCards[displayAtkIdx];
+      const fsDiv=document.getElementById("spEnemyFieldSpell")?.querySelector(".sp-card");
+      if(atkCardEl&&fsDiv){
+        const ar=atkCardEl.getBoundingClientRect(), tr=fsDiv.getBoundingClientRect();
+        const dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7;
+        const dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;
+        atkCardEl.style.transition="none"; atkCardEl.style.transform="translate(0,0)";
+        void atkCardEl.offsetWidth;
+        atkCardEl.style.transition="transform 0.18s ease-out";
+        atkCardEl.style.transform=`translate(${dx}px,${dy}px)`;
+        setTimeout(()=>{
+          atkCardEl.style.transition="transform 0.16s ease-in";
+          atkCardEl.style.transform="translate(0,0)";
+          setTimeout(()=>{atkCardEl.style.transition="";atkCardEl.style.transform="";},180);
+        },200);
+      }
+      spClearSelection();
+      spPlaySE(SP_SE.atk[spGetClientAttr(atkName)]||SP_SE.atk.neutral);
+      setTimeout(()=>socket.emit("action",{type:"attack",a:atkIdx,target:"fieldSpell"}),200);
+    };
+  }
+  el.appendChild(div);
+}
+
+// ===== TURN CHANGEアニメーション =====
+function spShowTurnChangeAnim(){
+  const overlay=document.getElementById("spTurnChangeOverlay");
+  if(!overlay)return;
+  overlay.classList.remove("sp-turn-change-anim");
+  void overlay.offsetWidth;
+  overlay.classList.add("sp-turn-change-anim");
+  _spTurnChangeFinishTime=Date.now()+1500;
+  setTimeout(()=>overlay.classList.remove("sp-turn-change-anim"),1500);
+  SE_TC_SP.currentTime=0; SE_TC_SP.play().catch(()=>{});
+}
+
+// ===== ドローアニメーション =====
+let _spDrawQueue=[],_spDrawPlaying=false;
+function spPlayDrawAnim(cardName){
+  return new Promise(resolve=>{
+    _spDrawQueue.push({cardName,resolve,onPhase1Done:null});
+    if(!_spDrawPlaying)_spStartDrawWhenReady();
+  });
+}
+function spPlayDrawAnimWithCallback(cardName,onPhase1Done){
+  return new Promise(resolve=>{
+    _spDrawQueue.push({cardName,resolve,onPhase1Done});
+    if(!_spDrawPlaying)_spStartDrawWhenReady();
+  });
+}
+function _spStartDrawWhenReady(){
+  const wait=Math.max(0,_spTurnChangeFinishTime-Date.now());
+  if(wait>0)setTimeout(()=>_spProcessDrawQueue(),wait);
+  else _spProcessDrawQueue();
+}
+function _spProcessDrawQueue(){
+  if(_spDrawQueue.length===0){_spDrawPlaying=false;return;}
+  _spDrawPlaying=true;
+  const{cardName,resolve,onPhase1Done}=_spDrawQueue.shift();
+  const back=document.getElementById("spDrawCardAnim");
+  const front=document.getElementById("spDrawCardAnimFront");
+  if(!back||!front){resolve();_spProcessDrawQueue();return;}
+  const deckImg=document.getElementById("spMyDeckImg");
+  const deckRect=deckImg?deckImg.getBoundingClientRect():{left:window.innerWidth-50,top:window.innerHeight/2,width:32,height:46};
+  const deckCx=deckRect.left+deckRect.width/2, deckCy=deckRect.top+deckRect.height/2;
+  const cx=window.innerWidth/2, cy=window.innerHeight/2;
+  const dur1=250,dur2=380,dur3=380,dur4=200;
+  spPlaySE(SP_SE.draw);
+  back.src="images/card_back.png";
+  back.style.display="block"; back.style.transition="none";
+  back.style.left=deckCx+"px"; back.style.top=deckCy+"px";
+  back.style.transform="translate(-50%,-50%)"; back.style.opacity="1"; back.style.width="32px";
+  void back.offsetWidth;
+  back.style.transition=`top ${dur1}ms ease-in,opacity ${dur1*0.6}ms ${dur1*0.4}ms ease-in`;
+  back.style.top=(window.innerHeight+80)+"px"; back.style.opacity="0";
+  setTimeout(()=>{
+    back.style.display="none";
+    if(onPhase1Done)onPhase1Done();
+    front.src=cardName?"images/"+cardName+".png":"images/card_back.png";
+    front.style.display="block"; front.style.transition="none";
+    front.style.left=cx+"px"; front.style.top=(window.innerHeight+150)+"px";
+    front.style.transform="translate(-50%,-50%)"; front.style.opacity="0"; front.style.width="180px";
+    void front.offsetWidth;
+    front.style.transition=`top ${dur2}ms cubic-bezier(0.22,1,0.36,1),opacity ${dur2*0.3}ms ease-out`;
+    front.style.top=cy+"px"; front.style.opacity="1";
+    setTimeout(()=>{
+      setTimeout(()=>{
+        front.style.transition=`opacity ${dur4}ms ease-out`; front.style.opacity="0";
+        setTimeout(()=>{front.style.display="none";resolve();_spProcessDrawQueue();},dur4+30);
+      },dur3);
+    },dur2+30);
+  },dur1+30);
+}
+
+// ===== ダメージポップ =====
+socket.off("damagePop");
+socket.on("damagePop",(data)=>{
+  const now=Date.now();
+  if(!window._spDpLastTime)window._spDpLastTime={};
+  const key=`${data.amount}_${data.isLife}_${data.unitIdx}_${data.isEnemy}_${data.isCounter||false}`;
+  if(window._spDpLastTime[key]&&now-window._spDpLastTime[key]<200)return;
+  window._spDpLastTime[key]=now;
+  setTimeout(()=>_spShowDamagePop(data),80);
+});
+function _spShowDamagePop(data){
+  const{amount,isLife,unitIdx,isEnemy}=data;
+  let cx,cy;
+  if(isLife){
+    if(isEnemy){
+      const el=document.getElementById("spDirectZone");
+      if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}
+      else{cx=window.innerWidth/2;cy=150;}
+    }else{
+      const el=document.getElementById("spHandArea");
+      if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top;}
+      else{cx=window.innerWidth/2;cy=window.innerHeight-100;}
+    }
+  }else if(unitIdx===-2){
+    const fsId=isEnemy?"spEnemyFieldSpell":"spMyFieldSpell";
+    const fsEl=document.getElementById(fsId)?.querySelector(".sp-card");
+    if(fsEl){const r=fsEl.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}
+    else{cx=window.innerWidth/2;cy=window.innerHeight/2;}
+  }else{
+    const containerId=isEnemy?"spEnemyUnits":"spMyUnits";
+    const container=document.getElementById(containerId);
+    if(container){
+      const cards=Array.from(container.querySelectorAll(".sp-card"));
+      let targetCard=null;
+      if(isEnemy){targetCard=cards[unitIdx]||null;}
+      else{
+        const myBoardLen=spLatestState?.myBoard?.length??0;
+        const myDomLen=cards.length;
+        if(myBoardLen===myDomLen&&myDomLen>0){targetCard=cards[myDomLen-1-unitIdx]||null;}
+        else if(myDomLen>0){targetCard=cards[Math.min(unitIdx,myDomLen-1)]||null;}
+      }
+      if(targetCard){const r=targetCard.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}
+      else{cx=window.innerWidth/2;cy=window.innerHeight/2;}
+    }else{cx=window.innerWidth/2;cy=window.innerHeight/2;}
+  }
+  const pop=document.createElement("div");
+  pop.className="sp-damage-pop"+(isLife?" dmg-life":" dmg-unit")+(isEnemy?" dmg-enemy":"");
+  pop.innerText="-"+amount;
+  pop.style.left=cx+"px"; pop.style.top=cy+"px";
+  document.body.appendChild(pop);
+  setTimeout(()=>pop.remove(),1300);
+}
+
+// ===== hitEffect =====
+socket.on("hitEffect",(data)=>{
+  if(data.isEnemy){
+    spHitActiveEnemy=true; clearTimeout(spHitEnemyTimer);
+    spHitEnemyTimer=setTimeout(()=>{spHitActiveEnemy=false;},520);
+  }else{
+    spHitActiveMy=true; clearTimeout(spHitMyTimer);
+    spHitMyTimer=setTimeout(()=>{spHitActiveMy=false;},520);
+  }
+  const attr=data.attr||"fire";
+  if(data.hasAttackAnim&&!data.isEnemy){
+    spPlaySE(SP_SE.atk[attr]||SP_SE.atk.neutral);
+    const enCards=Array.from(document.getElementById("spEnemyUnits")?.querySelectorAll(".sp-card")||[]);
+    const savedRect=enCards[data.attackerIdx]?.getBoundingClientRect()||null;
+    setTimeout(()=>{
+      const enCards2=Array.from(document.getElementById("spEnemyUnits")?.querySelectorAll(".sp-card")||[]);
+      const atkCard=enCards2[data.attackerIdx];
+      const useRect=atkCard?atkCard.getBoundingClientRect():savedRect;
+      if(!useRect)return;
+      const atkRect=useRect; let dx=0,dy=0;
+      if(data.isDirect){dx=0;dy=160;}
+      else if(!data.isFieldSpell){
+        const myCards=Array.from(document.getElementById("spMyUnits")?.querySelectorAll(".sp-card")||[]);
+        const myLen=myCards.length;
+        const di=myLen>0?myLen-1-data.targetIdx:data.targetIdx;
+        const tgt=myCards[di];
+        if(tgt){const tr=tgt.getBoundingClientRect();dx=((tr.left+tr.width/2)-(atkRect.left+atkRect.width/2))*0.7;dy=((tr.top+tr.height/2)-(atkRect.top+atkRect.height/2))*0.7;}
+      }
+      if(atkCard){
+        atkCard.style.transition="none"; atkCard.style.transform="translate(0,0)";
+        void atkCard.offsetWidth;
+        atkCard.style.transition="transform 0.18s ease-out"; atkCard.style.transform=`translate(${dx}px,${dy}px)`;
+        setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);
+      }
+      if(data.isDirect||data.isFieldSpell)return;
+      const myCards2=Array.from(document.getElementById("spMyUnits")?.querySelectorAll(".sp-card")||[]);
+      const myLen2=myCards2.length;
+      const di2=myLen2>0?myLen2-1-data.targetIdx:data.targetIdx;
+      const hitCard=myCards2[di2]; if(!hitCard)return;
+      const r=hitCard.getBoundingClientRect();
+      const fx=document.createElement("img");
+      fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+      fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;
+      document.body.appendChild(fx); setTimeout(()=>fx.remove(),500);
+    },50);
+    return;
+  }
+  if(data.isEnemy){
+    if(data.targetIdx===-1)return;
+    const enCards=Array.from(document.getElementById("spEnemyUnits")?.querySelectorAll(".sp-card")||[]);
+    const card=enCards[data.targetIdx]; if(!card)return;
+    const r=card.getBoundingClientRect();
+    const fx=document.createElement("img");
+    fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+    fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;
+    document.body.appendChild(fx); setTimeout(()=>fx.remove(),500);
+  }
+});
+
+// ===== showEffect =====
+socket.on("showEffect",(data)=>{
+  const old=document.getElementById("spEffectPopup"); if(old)old.remove();
+  const popup=document.createElement("div"); popup.id="spEffectPopup";
+  popup.style.cssText="position:fixed;top:50%;left:50%;z-index:900;pointer-events:none;";
+  popup.innerHTML=`<img src="images/${data.cardName}.png" style="width:180px;border-radius:8px;box-shadow:0 0 20px #ffe066;animation:spPopIn 0.2s ease-out forwards;">`;
+  document.body.appendChild(popup);
+  if(data.isSpell)spPlaySE(SP_SE.spell); else spPlaySE(SP_SE.effect);
+  setTimeout(()=>{const e=document.getElementById("spEffectPopup");if(e)e.remove();},1100);
+});
+
+// ===== attackRollback =====
+socket.on("attackRollback",(data)=>{
+  spPendingAttackerIndex=data.attackerIndex;
+});
+
+// ===== growCoreResolved =====
+socket.on("growCoreResolved",()=>{
+  const el=document.getElementById("spGrowCoreMsg"); if(el)el.remove();
+});
+
+// ===== message =====
+socket.on("message",(msg)=>{
+  if(msg.includes("グロウコアの効果でユニットを選択中")){
+    const old=document.getElementById("spGrowCoreMsg"); if(old)old.remove();
+    const d=document.createElement("div"); d.id="spGrowCoreMsg";
+    d.style.cssText="position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,80,0.9);color:#aaddff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:600;border:2px solid #6699ff;text-align:center;max-width:90vw;";
+    d.innerText="⏳ "+msg; document.body.appendChild(d);
+  }else if(msg.includes("捨て場に送られました")){
+    const old=document.getElementById("spHandToast"); if(old)old.remove();
+    const t=document.createElement("div"); t.id="spHandToast";
+    t.style.cssText="position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(80,0,0,0.92);color:#ffaaaa;padding:8px 18px;border-radius:8px;font-size:13px;z-index:700;border:2px solid #cc4444;text-align:center;pointer-events:none;max-width:90vw;";
+    t.innerText="🃏 "+msg; document.body.appendChild(t);
+    setTimeout(()=>{const e=document.getElementById("spHandToast");if(e)e.remove();},3000);
+  }else{alert(msg);}
+});
+
+// ===== selectTarget =====
+socket.on("selectTarget",(data)=>{
+  spSelectTargetMode=data;
+  document.getElementById("spTurnLabel").innerText="⚔ "+data.message;
+  const notice=document.getElementById("spTargetNotice");
+  notice.innerText="⚔ "+data.message; notice.style.display="block";
+  setTimeout(()=>{notice.style.display="none";},2500);
+  if(data.type==="fieldSpell"){
+    const myFs=spLatestState?.myFieldSpell, enFs=spLatestState?.enemyFieldSpell;
+    let msg="崩壊：破壊するフィールドスペルを選択\n";
+    if(myFs)msg+="[自分] "+myFs.name+"（耐久"+myFs.durability+"）\n";
+    if(enFs)msg+="[相手] "+enFs.name+"（耐久"+enFs.durability+"）\n";
+    const choice=confirm(msg+"OKで相手、キャンセルで自分のFSを破壊");
+    socket.emit("action",{type:"select_target",fieldSpellTarget:choice?"op":"my"});
+    spSelectTargetMode=null;
+    return;
+  }
+  if(data.type==="lifeInput"){
+    const maxVal=data.message.includes("1〜")?3:99;
+    const input=prompt(data.message)||"0";
+    const amount=parseInt(input,10);
+    if(amount>0&&amount<=maxVal){
+      socket.emit("action",{type:"select_target",targetSide:"life",lifeAmount:amount});
+      spSelectTargetMode=null;
+      document.getElementById("spTurnLabel").innerText="▶ YOUR TURN";
+    }else{socket.emit("action",{type:"select_target",targetSide:"life",lifeAmount:0});}
+    return;
+  }
+  if(data.type==="graveSelect"){
+    const options=data.options||[];
+    const choice=prompt(data.message+"\n"+options.map((n,i)=>i+": "+n).join("\n"))||"";
+    const idx=parseInt(choice,10);
+    if(!isNaN(idx)&&idx>=0&&idx<options.length){
+      socket.emit("action",{type:"select_target",targetSide:"grave",graveIndex:idx});
+      spSelectTargetMode=null;
+      document.getElementById("spTurnLabel").innerText="▶ YOUR TURN";
+    }
+    return;
+  }
+  if(data.type==="soulTrade"){return;} // 手札クリックで処理
+});
+
+// ===== updateイベント =====
+let _spDidDrawAnim=false;
+socket.on("update",(g)=>{
+  spLatestState=g;
+  if(_spPrevTurn!==null&&_spPrevTurn!==g.turn&&!g.winner)spShowTurnChangeAnim();
+  _spPrevTurn=g.turn;
+
+  // ドロー検知
+  let drawAnimPromise=Promise.resolve(); _spDidDrawAnim=false;
+  if(spPrevMyDeckCount!==null&&g.myDeckCount<spPrevMyDeckCount){
+    const drawCount=spPrevMyDeckCount-g.myDeckCount;
+    const drawnCards=[];
+    for(let i=0;i<drawCount;i++)drawnCards.push(g.myHand[g.myHand.length-drawCount+i]||null);
+    const handBefore=g.myHand.slice(0,g.myHand.length-drawCount);
+    _spRenderHand(handBefore,g); _spDidDrawAnim=true;
+    let displayDeckCount=spPrevMyDeckCount;
+    document.getElementById("spMyDeck").innerText=displayDeckCount;
+    const myDeckImgEl=document.getElementById("spMyDeckImg");
+    if(myDeckImgEl)myDeckImgEl.style.opacity=displayDeckCount>0?"1":"0.2";
+    drawAnimPromise=(async()=>{
+      for(let i=0;i<drawCount;i++){
+        await spPlayDrawAnimWithCallback(drawnCards[i],()=>{
+          displayDeckCount--;
+          document.getElementById("spMyDeck").innerText=displayDeckCount;
+          if(myDeckImgEl)myDeckImgEl.style.opacity=displayDeckCount>0?"1":"0.2";
+        });
+        handBefore.push(drawnCards[i]);
+        _spRenderHand(handBefore,g);
+      }
+    })();
+  }
+  // 相手ドロー効果音
+  if(spPrevEnemyDeckCount!==null&&g.enemyDeckCount<spPrevEnemyDeckCount){
+    const drawCount=spPrevEnemyDeckCount-g.enemyDeckCount;
+    const waitEnemy=Math.max(0,_spTurnChangeFinishTime-Date.now());
+    setTimeout(()=>{for(let i=0;i<drawCount;i++)setTimeout(()=>spPlaySE(SP_SE.draw),i*100);},waitEnemy);
+  }
+  spPrevMyDeckCount=g.myDeckCount; spPrevEnemyDeckCount=g.enemyDeckCount;
+
+  // 召喚音
+  if(spPrevMyBoardCount!==null&&g.myBoard.length>spPrevMyBoardCount)spPlaySE(SP_SE.summon);
+  if(spPrevEnemyBoardCount!==null&&g.enemyBoard.length>spPrevEnemyBoardCount)spPlaySE(SP_SE.summon);
+  spPrevMyBoardCount=g.myBoard.length; spPrevEnemyBoardCount=g.enemyBoard.length;
+
+  // ログ攻撃音
+  const newLogs=(g.allLogs||[]).slice(spPrevAllLogsLen);
+  newLogs.forEach(log=>{
+    if(log.includes("に攻撃（")||log.includes("でプレイヤーに直接攻撃")||log.includes("に全体攻撃")){
+      const match=log.match(/「(.+?)」(?:で|が)/);
+      if(match)spPlaySE(SP_SE.atk[spGetClientAttr(match[1])]||SP_SE.atk.neutral);
+      if(log.includes("でプレイヤーに直接攻撃")){
+        document.getElementById("gameRoot").classList.remove("sp-shaking");
+        void document.getElementById("gameRoot").offsetWidth;
+        document.getElementById("gameRoot").classList.add("sp-shaking");
+        setTimeout(()=>document.getElementById("gameRoot").classList.remove("sp-shaking"),420);
+      }
+    }
+  });
+  spPrevAllLogsLen=(g.allLogs||[]).length;
+  spAllLogs=g.allLogs||[];
+
+  // ターン表示
+  if(!spSelectTargetMode){
+    document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
+  }
+  document.getElementById("spWinner").innerText=g.winner?(g.winner===socket.id?"YOU WIN！":"YOU LOSE"):"";
+  if(g.winner&&!spResultShown)setTimeout(()=>spShowResult(g.winner===socket.id),300);
+  if(!g.winner)spResultShown=false;
+
+  // 相手手札（裏向き）
+  const ehArea=document.getElementById("spEnemyHand");
+  if(ehArea){
+    ehArea.innerHTML="";
+    for(let i=0;i<g.enemyHandCount;i++){
+      const img=document.createElement("img");
+      img.src="images/card_back.png";
+      ehArea.appendChild(img);
+    }
+  }
+
+  // 相手情報
+  document.getElementById("spEnemyLife").innerText=g.enemyLife;
+  document.getElementById("spEnemyEnergy").innerText=g.enemyEnergy+"/"+g.enemyMaxEnergy;
+  document.getElementById("spEnemyDeck").innerText=g.enemyDeckCount;
+  const enDeckImg=document.getElementById("spEnemyDeckImg");
+  if(enDeckImg)enDeckImg.style.opacity=g.enemyDeckCount>0?"1":"0.2";
+
+  // 自分情報
+  document.getElementById("spMyLife").innerText=g.myLife;
+  document.getElementById("spMyEnergy").innerText=g.myEnergy+"/"+g.myMaxEnergy;
+  if(!_spDidDrawAnim){
+    document.getElementById("spMyDeck").innerText=g.myDeckCount;
+    const myDeckImg=document.getElementById("spMyDeckImg");
+    if(myDeckImg)myDeckImg.style.opacity=g.myDeckCount>0?"1":"0.2";
+  }
+
+  // 捨て場
+  spMyGraveData=g.myGrave; spEnemyGraveData=g.enemyGrave;
+  spRenderGravePile("spMyGravePile","spMyGraveEmpty",g.myGrave);
+  spRenderGravePile("spEnemyGravePile","spEnemyGraveEmpty",g.enemyGrave);
+
+  // フィールドスペル
+  spRenderFieldSpell("spMyFieldSpell",g.myFieldSpell);
+  spRenderFieldSpell("spEnemyFieldSpell",g.enemyFieldSpell);
+
+  // 相手フィールド
+  const _renderEnemyField=()=>{
+    const ef=document.getElementById("spEnemyUnits"); if(!ef)return;
+    ef.innerHTML="";
+    for(let si=0;si<3;si++){const s=document.createElement("div");s.className="sp-unit-slot-empty";ef.appendChild(s);}
+    g.enemyBoard.forEach((c,i)=>{
+      const div=document.createElement("div"); div.className="sp-card";
+      const img=document.createElement("img");
+      img.src="images/"+c.name+".png";
+      img.onclick=()=>{
+        document.getElementById("spPreviewImg").src="images/"+c.name+".png";
+        document.getElementById("spPreviewModal").classList.add("open");
+      };
+      div.ontouchend=(e)=>{
+        e.preventDefault();
+        if(spSelectTargetMode&&(spSelectTargetMode.type==="enemyUnit"||spSelectTargetMode.type==="anyUnit")){
+          socket.emit("action",{type:"select_target",targetIndex:i,targetSide:"enemy"});
+          spSelectTargetMode=null;
+          document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
+          return;
+        }
+        if(spSelectedUnitIndex!==null){
+          if(confirm(spSelectedUnitName+" で "+c.name+" に攻撃？")){
+            const atkIdx=spSelectedUnitIndex; const tIdx=i;
+            spClearSelection();
+            spPlayAttackAnim(atkIdx, tIdx, false);
+            setTimeout(()=>socket.emit("action",{type:"attack",a:atkIdx,t:tIdx}), 200);
+          }else spClearSelection();
+        }else{
+          document.getElementById("spPreviewImg").src="images/"+c.name+".png";
+          document.getElementById("spPreviewModal").classList.add("open");
+        }
+      };
+      const stat=document.createElement("div"); stat.className="sp-stat";
+      const baseAtk=spGetBaseAtk(c.name);
+      let atkColor="#ffe066";
+      if(baseAtk!==null){if(c.atk>baseAtk)atkColor="#66aaff";else if(c.atk<baseAtk)atkColor="#ff6666";}
+      stat.innerHTML=`HP${c.hp} <span style="color:${atkColor}">AT${c.atk}</span>`;
+      if(c.disabled)stat.innerHTML+=" 🚫";
+      if(c.barrier)stat.innerHTML+=" 💎";
+      if(c.denko&&!c.attacked)stat.innerHTML+=" ⚡x2";
+      if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)stat.innerHTML+=" ⚡x1";
+      div.appendChild(img); div.appendChild(stat); ef.appendChild(div);
+    });
+    const emptySlots=ef.querySelectorAll(".sp-unit-slot-empty");
+    const cardCount=ef.querySelectorAll(".sp-card").length;
+    emptySlots.forEach((s,i)=>{s.style.display=i<(3-cardCount)?"flex":"none";});
+  };
+  if(spHitActiveEnemy)setTimeout(_renderEnemyField,400); else _renderEnemyField();
+
+  // 自分フィールド
+  const _renderMyField=()=>{
+    const myUnits=document.getElementById("spMyUnits"); if(!myUnits)return;
+    myUnits.innerHTML="";
+    for(let si=0;si<3;si++){const s=document.createElement("div");s.className="sp-unit-slot-empty";myUnits.appendChild(s);}
+    const reversedBoard=[...g.myBoard].reverse();
+    reversedBoard.forEach((c,i)=>{
+      const originalIdx=g.myBoard.length-1-i;
+      const div=document.createElement("div"); div.className="sp-card";
+      const img=document.createElement("img"); img.src="images/"+c.name+".png";
+      div.ontouchend=(e)=>{
+        e.preventDefault();
+        if(spSelectTargetMode&&(spSelectTargetMode.type==="myUnit"||spSelectTargetMode.type==="anyUnit")){
+          socket.emit("action",{type:"select_target",targetIndex:originalIdx,targetSide:"my"});
+          spSelectTargetMode=null;
+          document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
+          return;
+        }
+        if(spSelectedUnitIndex===originalIdx){
+          if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)return;
+          spClearSelection(); return;
+        }
+        spClearSelection();
+        spSelectedUnitIndex=originalIdx; spSelectedUnitName=c.name;
+        div.classList.add("selected");
+        // 長押しでプレビュー（タップは選択）
+      };
+      // 長押しでプレビュー
+      let pressTimer=null;
+      div.addEventListener("touchstart",()=>{pressTimer=setTimeout(()=>{
+        document.getElementById("spPreviewImg").src="images/"+c.name+".png";
+        document.getElementById("spPreviewModal").classList.add("open");
+      },500);});
+      div.addEventListener("touchend",()=>clearTimeout(pressTimer));
+      div.addEventListener("touchmove",()=>clearTimeout(pressTimer));
+
+      const stat=document.createElement("div"); stat.className="sp-stat";
+      const baseAtkMy=spGetBaseAtk(c.name);
+      let atkColorMy="#ffe066";
+      if(baseAtkMy!==null){if(c.atk>baseAtkMy)atkColorMy="#66aaff";else if(c.atk<baseAtkMy)atkColorMy="#ff6666";}
+      stat.innerHTML=`HP${c.hp} <span style="color:${atkColorMy}">AT${c.atk}</span>`;
+      if(c.disabled)stat.innerHTML+=" 🚫";
+      if(c.barrier)stat.innerHTML+=" 🛡";
+      if(c.denko&&!c.attacked)stat.innerHTML+=" ⚡x2";
+      if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)stat.innerHTML+=" ⚡x1";
+      div.appendChild(img); div.appendChild(stat); myUnits.appendChild(div);
+    });
+    const myEmptySlots=myUnits.querySelectorAll(".sp-unit-slot-empty");
+    const myCardCount=myUnits.querySelectorAll(".sp-card").length;
+    myEmptySlots.forEach((s,i)=>{s.style.display=i<(3-myCardCount)?"flex":"none";});
+    // 巻き戻し後の選択復元
+    if(spPendingAttackerIndex!==null){
+      const cards2=myUnits.querySelectorAll(".sp-card");
+      const di=g.myBoard.length-1-spPendingAttackerIndex;
+      if(cards2[di]){
+        spSelectedUnitIndex=spPendingAttackerIndex;
+        spSelectedUnitName=g.myBoard[spPendingAttackerIndex]?.name||"";
+        cards2[di].classList.add("selected");
+      }
+      spPendingAttackerIndex=null;
+    }
+  };
+  if(spHitActiveMy)setTimeout(_renderMyField,400); else _renderMyField();
+
+  // 直接攻撃ゾーン活性化
+  const dz=document.getElementById("spDirectZone");
+  if(dz)dz.classList.toggle("active",spSelectedUnitIndex!==null);
+
+  // 手札捨て待ちメッセージ
+  if(g.pendingDiscard&&g.pendingDiscard>0){
+    if(g.isHandLimit)document.getElementById("spTurnLabel").innerText=`⚠️ ${g.pendingDiscard}枚捨ててください`;
+    else if(g.isSoulTrade)document.getElementById("spTurnLabel").innerText="🔄 ソウルトレード：捨てるカードを選択";
+  }
+
+  // 手札
+  if(!_spDidDrawAnim)_spRenderHand(g.myHand,g);
+  if(!_spDidDrawAnim){
+    document.getElementById("spMyDeck").innerText=g.myDeckCount;
+    const myDeckImg=document.getElementById("spMyDeckImg");
+    if(myDeckImg)myDeckImg.style.opacity=g.myDeckCount>0?"1":"0.2";
+  }
+  void drawAnimPromise;
+});
+
+// ===== 手札描画 =====
+function _spRenderHand(handCards,g){
+  const hand=document.getElementById("spHandArea"); hand.innerHTML="";
+  const handCount=handCards.length;
+  const maxAngle=Math.min(3*handCount,22);
+  const overlapPx=handCount<=4?0:Math.min((handCount-4)*10,38);
+  handCards.forEach((card,hi)=>{
+    const div=document.createElement("div"); div.className="sp-card";
+    const ratio=handCount<=1?0:(hi/(handCount-1))*2-1;
+    const rotate=ratio*maxAngle;
+    const translateY=Math.abs(ratio)*Math.abs(rotate)*0.4;
+    const marginLeft=hi===0?0:-overlapPx;
+    div.style.cssText=`transform:rotate(${rotate}deg) translateY(${translateY}px);transform-origin:center bottom;z-index:${hi};margin-left:${marginLeft}px;`;
+    const img=document.createElement("img"); img.src="images/"+card+".png";
+    // 長押しでプレビュー
+    let pressTimer=null;
+    div.addEventListener("touchstart",()=>{pressTimer=setTimeout(()=>{
+      document.getElementById("spPreviewImg").src="images/"+card+".png";
+      document.getElementById("spPreviewModal").classList.add("open");
+    },400);});
+    div.addEventListener("touchend",()=>clearTimeout(pressTimer));
+    div.addEventListener("touchmove",()=>clearTimeout(pressTimer));
+    div.ontouchend=(e)=>{
+      e.preventDefault();
+      if(pressTimer)clearTimeout(pressTimer);
+      if(g.pendingDiscard&&g.pendingDiscard>0){
+        if(confirm(card+" を捨てますか？"))socket.emit("action",{type:"discard_hand",card});
+        return;
+      }
+      if(spSelectTargetMode&&(spSelectTargetMode.type==="handUnit_steel_cost3"||spSelectTargetMode.type==="handUnit_cost2"||spSelectTargetMode.type==="handUnit_cost3"||spSelectTargetMode.type==="handUnit_steel")){
+        const hi2=g.myHand.indexOf(card);
+        socket.emit("action",{type:"select_target",targetIndex:hi2,targetSide:"hand",handIndex:hi2});
+        spSelectTargetMode=null;
+        document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
+        return;
+      }
+      if(spSelectTargetMode&&spSelectTargetMode.type==="soulTrade"){
+        if(confirm(card+" を捨てますか？")){
+          const hi2=g.myHand.indexOf(card);
+          socket.emit("action",{type:"select_target",targetSide:"soulTrade",handIndex:hi2,card:card});
+          spSelectTargetMode=null;
+          document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
+        }
+        return;
+      }
+      if(confirm(card+" を使用しますか？"))socket.emit("action",{type:"play_card",card});
+    };
+    div.appendChild(img); hand.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>

@@ -289,7 +289,7 @@ const cards = {
 "禁断の秘薬":{cost:3,type:"spell",attr:"poison",effect:"L_SELF_HALF_DRAW5"},
 "ヴェノムハーベスト":{cost:3,type:"spell",attr:"poison",effect:"UNIT_DES_COST_LHEAL"},
 "トキシックアポカリプス":{cost:4,type:"spell",attr:"poison",effect:"LIFE_5_ALL_DES"},
-"薬草の湿地":{cost:3,type:"spell",attr:"poison",effect:"PERM_SPELL_HERB_HEAL",durability:7},
+"薬草の湿地":{cost:2,type:"spell",attr:"poison",effect:"PERM_SPELL_HERB_HEAL",durability:5},
 
 //⚙️鉄
 "ギアスカウト":{cost:1,atk:1,hp:1,type:"unit",attr:"steel",effect:"SUM_TOKEN1"},
