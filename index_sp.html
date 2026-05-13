@@ -73,8 +73,8 @@ html,body{
   display:flex;
   flex-direction:column;
   overflow:hidden;
-  padding:1px 3px;
-  gap:1px;
+  padding:2px 3px;
+  gap:2px;
   min-height:0;
 }
 
@@ -88,16 +88,15 @@ html,body{
   border-radius:5px;
   flex-shrink:0;
 }
-/* ライフバッジ：vwで縮小 */
 .sp-life-badge{
   display:flex;flex-direction:column;align-items:center;
   background:radial-gradient(circle at 40% 35%,#5a1a1a,#1a0808);
   border:2px solid #cc4444;border-radius:50%;
-  width:clamp(30px,8.5vw,42px);height:clamp(30px,8.5vw,42px);
+  width:clamp(30px,8.5vw,40px);height:clamp(30px,8.5vw,40px);
   justify-content:center;
   box-shadow:0 0 8px rgba(200,50,50,0.4);flex-shrink:0;
 }
-.sp-life-badge .lv{ font-size:clamp(11px,3.8vw,15px);font-weight:bold;color:#ffaaaa;line-height:1; }
+.sp-life-badge .lv{ font-size:clamp(11px,3.8vw,14px);font-weight:bold;color:#ffaaaa;line-height:1; }
 .sp-life-badge .ll{ font-size:5px;color:#cc6666;letter-spacing:1px; }
 .sp-energy-badge{
   background:linear-gradient(135deg,#0a1a2a,#0d2a3a);
@@ -124,23 +123,24 @@ html,body{
 
 /* ===== フィールド共通 ===== */
 .sp-field{
-  flex:1;
-  max-height:14vh;
+  flex:0 0 12vh;
   background:var(--field-bg);
   border:1px solid var(--field-border);
   border-radius:6px;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:2px 68px;
+  padding:2px 66px;
   min-height:0;
   position:relative;
   transition:background 0.8s,border-color 0.8s;
+  overflow:visible;
 }
 .sp-field.enemy-field{ background:var(--enemy-field-bg);border-color:var(--enemy-field-border); }
 .sp-unit-slots{ display:flex;gap:4px;align-items:center;flex:0 0 auto; }
+/* カード・スロットをフィールド高さより小さく */
 .sp-unit-slot-empty{
-  width:11vh;height:15vh;
+  width:8vh;height:11vh;
   border:1px solid rgba(255,255,255,0.15);border-radius:4px;
   background:rgba(255,255,255,0.02);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -149,7 +149,7 @@ html,body{
 /* FSスロット */
 .sp-fs-slot{
   position:absolute;top:50%;transform:translateY(-50%);
-  width:11vh;height:15vh;
+  width:8vh;height:11vh;
   flex-shrink:0;display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(255,215,0,0.4);border-radius:4px;background:rgba(255,215,0,0.03);
 }
@@ -161,15 +161,15 @@ html,body{
 /* ===== カード ===== */
 .sp-card{ display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;position:relative;flex-shrink:0;transition:transform 0.15s; }
 .sp-card:active{ transform:scale(0.95); }
-.sp-card img{ width:11vh;border-radius:3px;box-shadow:0 2px 4px #000; }
-.sp-card .sp-stat{ font-size:8px;color:#ffe066;margin-top:1px;background:rgba(0,0,0,0.7);border-radius:2px;padding:1px 2px;white-space:nowrap; }
+.sp-card img{ width:8vh;border-radius:3px;box-shadow:0 2px 4px #000; }
+.sp-card .sp-stat{ font-size:7px;color:#ffe066;margin-top:1px;background:rgba(0,0,0,0.7);border-radius:2px;padding:1px 2px;white-space:nowrap; }
 .sp-card.selected img{ outline:2px solid #ff4444;border-radius:3px; }
 
 /* ===== 直接攻撃ゾーン ===== */
 #spDirectZone{
   background:linear-gradient(135deg,rgba(80,0,0,0.25),rgba(120,0,0,0.15));
   border:1px solid rgba(180,60,60,0.4);border-radius:4px;
-  height:20px;
+  height:18px;
   display:flex;align-items:center;justify-content:center;
   color:rgba(220,100,100,0.7);font-size:8px;font-weight:bold;letter-spacing:2px;
   cursor:pointer;flex-shrink:0;transition:all 0.2s;
@@ -179,26 +179,27 @@ html,body{
 /* ===== 自分情報バー ===== */
 #spMyInfoBar{ display:flex;align-items:center;gap:4px;padding:1px 4px;background:rgba(0,0,0,0.4);border-radius:5px;flex-shrink:0; }
 
-/* ===== 手札エリア ===== */
+/* ===== 手札エリア（枚数に応じて自動調整） ===== */
 #spHandArea{
-  flex-shrink:0;
+  flex:1;
+  min-height:0;
+  max-height:16vh;
   display:flex;align-items:flex-end;justify-content:center;
-  height:13vh;
   padding:0 6px 2px;
   position:relative;overflow:visible;
 }
 
 /* ===== ボタンエリア ===== */
-#spBtnArea{ display:flex;gap:4px;padding:3px 5px;flex-shrink:0; }
+#spBtnArea{ display:flex;gap:4px;padding:3px 5px 6px;flex-shrink:0; }
 #spEndTurnBtn{
   flex:1;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;
-  border:1px solid #2a8a2a;border-radius:6px;padding:6px 4px;
+  border:1px solid #2a8a2a;border-radius:6px;padding:7px 4px;
   font-size:11px;font-weight:bold;letter-spacing:1px;cursor:pointer;
   box-shadow:0 0 6px rgba(40,180,40,0.3);
 }
 #spSurrenderBtn{
   flex:1;background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;
-  border:1px solid #8a2222;border-radius:6px;padding:6px 4px;
+  border:1px solid #8a2222;border-radius:6px;padding:7px 4px;
   font-size:11px;font-weight:bold;letter-spacing:1px;cursor:pointer;
 }
 
@@ -230,6 +231,9 @@ html,body{
 }
 
 /* ===== カードプレビューモーダル ===== */
+#spPreviewModal{
+  z-index:1500;
+}
 #spPreviewModal .sp-modal-inner{
   background:transparent;border:none;
   display:flex;align-items:center;justify-content:center;
@@ -709,10 +713,14 @@ function spShowGrave(side){
     const img=document.createElement("img");
     img.src="images/"+c.name+".png";
     img.style.cssText="width:56px;border-radius:4px;box-shadow:0 2px 5px #000;cursor:pointer;";
-    img.onclick=()=>{
+    // 長押しでプレビュー（z-index:1500のプレビューモーダルが捨て場モーダルの上に表示される）
+    let pressTimer=null;
+    img.addEventListener("touchstart",()=>{pressTimer=setTimeout(()=>{
       document.getElementById("spPreviewImg").src="images/"+c.name+".png";
       document.getElementById("spPreviewModal").classList.add("open");
-    };
+    },400);});
+    img.addEventListener("touchend",()=>clearTimeout(pressTimer));
+    img.addEventListener("touchmove",()=>clearTimeout(pressTimer));
     container.appendChild(img);
   });
   document.getElementById("spGraveModal").classList.add("open");
@@ -1327,7 +1335,9 @@ function _spRenderHand(handCards,g){
   const hand=document.getElementById("spHandArea"); hand.innerHTML="";
   const handCount=handCards.length;
   const maxAngle=Math.min(3*handCount,22);
-  const overlapPx=handCount<=4?0:Math.min((handCount-4)*10,38);
+  // 枚数が多いほどカードを小さく・重ねる
+  const cardW=handCount<=4?48:handCount<=6?42:handCount<=8?36:30;
+  const overlapPx=handCount<=4?0:Math.min((handCount-4)*8,36);
   handCards.forEach((card,hi)=>{
     const div=document.createElement("div"); div.className="sp-card";
     const ratio=handCount<=1?0:(hi/(handCount-1))*2-1;
@@ -1336,6 +1346,7 @@ function _spRenderHand(handCards,g){
     const marginLeft=hi===0?0:-overlapPx;
     div.style.cssText=`transform:rotate(${rotate}deg) translateY(${translateY}px);transform-origin:center bottom;z-index:${hi};margin-left:${marginLeft}px;`;
     const img=document.createElement("img"); img.src="images/"+card+".png";
+    img.style.width=cardW+"px";
     // 長押しでプレビュー
     let pressTimer=null;
     div.addEventListener("touchstart",()=>{pressTimer=setTimeout(()=>{
