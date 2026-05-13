@@ -243,8 +243,11 @@ function renderCards(){
     if(n>0){const b=document.createElement("div");b.className="pcb";b.innerText="×"+n;d.appendChild(b);}
     if(LIMITED.includes(cd.name)){const l=document.createElement("div");l.className="limb";l.innerText="制限";d.appendChild(l);}
     d.appendChild(img);
-    // タップでプレビュー表示（デッキ追加はプレビュー内ボタンで行う）
-    d.ontouchend=(e)=>{e.preventDefault();showPreview(cd.name);};
+    // タップでプレビュー表示（スクロール時は表示しない）
+    let _touchStartY=0, _touchMoved=false;
+    d.addEventListener("touchstart",(e)=>{_touchStartY=e.touches[0].clientY;_touchMoved=false;},{passive:true});
+    d.addEventListener("touchmove",(e)=>{if(Math.abs(e.touches[0].clientY-_touchStartY)>8)_touchMoved=true;},{passive:true});
+    d.ontouchend=(e)=>{if(_touchMoved)return;e.preventDefault();showPreview(cd.name);};
     p.appendChild(d);
   });
 }

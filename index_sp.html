@@ -125,23 +125,22 @@ html,body{
 /* ===== フィールド共通 ===== */
 .sp-field{
   flex:1;
+  max-height:14vh;
   background:var(--field-bg);
   border:1px solid var(--field-border);
   border-radius:6px;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:2px clamp(44px,15vw,66px);
+  padding:2px 68px;
   min-height:0;
   position:relative;
   transition:background 0.8s,border-color 0.8s;
 }
 .sp-field.enemy-field{ background:var(--enemy-field-bg);border-color:var(--enemy-field-border); }
-.sp-unit-slots{ display:flex;gap:clamp(3px,1.5vw,7px);align-items:center;flex:0 0 auto; }
-/* ユニットスロット・カードサイズをvwで自動縮小 */
+.sp-unit-slots{ display:flex;gap:4px;align-items:center;flex:0 0 auto; }
 .sp-unit-slot-empty{
-  width:clamp(38px,12.5vw,54px);
-  height:clamp(54px,17.5vw,76px);
+  width:11vh;height:15vh;
   border:1px solid rgba(255,255,255,0.15);border-radius:4px;
   background:rgba(255,255,255,0.02);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -150,7 +149,7 @@ html,body{
 /* FSスロット */
 .sp-fs-slot{
   position:absolute;top:50%;transform:translateY(-50%);
-  width:clamp(38px,12.5vw,54px);height:clamp(54px,17.5vw,76px);
+  width:11vh;height:15vh;
   flex-shrink:0;display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(255,215,0,0.4);border-radius:4px;background:rgba(255,215,0,0.03);
 }
@@ -162,8 +161,8 @@ html,body{
 /* ===== カード ===== */
 .sp-card{ display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;position:relative;flex-shrink:0;transition:transform 0.15s; }
 .sp-card:active{ transform:scale(0.95); }
-.sp-card img{ width:clamp(38px,12.5vw,54px);border-radius:3px;box-shadow:0 2px 4px #000; }
-.sp-card .sp-stat{ font-size:clamp(7px,2.2vw,9px);color:#ffe066;margin-top:1px;background:rgba(0,0,0,0.7);border-radius:2px;padding:1px 2px;white-space:nowrap; }
+.sp-card img{ width:11vh;border-radius:3px;box-shadow:0 2px 4px #000; }
+.sp-card .sp-stat{ font-size:8px;color:#ffe066;margin-top:1px;background:rgba(0,0,0,0.7);border-radius:2px;padding:1px 2px;white-space:nowrap; }
 .sp-card.selected img{ outline:2px solid #ff4444;border-radius:3px; }
 
 /* ===== 直接攻撃ゾーン ===== */
@@ -184,7 +183,7 @@ html,body{
 #spHandArea{
   flex-shrink:0;
   display:flex;align-items:flex-end;justify-content:center;
-  height:clamp(68px,20vw,88px);
+  height:13vh;
   padding:0 6px 2px;
   position:relative;overflow:visible;
 }
