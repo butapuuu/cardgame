@@ -66,7 +66,7 @@ html,body{ width:100%;height:100%;background:var(--bg);color:#ccc;font-family:'S
 .fb.active[data-attr=neutral]{background:linear-gradient(135deg,#1a1a0a,#2a2a1a);color:#ddddaa;border-color:#888844;}
 
 /* カードプール */
-#psec{ flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 5px;min-height:0; }
+#psec{ flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 5px 60px;min-height:0; }
 #pool{ display:grid;grid-template-columns:repeat(5,1fr);gap:3px; }
 .pc{ position:relative;cursor:pointer;border-radius:3px;overflow:hidden;aspect-ratio:0.72;background:#0a100a;border:1px solid transparent;transition:transform 0.1s; }
 .pc:active{ transform:scale(0.93); }
@@ -81,15 +81,18 @@ html,body{ width:100%;height:100%;background:var(--bg);color:#ccc;font-family:'S
 #pmod.open{ display:flex; }
 #pmod img{ width:70%;max-width:260px;border-radius:10px;box-shadow:0 0 30px rgba(0,0,0,0.9); }
 #pmname{ font-size:13px;color:#88aa88;letter-spacing:1px;text-align:center; }
-#pminfo{ font-size:11px;color:#558855;text-align:center; }
 
 /* トースト */
 #toast{ display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(20,50,20,0.95);color:var(--accent);border:1px solid var(--bright);border-radius:8px;padding:7px 16px;font-size:11px;letter-spacing:0.5px;box-shadow:0 0 14px rgba(40,180,40,0.4);z-index:3000;white-space:nowrap;max-width:90vw;text-align:center; }
 </style>
 </head>
 <body>
-<div id="pmod" onclick="this.classList.remove('open')">
-  <img id="pmimg" src=""><div id="pmname"></div><div id="pminfo"></div>
+<div id="pmod" onclick="if(event.target===this)this.classList.remove('open')">
+  <img id="pmimg" src=""><div id="pmname"></div>
+  <div style="display:flex;gap:10px;margin-top:6px;">
+    <button onclick="addFromPreview()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:8px 24px;font-size:13px;font-weight:bold;cursor:pointer;">✚ デッキに追加</button>
+    <button onclick="document.getElementById('pmod').classList.remove('open')" style="background:rgba(0,0,0,0.5);color:#aaa;border:1px solid #444;border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;">閉じる</button>
+  </div>
 </div>
 <div id="toast"></div>
 <div id="root">
@@ -180,15 +183,27 @@ function sf(k,v,btn){
   document.querySelectorAll(`.fb[data-${k}]`).forEach(b=>b.classList.remove("active"));
   btn.classList.add("active"); renderCards();
 }
-function lp(el,name,cd){
+let _previewCardName=null;
+function addFromPreview(){
+  if(!_previewCardName)return;
+  if(deck.length>=20){showToast("デッキは20枚まで");return;}
+  const cnt=deck.filter(x=>x===_previewCardName).length;
+  if(LIMITED.includes(_previewCardName)&&cnt>=1){showToast("「"+_previewCardName+"」は制限カードのため1枚まで");return;}
+  if(cnt>=2){showToast("同名カードは2枚まで");return;}
+  deck.push(_previewCardName);
+  document.getElementById("pmod").classList.remove("open");
+  renderDeck(); renderCards();
+}
+function showPreview(name){
+  _previewCardName=name;
+  document.getElementById("pmimg").src="images/"+name+".png";
+  document.getElementById("pmname").innerText=name;
+  document.getElementById("pmod").classList.add("open");
+}
+// デッキグリッドの長押しプレビュー用
+function lp(el,name){
   let t=null;
-  el.addEventListener("touchstart",()=>{t=setTimeout(()=>{
-    document.getElementById("pmimg").src="images/"+name+".png";
-    document.getElementById("pmname").innerText=name;
-    const d=cd||CDL.find(x=>x.name===name);
-    document.getElementById("pminfo").innerText=d?(d.type==="unit"?"[ユニット] コスト"+d.cost+" ATK"+(d.atk||"?")+" HP"+(d.hp||"?"):"["+d.type.toUpperCase()+"] コスト"+d.cost):"";
-    document.getElementById("pmod").classList.add("open");
-  },450);});
+  el.addEventListener("touchstart",()=>{t=setTimeout(()=>showPreview(name),450);});
   el.addEventListener("touchend",()=>clearTimeout(t));
   el.addEventListener("touchmove",()=>clearTimeout(t));
 }
@@ -228,15 +243,9 @@ function renderCards(){
     if(n>0){const b=document.createElement("div");b.className="pcb";b.innerText="×"+n;d.appendChild(b);}
     if(LIMITED.includes(cd.name)){const l=document.createElement("div");l.className="limb";l.innerText="制限";d.appendChild(l);}
     d.appendChild(img);
-    d.ontouchend=(e)=>{
-      e.preventDefault();
-      if(deck.length>=20){showToast("デッキは20枚まで");return;}
-      const cnt=deck.filter(x=>x===cd.name).length;
-      if(LIMITED.includes(cd.name)&&cnt>=1){showToast("「"+cd.name+"」は制限カードのため1枚まで");return;}
-      if(cnt>=2){showToast("同名カードは2枚まで");return;}
-      deck.push(cd.name); renderDeck(); renderCards();
-    };
-    lp(d,cd.name,cd); p.appendChild(d);
+    // タップでプレビュー表示（デッキ追加はプレビュー内ボタンで行う）
+    d.ontouchend=(e)=>{e.preventDefault();showPreview(cd.name);};
+    p.appendChild(d);
   });
 }
 function save(){

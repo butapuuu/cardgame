@@ -37,21 +37,20 @@ html,body{
 #spHeader{
   background:rgba(0,0,0,0.6);
   border-bottom:1px solid #333;
-  padding:4px 8px;
+  padding:2px 6px;
   display:flex;
   align-items:center;
-  gap:6px;
+  gap:4px;
   flex-wrap:wrap;
   flex-shrink:0;
-  min-height:36px;
 }
 #spHeader button{
   background:linear-gradient(135deg,#1a2a1a,#2a3a2a);
   color:#aaddaa;
   border:1px solid #3a6a3a;
-  border-radius:5px;
-  padding:4px 10px;
-  font-size:11px;
+  border-radius:4px;
+  padding:3px 7px;
+  font-size:10px;
   font-weight:bold;
   cursor:pointer;
   white-space:nowrap;
@@ -60,279 +59,148 @@ html,body{
   background:#0e1a0e;
   color:#aaddaa;
   border:1px solid #3a6a3a;
-  border-radius:5px;
-  padding:3px 6px;
-  font-size:11px;
-  max-width:100px;
+  border-radius:4px;
+  padding:2px 4px;
+  font-size:10px;
+  max-width:88px;
 }
-#spTurnLabel{
-  font-size:12px;
-  font-weight:bold;
-  color:#ffe066;
-  margin-left:auto;
-}
-#spWinner{
-  font-size:12px;
-  font-weight:bold;
-  color:#ff6666;
-}
+#spTurnLabel{ font-size:10px;font-weight:bold;color:#ffe066;margin-left:auto; }
+#spWinner{ font-size:10px;font-weight:bold;color:#ff6666; }
 
-/* ===== プレイマット（縦スクロールなし） ===== */
+/* ===== プレイマット ===== */
 #spMat{
   flex:1;
   display:flex;
   flex-direction:column;
   overflow:hidden;
-  padding:2px 4px;
-  gap:2px;
+  padding:1px 3px;
+  gap:1px;
+  min-height:0;
 }
 
-/* ===== 相手情報バー ===== */
+/* ===== 情報バー共通 ===== */
 .sp-info-bar{
   display:flex;
   align-items:center;
-  gap:6px;
-  padding:2px 4px;
+  gap:4px;
+  padding:1px 4px;
   background:rgba(0,0,0,0.4);
-  border-radius:6px;
+  border-radius:5px;
   flex-shrink:0;
 }
+/* ライフバッジ：vwで縮小 */
 .sp-life-badge{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+  display:flex;flex-direction:column;align-items:center;
   background:radial-gradient(circle at 40% 35%,#5a1a1a,#1a0808);
-  border:2px solid #cc4444;
-  border-radius:50%;
-  width:44px;height:44px;
+  border:2px solid #cc4444;border-radius:50%;
+  width:clamp(30px,8.5vw,42px);height:clamp(30px,8.5vw,42px);
   justify-content:center;
-  box-shadow:0 0 8px rgba(200,50,50,0.4);
+  box-shadow:0 0 8px rgba(200,50,50,0.4);flex-shrink:0;
 }
-.sp-life-badge .lv{ font-size:16px;font-weight:bold;color:#ffaaaa;line-height:1; }
-.sp-life-badge .ll{ font-size:7px;color:#cc6666;letter-spacing:1px; }
+.sp-life-badge .lv{ font-size:clamp(11px,3.8vw,15px);font-weight:bold;color:#ffaaaa;line-height:1; }
+.sp-life-badge .ll{ font-size:5px;color:#cc6666;letter-spacing:1px; }
 .sp-energy-badge{
   background:linear-gradient(135deg,#0a1a2a,#0d2a3a);
-  border:1px solid #2266aa;
-  border-radius:6px;
-  padding:2px 8px;
-  text-align:center;
+  border:1px solid #2266aa;border-radius:5px;
+  padding:1px 5px;text-align:center;
   box-shadow:0 0 6px rgba(40,120,200,0.3);
 }
-.sp-energy-badge .el{ font-size:7px;color:#4488cc;letter-spacing:1px; }
-.sp-energy-badge .ev{ font-size:12px;font-weight:bold;color:#88ccff; }
+.sp-energy-badge .el{ font-size:6px;color:#4488cc;letter-spacing:1px; }
+.sp-energy-badge .ev{ font-size:10px;font-weight:bold;color:#88ccff; }
 
-/* デッキ・捨て場（小） */
-.sp-deck-grave{
-  display:flex;
-  gap:4px;
-  align-items:center;
-}
-.sp-deck-pile{
-  position:relative;
-  width:32px;
-}
-.sp-deck-pile img{
-  width:32px;border-radius:3px;
-  box-shadow:1px 1px 0 #222,2px 2px 0 #111,3px 3px 0 #080808,0 4px 8px rgba(0,0,0,0.7);
-}
-.sp-deck-pile .sp-deck-count{
-  position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  color:#fff;font-size:10px;font-weight:bold;
-  text-shadow:0 0 4px #000,0 0 8px #000;
-  pointer-events:none;z-index:10;
-}
-.sp-grave-pile{
-  position:relative;
-  width:32px;
-  cursor:pointer;
-}
-.sp-grave-pile img{
-  width:32px;border-radius:3px;
-  box-shadow:0 1px 4px #000;
-}
-.sp-grave-pile .sp-grave-empty{
-  width:32px;height:46px;
-  border:1px solid rgba(180,140,80,0.4);
-  border-radius:3px;
-  display:flex;align-items:center;justify-content:center;
-  color:rgba(180,140,80,0.4);
-  font-size:6px;letter-spacing:1px;font-weight:bold;
-}
-.sp-grave-pile .sp-grave-count{
-  position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  color:#fff;font-size:10px;font-weight:bold;
-  text-shadow:0 0 4px #000;pointer-events:none;z-index:10;
-}
+/* デッキ・捨て場 */
+.sp-deck-grave{ display:flex;gap:3px;align-items:center; }
+.sp-deck-pile{ position:relative;width:clamp(22px,7vw,30px); }
+.sp-deck-pile img{ width:100%;border-radius:3px;box-shadow:1px 1px 0 #222,2px 2px 0 #111,0 3px 6px rgba(0,0,0,0.7); }
+.sp-deck-pile .sp-deck-count{ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:9px;font-weight:bold;text-shadow:0 0 4px #000;pointer-events:none;z-index:10; }
+.sp-grave-pile{ position:relative;width:clamp(22px,7vw,30px);cursor:pointer; }
+.sp-grave-pile img{ width:100%;border-radius:3px;box-shadow:0 1px 4px #000; }
+.sp-grave-pile .sp-grave-empty{ width:100%;height:calc(clamp(22px,7vw,30px) * 1.44);border:1px solid rgba(180,140,80,0.4);border-radius:3px;display:flex;align-items:center;justify-content:center;color:rgba(180,140,80,0.4);font-size:5px;letter-spacing:1px;font-weight:bold; }
+.sp-grave-pile .sp-grave-count{ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:9px;font-weight:bold;text-shadow:0 0 4px #000;pointer-events:none;z-index:10; }
 
-/* ===== 相手手札エリア ===== */
-#spEnemyHand{
-  display:flex;
-  gap:2px;
-  justify-content:center;
-  flex-shrink:0;
-  padding:1px 0;
-  min-height:28px;
-}
-#spEnemyHand img{
-  width:22px;border-radius:2px;
-  box-shadow:0 1px 3px #000;
-}
+/* ===== 相手手札 ===== */
+#spEnemyHand{ display:flex;gap:2px;justify-content:center;flex-shrink:0;padding:0; }
+#spEnemyHand img{ width:clamp(14px,5vw,20px);border-radius:2px;box-shadow:0 1px 3px #000; }
 
 /* ===== フィールド共通 ===== */
 .sp-field{
   flex:1;
   background:var(--field-bg);
-  border:2px solid var(--field-border);
-  border-radius:8px;
+  border:1px solid var(--field-border);
+  border-radius:6px;
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:4px 70px;
+  padding:2px clamp(44px,15vw,66px);
   min-height:0;
   position:relative;
   transition:background 0.8s,border-color 0.8s;
 }
-.sp-field.enemy-field{
-  background:var(--enemy-field-bg);
-  border-color:var(--enemy-field-border);
-}
-.sp-unit-slots{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  flex:0 0 auto;
-}
+.sp-field.enemy-field{ background:var(--enemy-field-bg);border-color:var(--enemy-field-border); }
+.sp-unit-slots{ display:flex;gap:clamp(3px,1.5vw,7px);align-items:center;flex:0 0 auto; }
+/* ユニットスロット・カードサイズをvwで自動縮小 */
 .sp-unit-slot-empty{
-  width:56px;height:82px;
-  border:1px solid rgba(255,255,255,0.15);
-  border-radius:5px;
+  width:clamp(38px,12.5vw,54px);
+  height:clamp(54px,17.5vw,76px);
+  border:1px solid rgba(255,255,255,0.15);border-radius:4px;
   background:rgba(255,255,255,0.02);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
-.sp-unit-slot-empty::before{
-  content:"UNIT";
-  font-size:7px;color:rgba(255,255,255,0.15);
-  letter-spacing:2px;font-weight:bold;pointer-events:none;
-}
-/* FSスロット：絶対配置で両フィールド共通 */
+.sp-unit-slot-empty::before{ content:"UNIT";font-size:6px;color:rgba(255,255,255,0.15);letter-spacing:2px;font-weight:bold;pointer-events:none; }
+/* FSスロット */
 .sp-fs-slot{
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-  width:60px;
-  height:82px;
-  flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  border:1px solid rgba(255,215,0,0.4);
-  border-radius:5px;
-  background:rgba(255,215,0,0.03);
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:clamp(38px,12.5vw,54px);height:clamp(54px,17.5vw,76px);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,215,0,0.4);border-radius:4px;background:rgba(255,215,0,0.03);
 }
-.sp-fs-slot::before{
-  content:"FIELD";
-  position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  font-size:7px;color:rgba(255,215,0,0.25);
-  letter-spacing:2px;pointer-events:none;font-weight:bold;
-}
+.sp-fs-slot::before{ content:"FIELD";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:6px;color:rgba(255,215,0,0.25);letter-spacing:2px;pointer-events:none;font-weight:bold; }
 .sp-fs-slot:not(:empty)::before{ display:none; }
-/* 自分フィールドのFSは左端 */
-#spMyField>.sp-fs-slot{ left:6px; }
-/* 相手フィールドのFSは右端 */
-#spEnemyField>.sp-fs-slot{ right:6px; }
+#spMyField>.sp-fs-slot{ left:4px; }
+#spEnemyField>.sp-fs-slot{ right:4px; }
 
 /* ===== カード ===== */
-.sp-card{
-  display:inline-flex;
-  flex-direction:column;
-  align-items:center;
-  cursor:pointer;
-  position:relative;
-  flex-shrink:0;
-  transition:transform 0.15s;
-}
+.sp-card{ display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;position:relative;flex-shrink:0;transition:transform 0.15s; }
 .sp-card:active{ transform:scale(0.95); }
-.sp-card img{ width:56px;border-radius:4px;box-shadow:0 2px 5px #000; }
-.sp-card .sp-stat{
-  font-size:9px;color:#ffe066;
-  margin-top:1px;
-  background:rgba(0,0,0,0.7);
-  border-radius:2px;padding:1px 3px;
-  white-space:nowrap;
-}
-.sp-card.selected img{ outline:3px solid #ff4444;border-radius:4px; }
+.sp-card img{ width:clamp(38px,12.5vw,54px);border-radius:3px;box-shadow:0 2px 4px #000; }
+.sp-card .sp-stat{ font-size:clamp(7px,2.2vw,9px);color:#ffe066;margin-top:1px;background:rgba(0,0,0,0.7);border-radius:2px;padding:1px 2px;white-space:nowrap; }
+.sp-card.selected img{ outline:2px solid #ff4444;border-radius:3px; }
 
 /* ===== 直接攻撃ゾーン ===== */
 #spDirectZone{
   background:linear-gradient(135deg,rgba(80,0,0,0.25),rgba(120,0,0,0.15));
-  border:1px solid rgba(180,60,60,0.4);
-  border-radius:5px;
-  height:28px;
+  border:1px solid rgba(180,60,60,0.4);border-radius:4px;
+  height:20px;
   display:flex;align-items:center;justify-content:center;
-  color:rgba(220,100,100,0.7);
-  font-size:9px;font-weight:bold;letter-spacing:2px;
-  cursor:pointer;
-  flex-shrink:0;
-  transition:all 0.2s;
+  color:rgba(220,100,100,0.7);font-size:8px;font-weight:bold;letter-spacing:2px;
+  cursor:pointer;flex-shrink:0;transition:all 0.2s;
 }
-#spDirectZone.active{
-  background:linear-gradient(135deg,rgba(160,20,20,0.4),rgba(100,0,0,0.3));
-  border-color:rgba(255,80,80,0.7);
-  color:rgba(255,150,150,0.95);
-}
+#spDirectZone.active{ background:linear-gradient(135deg,rgba(160,20,20,0.4),rgba(100,0,0,0.3));border-color:rgba(255,80,80,0.7);color:rgba(255,150,150,0.95); }
 
 /* ===== 自分情報バー ===== */
-#spMyInfoBar{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  padding:2px 4px;
-  background:rgba(0,0,0,0.4);
-  border-radius:6px;
-  flex-shrink:0;
-}
+#spMyInfoBar{ display:flex;align-items:center;gap:4px;padding:1px 4px;background:rgba(0,0,0,0.4);border-radius:5px;flex-shrink:0; }
 
 /* ===== 手札エリア ===== */
 #spHandArea{
   flex-shrink:0;
-  display:flex;
-  align-items:flex-end;
-  justify-content:center;
-  min-height:90px;
-  padding:0 8px 4px;
-  position:relative;
-  overflow:visible;
+  display:flex;align-items:flex-end;justify-content:center;
+  height:clamp(68px,20vw,88px);
+  padding:0 6px 2px;
+  position:relative;overflow:visible;
 }
 
 /* ===== ボタンエリア ===== */
-#spBtnArea{
-  display:flex;
-  gap:6px;
-  padding:4px 6px;
-  flex-shrink:0;
-}
+#spBtnArea{ display:flex;gap:4px;padding:3px 5px;flex-shrink:0; }
 #spEndTurnBtn{
-  flex:1;
-  background:linear-gradient(135deg,#0d2a0d,#1a4a1a);
-  color:#88ff88;
-  border:1px solid #2a8a2a;
-  border-radius:7px;
-  padding:8px;
-  font-size:12px;font-weight:bold;letter-spacing:1px;
-  cursor:pointer;
-  box-shadow:0 0 8px rgba(40,180,40,0.3);
+  flex:1;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;
+  border:1px solid #2a8a2a;border-radius:6px;padding:6px 4px;
+  font-size:11px;font-weight:bold;letter-spacing:1px;cursor:pointer;
+  box-shadow:0 0 6px rgba(40,180,40,0.3);
 }
 #spSurrenderBtn{
-  flex:1;
-  background:linear-gradient(135deg,#2a0808,#4a1212);
-  color:#ff8888;
-  border:1px solid #8a2222;
-  border-radius:7px;
-  padding:8px;
-  font-size:12px;font-weight:bold;letter-spacing:1px;
-  cursor:pointer;
+  flex:1;background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;
+  border:1px solid #8a2222;border-radius:6px;padding:6px 4px;
+  font-size:11px;font-weight:bold;letter-spacing:1px;cursor:pointer;
 }
 
 /* ===== モーダル共通 ===== */
