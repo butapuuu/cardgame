@@ -22,6 +22,13 @@ html,body{
   font-family:sans-serif;
   transition:background 0.8s;
 }
+/* ★画像の長押し保存ダイアログを防ぐ */
+img{
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;
+  user-select:none;
+  pointer-events:auto;
+}
 
 /* ===== メインレイアウト：縦方向に全画面 ===== */
 #gameRoot{
@@ -92,29 +99,29 @@ html,body{
   display:flex;flex-direction:column;align-items:center;
   background:radial-gradient(circle at 40% 35%,#5a1a1a,#1a0808);
   border:2px solid #cc4444;border-radius:50%;
-  width:clamp(34px,9.5vw,46px);height:clamp(34px,9.5vw,46px);
+  width:clamp(36px,10vw,48px);height:clamp(36px,10vw,48px);
   justify-content:center;
   box-shadow:0 0 8px rgba(200,50,50,0.4);flex-shrink:0;
 }
-.sp-life-badge .lv{ font-size:clamp(12px,4.2vw,16px);font-weight:bold;color:#ffaaaa;line-height:1; }
+.sp-life-badge .lv{ font-size:clamp(13px,4.5vw,17px);font-weight:bold;color:#ffaaaa;line-height:1; }
 .sp-life-badge .ll{ font-size:6px;color:#cc6666;letter-spacing:1px; }
 .sp-energy-badge{
   background:linear-gradient(135deg,#0a1a2a,#0d2a3a);
   border:1px solid #2266aa;border-radius:5px;
-  padding:2px 7px;text-align:center;
+  padding:2px 8px;text-align:center;
   box-shadow:0 0 6px rgba(40,120,200,0.3);
 }
 .sp-energy-badge .el{ font-size:7px;color:#4488cc;letter-spacing:1px; }
-.sp-energy-badge .ev{ font-size:11px;font-weight:bold;color:#88ccff; }
+.sp-energy-badge .ev{ font-size:12px;font-weight:bold;color:#88ccff; }
 
 /* デッキ・捨て場 */
-.sp-deck-grave{ display:flex;gap:3px;align-items:center; }
-.sp-deck-pile{ position:relative;width:clamp(26px,8vw,34px); }
+.sp-deck-grave{ display:flex;gap:4px;align-items:center; }
+.sp-deck-pile{ position:relative;width:clamp(28px,9vw,38px); }
 .sp-deck-pile img{ width:100%;border-radius:3px;box-shadow:1px 1px 0 #222,2px 2px 0 #111,0 3px 6px rgba(0,0,0,0.7); }
 .sp-deck-pile .sp-deck-count{ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:9px;font-weight:bold;text-shadow:0 0 4px #000;pointer-events:none;z-index:10; }
-.sp-grave-pile{ position:relative;width:clamp(26px,8vw,34px);cursor:pointer; }
+.sp-grave-pile{ position:relative;width:clamp(28px,9vw,38px);cursor:pointer; }
 .sp-grave-pile img{ width:100%;border-radius:3px;box-shadow:0 1px 4px #000; }
-.sp-grave-pile .sp-grave-empty{ width:100%;height:calc(clamp(26px,8vw,34px) * 1.44);border:1px solid rgba(180,140,80,0.4);border-radius:3px;display:flex;align-items:center;justify-content:center;color:rgba(180,140,80,0.4);font-size:5px;letter-spacing:1px;font-weight:bold; }
+.sp-grave-pile .sp-grave-empty{ width:100%;height:calc(clamp(28px,9vw,38px) * 1.44);border:1px solid rgba(180,140,80,0.4);border-radius:3px;display:flex;align-items:center;justify-content:center;color:rgba(180,140,80,0.4);font-size:5px;letter-spacing:1px;font-weight:bold; }
 .sp-grave-pile .sp-grave-count{ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:9px;font-weight:bold;text-shadow:0 0 4px #000;pointer-events:none;z-index:10; }
 
 /* ===== 相手手札 ===== */
@@ -162,8 +169,28 @@ html,body{
 .sp-card{ display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;position:relative;flex-shrink:0;transition:transform 0.15s; }
 .sp-card:active{ transform:scale(0.95); }
 .sp-card img{ width:8vh;border-radius:3px;box-shadow:0 2px 4px #000; }
-.sp-card .sp-stat{ font-size:7px;color:#ffe066;margin-top:1px;background:rgba(0,0,0,0.7);border-radius:2px;padding:1px 2px;white-space:nowrap; }
+.sp-card .sp-stat{
+  font-size:7px;color:#ffe066;
+  margin-top:2px;
+  background:rgba(0,0,0,0.85);
+  border-radius:2px;padding:1px 3px;
+  white-space:nowrap;
+  position:relative;
+  z-index:5;
+}
 .sp-card.selected img{ outline:2px solid #ff4444;border-radius:3px; }
+/* 自分フィールドのstatは上に出す（相手フィールドとの重なり防止） */
+#spMyUnits .sp-card .sp-stat{
+  order:0;
+  margin-top:0;
+  margin-bottom:2px;
+  position:absolute;
+  bottom:calc(100% + 1px);
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,20,0.9);
+  border:1px solid rgba(255,220,80,0.4);
+}
 
 /* ===== 直接攻撃ゾーン ===== */
 #spDirectZone{
@@ -183,9 +210,10 @@ html,body{
 #spHandArea{
   flex:1;
   min-height:14vh;
-  max-height:22vh;
+  max-height:20vh;
   display:flex;align-items:flex-end;justify-content:center;
-  padding:0 6px 2px;
+  padding:0 6px 0;
+  margin-bottom:2px;
   position:relative;
   overflow:hidden;
 }
@@ -497,32 +525,77 @@ html,body{
 const socket=io();
 
 // ===== BGM・SE =====
-const BGM_SP=new Audio("sounds/BGM.mp3");
-BGM_SP.volume=0.12;
 const BGM_WIN_SP=new Audio("sounds/勝利.mp3"); BGM_WIN_SP.volume=0.8;
 const BGM_LOSE_SP=new Audio("sounds/敗北.mp3"); BGM_LOSE_SP.volume=0.8;
-let spBgmStarted=false,spResultShown=false;
-let spBgmCtx=null,spBgmSrc=null,spBgmBuf=null;
+let spResultShown=false;
+
+// BGMはAudioContextで実装（途切れ防止）
+let _bgmCtx=null, _bgmGain=null, _bgmBuf=null, _bgmSrc=null, _bgmPlaying=false;
 
 async function spStartBGM(){
-  if(spBgmStarted)return; spBgmStarted=true;
+  if(_bgmPlaying) return;
   try{
-    spBgmCtx=new(window.AudioContext||window.webkitAudioContext)();
-    const res=await fetch("sounds/BGM.mp3");
-    const ab=await res.arrayBuffer();
-    spBgmBuf=await spBgmCtx.decodeAudioData(ab);
-    spBgmSrc=spBgmCtx.createBufferSource();
-    spBgmSrc.buffer=spBgmBuf; spBgmSrc.loop=true;
-    const g=spBgmCtx.createGain(); g.gain.value=0.12;
-    spBgmSrc.connect(g); g.connect(spBgmCtx.destination);
-    spBgmSrc.start(0);
-  }catch(e){ BGM_SP.loop=true; BGM_SP.play().catch(()=>{}); }
+    if(!_bgmCtx){
+      _bgmCtx=new(window.AudioContext||window.webkitAudioContext)();
+      _bgmGain=_bgmCtx.createGain();
+      _bgmGain.gain.value=0.12;
+      _bgmGain.connect(_bgmCtx.destination);
+    }
+    // BGMバッファが未ロードなら取得
+    if(!_bgmBuf){
+      const res=await fetch("sounds/BGM.mp3");
+      const ab=await res.arrayBuffer();
+      _bgmBuf=await _bgmCtx.decodeAudioData(ab);
+    }
+    if(_bgmCtx.state==="suspended") await _bgmCtx.resume();
+    _bgmSrc=_bgmCtx.createBufferSource();
+    _bgmSrc.buffer=_bgmBuf;
+    _bgmSrc.loop=true;
+    _bgmSrc.connect(_bgmGain);
+    _bgmSrc.start(0);
+    _bgmPlaying=true;
+  }catch(e){
+    // フォールバック：Audio要素
+    try{
+      window._bgmFallback=window._bgmFallback||new Audio("sounds/BGM.mp3");
+      window._bgmFallback.volume=0.12;
+      window._bgmFallback.loop=true;
+      window._bgmFallback.play().catch(()=>{});
+      _bgmPlaying=true;
+    }catch(e2){}
+  }
 }
+
 function spStopBGM(){
-  if(spBgmSrc){try{spBgmSrc.stop();}catch(e){} spBgmSrc=null;}
-  if(spBgmCtx){try{spBgmCtx.close();}catch(e){} spBgmCtx=null;}
-  spBgmBuf=null; BGM_SP.pause(); BGM_SP.currentTime=0; spBgmStarted=false;
+  if(_bgmSrc){try{_bgmSrc.stop();}catch(e){} _bgmSrc=null;}
+  if(window._bgmFallback){_bgmFallback.pause();_bgmFallback.currentTime=0;}
+  _bgmPlaying=false;
 }
+
+// ★iOSでconfirm/alertが出るとAudioContextがsuspendされるため、復帰処理
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible"&&_bgmCtx&&_bgmPlaying){
+    _bgmCtx.resume().catch(()=>{});
+  }
+});
+// touchstartでも復帰を試みる（iOS対策）
+document.addEventListener("touchstart",()=>{
+  if(_bgmCtx&&_bgmCtx.state==="suspended"&&_bgmPlaying){
+    _bgmCtx.resume().then(()=>{
+      // resumeしてもsrcが止まっていたら再生し直す
+      if(_bgmBuf&&(!_bgmSrc||_bgmCtx.state==="running")){
+        try{
+          if(_bgmSrc) _bgmSrc.stop();
+        }catch(e){}
+        _bgmSrc=_bgmCtx.createBufferSource();
+        _bgmSrc.buffer=_bgmBuf;
+        _bgmSrc.loop=true;
+        _bgmSrc.connect(_bgmGain);
+        _bgmSrc.start(0);
+      }
+    }).catch(()=>{});
+  }
+},{passive:true});
 
 const SP_SE={
   spell:new Audio("sounds/spell.mp3"),
@@ -643,7 +716,7 @@ function spSelectPlayer(num){
   if(!deck||deck.length===0){alert("デッキを選択してください");return;}
   socket.emit("join",{player:num,deck});
   spApplyAttrColor(spDetectDeckAttr(deck));
-  spStartBGM();
+  // BGMはSTARTボタンで開始するためここでは開始しない
 }
 
 // ===== ゲーム操作 =====
