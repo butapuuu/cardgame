@@ -565,15 +565,14 @@ document.addEventListener("visibilitychange",()=>{
     _bgmCtx.resume().catch(()=>{});
   }
 });
-// touchstartでも復帰を試みる（iOS対策）
-document.addEventListener("touchstart",()=>{
-  if(_bgmCtx&&_bgmCtx.state==="suspended"&&_bgmPlaying){
+// touchstart/click どちらでも復帰（iOS対策）
+function _tryResumeBGM(){
+  if(!_bgmCtx||!_bgmPlaying)return;
+  if(_bgmCtx.state==="suspended"){
     _bgmCtx.resume().then(()=>{
-      // resumeしてもsrcが止まっていたら再生し直す
-      if(_bgmBuf&&(!_bgmSrc||_bgmCtx.state==="running")){
-        try{
-          if(_bgmSrc) _bgmSrc.stop();
-        }catch(e){}
+      if(_bgmBuf&&_bgmPlaying){
+        // ノードが止まっていたら再接続して再生
+        try{ if(_bgmSrc)_bgmSrc.stop(); }catch(e){}
         _bgmSrc=_bgmCtx.createBufferSource();
         _bgmSrc.buffer=_bgmBuf;
         _bgmSrc.loop=true;
@@ -582,7 +581,10 @@ document.addEventListener("touchstart",()=>{
       }
     }).catch(()=>{});
   }
-},{passive:true});
+}
+document.addEventListener("touchstart",_tryResumeBGM,{passive:true});
+document.addEventListener("touchend",_tryResumeBGM,{passive:true});
+document.addEventListener("click",_tryResumeBGM);
 
 const SP_SE={
   spell:new Audio("sounds/spell.mp3"),
@@ -779,15 +781,17 @@ function spShowGrave(side){
   data.forEach(c=>{
     const img=document.createElement("img");
     img.src="images/"+c.name+".png";
-    img.style.cssText="width:56px;border-radius:4px;box-shadow:0 2px 5px #000;cursor:pointer;";
-    // 長押しでプレビュー（z-index:1500のプレビューモーダルが捨て場モーダルの上に表示される）
+    img.style.cssText="width:56px;border-radius:4px;box-shadow:0 2px 5px #000;";
+    // 長押しのみプレビュー（タップでは何もしない）
     let pressTimer=null;
-    img.addEventListener("touchstart",()=>{pressTimer=setTimeout(()=>{
+    let _lp=false;
+    img.addEventListener("touchstart",()=>{_lp=false;pressTimer=setTimeout(()=>{
+      _lp=true;
       document.getElementById("spPreviewImg").src="images/"+c.name+".png";
       document.getElementById("spPreviewModal").classList.add("open");
-    },400);});
+    },400);},{passive:true});
     img.addEventListener("touchend",()=>clearTimeout(pressTimer));
-    img.addEventListener("touchmove",()=>clearTimeout(pressTimer));
+    img.addEventListener("touchmove",()=>{clearTimeout(pressTimer);_lp=false;});
     container.appendChild(img);
   });
   document.getElementById("spGraveModal").classList.add("open");
@@ -829,10 +833,7 @@ function spRenderGravePile(pileId,emptyId,graveData){
   img.src="images/"+top.name+".png";
   img.className="sp-grave-top";
   img.style.cssText="width:32px;border-radius:3px;box-shadow:0 1px 4px #000;display:block;";
-  img.onclick=()=>{
-    document.getElementById("spPreviewImg").src="images/"+top.name+".png";
-    document.getElementById("spPreviewModal").classList.add("open");
-  };
+  // タップは捨て場一覧モーダルを開くだけ（pileのonclick="spShowGrave()"に委ねる）
   pile.insertBefore(img,emptyDiv);
   const countDiv=document.createElement("div");
   countDiv.className="sp-grave-count";
