@@ -81,7 +81,7 @@ img{
   flex-direction:column;
   overflow:hidden;
   padding:2px 3px;
-  gap:2px;
+  gap:3px;
   min-height:0;
 }
 
@@ -130,7 +130,7 @@ img{
 
 /* ===== フィールド共通 ===== */
 .sp-field{
-  flex:0 0 12vh;
+  flex:0 0 13vh;
   background:var(--field-bg);
   border:1px solid var(--field-border);
   border-radius:6px;
@@ -145,9 +145,8 @@ img{
 }
 .sp-field.enemy-field{ background:var(--enemy-field-bg);border-color:var(--enemy-field-border); }
 .sp-unit-slots{ display:flex;gap:4px;align-items:center;flex:0 0 auto; }
-/* カード・スロットをフィールド高さより小さく */
 .sp-unit-slot-empty{
-  width:8vh;height:11vh;
+  width:8vh;height:10vh;
   border:1px solid rgba(255,255,255,0.15);border-radius:4px;
   background:rgba(255,255,255,0.02);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
@@ -156,7 +155,7 @@ img{
 /* FSスロット */
 .sp-fs-slot{
   position:absolute;top:50%;transform:translateY(-50%);
-  width:8vh;height:11vh;
+  width:8vh;height:10vh;
   flex-shrink:0;display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(255,215,0,0.4);border-radius:4px;background:rgba(255,215,0,0.03);
 }
@@ -165,7 +164,7 @@ img{
 #spMyField>.sp-fs-slot{ left:4px; }
 #spEnemyField>.sp-fs-slot{ right:4px; }
 
-/* ===== カード ===== */
+/* ===== カード：statは全て下に統一 ===== */
 .sp-card{ display:inline-flex;flex-direction:column;align-items:center;cursor:pointer;position:relative;flex-shrink:0;transition:transform 0.15s; }
 .sp-card:active{ transform:scale(0.95); }
 .sp-card img{ width:8vh;border-radius:3px;box-shadow:0 2px 4px #000; }
@@ -175,22 +174,9 @@ img{
   background:rgba(0,0,0,0.85);
   border-radius:2px;padding:1px 3px;
   white-space:nowrap;
-  position:relative;
   z-index:5;
 }
 .sp-card.selected img{ outline:2px solid #ff4444;border-radius:3px; }
-/* 自分フィールドのstatは上に出す（相手フィールドとの重なり防止） */
-#spMyUnits .sp-card .sp-stat{
-  order:0;
-  margin-top:0;
-  margin-bottom:2px;
-  position:absolute;
-  bottom:calc(100% + 1px);
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(0,0,20,0.9);
-  border:1px solid rgba(255,220,80,0.4);
-}
 
 /* ===== 直接攻撃ゾーン ===== */
 #spDirectZone{
@@ -206,19 +192,20 @@ img{
 /* ===== 自分情報バー ===== */
 #spMyInfoBar{ display:flex;align-items:center;gap:4px;padding:1px 4px;background:rgba(0,0,0,0.4);border-radius:5px;flex-shrink:0; }
 
-/* ===== 手札エリア：残り空間を使い、ボタンと絶対に重ならない ===== */
+/* ===== 手札エリア ===== */
 #spHandArea{
   flex:1;
   min-height:14vh;
   max-height:20vh;
-  display:flex;align-items:flex-end;justify-content:center;
-  padding:0 6px 0;
-  margin-bottom:2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0 6px;
   position:relative;
   overflow:hidden;
 }
 
-/* ===== ボタンエリア：flex-shrink:0で必ず画面内に ===== */
+/* ===== ボタンエリア：必ず最下部 ===== */
 #spBtnArea{ display:flex;gap:4px;padding:4px 5px 10px;flex-shrink:0; }
 #spEndTurnBtn{
   flex:1;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;
@@ -1435,17 +1422,22 @@ function _spRenderHand(handCards,g){
     div.style.cssText=`transform:rotate(${rotate}deg) translateY(${translateY}px);transform-origin:center bottom;z-index:${hi};margin-left:${marginLeft}px;`;
     const img=document.createElement("img"); img.src="images/"+card+".png";
     img.style.width=cardW+"px";
-    // 長押しでプレビュー
+    // 長押しとタップを完全分離
     let pressTimer=null;
-    div.addEventListener("touchstart",()=>{pressTimer=setTimeout(()=>{
-      document.getElementById("spPreviewImg").src="images/"+card+".png";
-      document.getElementById("spPreviewModal").classList.add("open");
-    },400);});
-    div.addEventListener("touchend",()=>clearTimeout(pressTimer));
-    div.addEventListener("touchmove",()=>clearTimeout(pressTimer));
+    let _longPressed=false;
+    div.addEventListener("touchstart",(e)=>{
+      _longPressed=false;
+      pressTimer=setTimeout(()=>{
+        _longPressed=true;
+        document.getElementById("spPreviewImg").src="images/"+card+".png";
+        document.getElementById("spPreviewModal").classList.add("open");
+      },400);
+    },{passive:true});
+    div.addEventListener("touchmove",()=>{clearTimeout(pressTimer);_longPressed=false;});
     div.ontouchend=(e)=>{
       e.preventDefault();
-      if(pressTimer)clearTimeout(pressTimer);
+      clearTimeout(pressTimer);
+      if(_longPressed){ _longPressed=false; return; } // 長押しなら何もしない
       if(g.pendingDiscard&&g.pendingDiscard>0){
         if(confirm(card+" を捨てますか？"))socket.emit("action",{type:"discard_hand",card});
         return;
