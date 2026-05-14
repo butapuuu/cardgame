@@ -92,29 +92,29 @@ html,body{
   display:flex;flex-direction:column;align-items:center;
   background:radial-gradient(circle at 40% 35%,#5a1a1a,#1a0808);
   border:2px solid #cc4444;border-radius:50%;
-  width:clamp(30px,8.5vw,40px);height:clamp(30px,8.5vw,40px);
+  width:clamp(34px,9.5vw,46px);height:clamp(34px,9.5vw,46px);
   justify-content:center;
   box-shadow:0 0 8px rgba(200,50,50,0.4);flex-shrink:0;
 }
-.sp-life-badge .lv{ font-size:clamp(11px,3.8vw,14px);font-weight:bold;color:#ffaaaa;line-height:1; }
-.sp-life-badge .ll{ font-size:5px;color:#cc6666;letter-spacing:1px; }
+.sp-life-badge .lv{ font-size:clamp(12px,4.2vw,16px);font-weight:bold;color:#ffaaaa;line-height:1; }
+.sp-life-badge .ll{ font-size:6px;color:#cc6666;letter-spacing:1px; }
 .sp-energy-badge{
   background:linear-gradient(135deg,#0a1a2a,#0d2a3a);
   border:1px solid #2266aa;border-radius:5px;
-  padding:1px 5px;text-align:center;
+  padding:2px 7px;text-align:center;
   box-shadow:0 0 6px rgba(40,120,200,0.3);
 }
-.sp-energy-badge .el{ font-size:6px;color:#4488cc;letter-spacing:1px; }
-.sp-energy-badge .ev{ font-size:10px;font-weight:bold;color:#88ccff; }
+.sp-energy-badge .el{ font-size:7px;color:#4488cc;letter-spacing:1px; }
+.sp-energy-badge .ev{ font-size:11px;font-weight:bold;color:#88ccff; }
 
 /* デッキ・捨て場 */
 .sp-deck-grave{ display:flex;gap:3px;align-items:center; }
-.sp-deck-pile{ position:relative;width:clamp(22px,7vw,30px); }
+.sp-deck-pile{ position:relative;width:clamp(26px,8vw,34px); }
 .sp-deck-pile img{ width:100%;border-radius:3px;box-shadow:1px 1px 0 #222,2px 2px 0 #111,0 3px 6px rgba(0,0,0,0.7); }
 .sp-deck-pile .sp-deck-count{ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:9px;font-weight:bold;text-shadow:0 0 4px #000;pointer-events:none;z-index:10; }
-.sp-grave-pile{ position:relative;width:clamp(22px,7vw,30px);cursor:pointer; }
+.sp-grave-pile{ position:relative;width:clamp(26px,8vw,34px);cursor:pointer; }
 .sp-grave-pile img{ width:100%;border-radius:3px;box-shadow:0 1px 4px #000; }
-.sp-grave-pile .sp-grave-empty{ width:100%;height:calc(clamp(22px,7vw,30px) * 1.44);border:1px solid rgba(180,140,80,0.4);border-radius:3px;display:flex;align-items:center;justify-content:center;color:rgba(180,140,80,0.4);font-size:5px;letter-spacing:1px;font-weight:bold; }
+.sp-grave-pile .sp-grave-empty{ width:100%;height:calc(clamp(26px,8vw,34px) * 1.44);border:1px solid rgba(180,140,80,0.4);border-radius:3px;display:flex;align-items:center;justify-content:center;color:rgba(180,140,80,0.4);font-size:5px;letter-spacing:1px;font-weight:bold; }
 .sp-grave-pile .sp-grave-count{ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:9px;font-weight:bold;text-shadow:0 0 4px #000;pointer-events:none;z-index:10; }
 
 /* ===== 相手手札 ===== */
@@ -179,28 +179,26 @@ html,body{
 /* ===== 自分情報バー ===== */
 #spMyInfoBar{ display:flex;align-items:center;gap:4px;padding:1px 4px;background:rgba(0,0,0,0.4);border-radius:5px;flex-shrink:0; }
 
-/* ===== 手札エリア（枚数に応じて自動調整） ===== */
+/* ===== 手札エリア（大きく・ボタンと重ならない） ===== */
 #spHandArea{
-  flex:1;
-  min-height:0;
-  max-height:16vh;
+  flex:0 0 18vh;
   display:flex;align-items:flex-end;justify-content:center;
   padding:0 6px 2px;
   position:relative;overflow:visible;
 }
 
-/* ===== ボタンエリア ===== */
-#spBtnArea{ display:flex;gap:4px;padding:3px 5px 6px;flex-shrink:0; }
+/* ===== ボタンエリア：最下部に固定 ===== */
+#spBtnArea{ display:flex;gap:4px;padding:4px 5px 8px;flex-shrink:0; }
 #spEndTurnBtn{
   flex:1;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;
-  border:1px solid #2a8a2a;border-radius:6px;padding:7px 4px;
-  font-size:11px;font-weight:bold;letter-spacing:1px;cursor:pointer;
+  border:1px solid #2a8a2a;border-radius:6px;padding:9px 4px;
+  font-size:12px;font-weight:bold;letter-spacing:1px;cursor:pointer;
   box-shadow:0 0 6px rgba(40,180,40,0.3);
 }
 #spSurrenderBtn{
   flex:1;background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;
-  border:1px solid #8a2222;border-radius:6px;padding:7px 4px;
-  font-size:11px;font-weight:bold;letter-spacing:1px;cursor:pointer;
+  border:1px solid #8a2222;border-radius:6px;padding:9px 4px;
+  font-size:12px;font-weight:bold;letter-spacing:1px;cursor:pointer;
 }
 
 /* ===== モーダル共通 ===== */
@@ -379,15 +377,21 @@ html,body{
 
   <!-- ヘッダー -->
   <div id="spHeader">
-    <button onclick="spSelectPlayer(1)">P1参加</button>
-    <select id="spDeckSelectP1"><option value="-1">デッキ</option></select>
-    <button onclick="spSelectPlayer(2)">P2参加</button>
-    <select id="spDeckSelectP2"><option value="-1">デッキ</option></select>
-    <button onclick="spReset()" style="background:linear-gradient(135deg,#2a1a00,#4a3000);color:#ffcc66;border-color:#aa6600;">▶START</button>
-    <button onclick="window.open('deck1.html','_blank')" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border-color:#2a4a6a;">P1 DECK</button>
-    <button onclick="window.open('deck2.html','_blank')" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border-color:#2a4a6a;">P2 DECK</button>
-    <span id="spTurnLabel"></span>
-    <span id="spWinner"></span>
+    <!-- 1段目：参加・デッキ選択・START -->
+    <div style="display:flex;align-items:center;gap:4px;width:100%;flex-wrap:nowrap;">
+      <button onclick="spSelectPlayer(1)">P1参加</button>
+      <select id="spDeckSelectP1" style="flex:1;min-width:0;"><option value="-1">デッキ</option></select>
+      <button onclick="spSelectPlayer(2)">P2参加</button>
+      <select id="spDeckSelectP2" style="flex:1;min-width:0;"><option value="-1">デッキ</option></select>
+      <button onclick="spReset()" style="background:linear-gradient(135deg,#2a1a00,#4a3000);color:#ffcc66;border-color:#aa6600;flex-shrink:0;">▶START</button>
+    </div>
+    <!-- 2段目：DECKボタン＋ターン表示 -->
+    <div style="display:flex;align-items:center;gap:4px;width:100%;">
+      <button onclick="window.open('deck1.html','_blank')" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border-color:#2a4a6a;">P1 DECK</button>
+      <button onclick="window.open('deck2.html','_blank')" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border-color:#2a4a6a;">P2 DECK</button>
+      <span id="spTurnLabel" style="margin-left:auto;"></span>
+      <span id="spWinner"></span>
+    </div>
   </div>
 
   <!-- プレイマット -->
@@ -1336,7 +1340,7 @@ function _spRenderHand(handCards,g){
   const handCount=handCards.length;
   const maxAngle=Math.min(3*handCount,22);
   // 枚数が多いほどカードを小さく・重ねる
-  const cardW=handCount<=4?48:handCount<=6?42:handCount<=8?36:30;
+  const cardW=handCount<=3?60:handCount<=5?52:handCount<=7?44:36;
   const overlapPx=handCount<=4?0:Math.min((handCount-4)*8,36);
   handCards.forEach((card,hi)=>{
     const div=document.createElement("div"); div.className="sp-card";
