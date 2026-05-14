@@ -66,7 +66,14 @@ html,body{ width:100%;height:100%;background:var(--bg);color:#ccc;font-family:'S
 .fb.active[data-attr=neutral]{background:linear-gradient(135deg,#1a1a0a,#2a2a1a);color:#ddddaa;border-color:#888844;}
 
 /* カードプール */
-#psec{ flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 5px 100px;min-height:0; }
+#psec{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:4px 5px;
+  padding-bottom:max(120px, env(safe-area-inset-bottom, 0px) + 120px);
+  min-height:0;
+}
 #pool{ display:grid;grid-template-columns:repeat(5,1fr);gap:3px; }
 .pc{ position:relative;cursor:pointer;border-radius:3px;overflow:hidden;aspect-ratio:0.72;background:#0a100a;border:1px solid transparent;transition:transform 0.1s; }
 .pc:active{ transform:scale(0.93); }

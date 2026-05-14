@@ -179,25 +179,28 @@ html,body{
 /* ===== 自分情報バー ===== */
 #spMyInfoBar{ display:flex;align-items:center;gap:4px;padding:1px 4px;background:rgba(0,0,0,0.4);border-radius:5px;flex-shrink:0; }
 
-/* ===== 手札エリア（大きく・ボタンと重ならない） ===== */
+/* ===== 手札エリア：残り空間を使い、ボタンと絶対に重ならない ===== */
 #spHandArea{
-  flex:0 0 18vh;
+  flex:1;
+  min-height:14vh;
+  max-height:22vh;
   display:flex;align-items:flex-end;justify-content:center;
   padding:0 6px 2px;
-  position:relative;overflow:visible;
+  position:relative;
+  overflow:hidden;
 }
 
-/* ===== ボタンエリア：最下部に固定 ===== */
-#spBtnArea{ display:flex;gap:4px;padding:4px 5px 8px;flex-shrink:0; }
+/* ===== ボタンエリア：flex-shrink:0で必ず画面内に ===== */
+#spBtnArea{ display:flex;gap:4px;padding:4px 5px 10px;flex-shrink:0; }
 #spEndTurnBtn{
   flex:1;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;
-  border:1px solid #2a8a2a;border-radius:6px;padding:9px 4px;
+  border:1px solid #2a8a2a;border-radius:6px;padding:10px 4px;
   font-size:12px;font-weight:bold;letter-spacing:1px;cursor:pointer;
   box-shadow:0 0 6px rgba(40,180,40,0.3);
 }
 #spSurrenderBtn{
   flex:1;background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;
-  border:1px solid #8a2222;border-radius:6px;padding:9px 4px;
+  border:1px solid #8a2222;border-radius:6px;padding:10px 4px;
   font-size:12px;font-weight:bold;letter-spacing:1px;cursor:pointer;
 }
 
@@ -1339,8 +1342,16 @@ function _spRenderHand(handCards,g){
   const hand=document.getElementById("spHandArea"); hand.innerHTML="";
   const handCount=handCards.length;
   const maxAngle=Math.min(3*handCount,22);
-  // 枚数が多いほどカードを小さく・重ねる
-  const cardW=handCount<=3?60:handCount<=5?52:handCount<=7?44:36;
+  // 手札エリアの実際の高さからカードサイズを計算（vhベース）
+  const handAreaH=document.getElementById("spHandArea")?.offsetHeight||window.innerHeight*0.18;
+  // カードの縦横比は約1:1.4。高さの75%をカード高さに使いpxに変換
+  const baseCardH=Math.floor(handAreaH*0.82);
+  const baseCardW=Math.floor(baseCardH/1.4);
+  // 枚数が多いほど縮小するが最小48px
+  const cardW=handCount<=3?baseCardW:
+               handCount<=5?Math.max(52,Math.floor(baseCardW*0.88)):
+               handCount<=7?Math.max(48,Math.floor(baseCardW*0.76)):
+               Math.max(44,Math.floor(baseCardW*0.65));
   const overlapPx=handCount<=4?0:Math.min((handCount-4)*8,36);
   handCards.forEach((card,hi)=>{
     const div=document.createElement("div"); div.className="sp-card";
