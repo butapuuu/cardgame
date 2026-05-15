@@ -320,7 +320,7 @@ const cards = {
 
 //汎用
 "ダブルドロー":{cost:1,type:"spell",attr:"neutral",effect:"DRAW2"},
-"浄化の光":{cost:2,type:"spell",attr:"neutral",effect:"PURIFY"},
+"解放の光":{cost:2,type:"spell",attr:"neutral",effect:"PURIFY"},
 "リバース":{cost:3,type:"spell",attr:"neutral",effect:"BOUNCE_UNIT"},
 "崩壊":{cost:1,type:"spell",attr:"neutral",effect:"DES_PERM_SPELL"}
 };
@@ -904,10 +904,14 @@ function processSpellEffect(cardName, p, socket){
     case "UNIT_FULL_HEAL":
     case "UNIT_DENKOUSEKKA":
     case "CRYSTAL_BARRIER":
-    case "PURIFY":
       if(game.board[p].length===0){socket.emit("message","対象ユニットがいません");return false;}
       game.pendingTarget={player:p, effect:eff, card:cardName};
       socket.emit("selectTarget",{type:"myUnit", message:`「${cardName}」の対象を選択してください`});
+      return "pending";
+    case "PURIFY":
+      if(game.board[p].length===0&&game.board[op].length===0){socket.emit("message","対象ユニットがいません");return false;}
+      game.pendingTarget={player:p, effect:eff, card:cardName};
+      socket.emit("selectTarget",{type:"anyUnit", message:`「${cardName}」：特殊状態を解除するユニットを選択してください（自分・相手どちらでも可）`});
       return "pending";
     case "FLAME_BURN":
       if(game.board[p].length===0){socket.emit("message","自分の場にユニットがいません");return false;}
@@ -1061,7 +1065,7 @@ function processSpellEffect(cardName, p, socket){
       socket.emit("selectTarget",{type:"enemyUnit",message:`「${cardName}」：破壊する相手ユニットを選択してください`});
       return "pending";
 
-    // 浄化の光（PURIFY・既にフェーズ2で実装済み、ここでは不要）
+    // 解放の光（PURIFY・既にフェーズ2で実装済み、ここでは不要）
 
     // ギアリペア（UNIT_FULL_HEAL・既にフェーズ2で実装済み）
 
@@ -1721,12 +1725,12 @@ const op=getOpponent(socket.id);
         }
 
         if(def.hp<=0){
-          // ★灼熱地獄：余剰ダメージをライフに
+          // ★灼熱地獄：破壊時、自分ATKが相手ATKを超えた分だけ相手ライフにダメージ
           if(game.fieldSpell[socket.id]&&cards[game.fieldSpell[socket.id].name]?.effect==="PERM_SPELL_FIRE_OVERFLOW"){
-            const overflow=Math.abs(def.hp); // hp<0の絶対値が余剰
+            const overflow=atkPower-def.atk; // 自分ATK - 相手ATK
             if(overflow>0){
               damageLife(op,overflow);
-              addLog(socket.id,`「${game.fieldSpell[socket.id].name}」：余剰${overflow}ダメージが相手ライフに`);
+              addLog(socket.id,`「${game.fieldSpell[socket.id].name}」：自ATK${atkPower}-相手ATK${def.atk}=${overflow}ダメージが相手ライフに`);
             }
           }
           game.board[op].splice(data.t,1);
@@ -2059,7 +2063,9 @@ const op=getOpponent(socket.id);
         }
         case "PURIFY":
           targetUnit.disabled=false;
-          addLog(p,`「${pt.card}」で「${targetUnit.name}」の状態異常を回復`);
+          delete targetUnit.disabledCount;
+          targetUnit.barrier=false;
+          addLog(p,`「${pt.card}」で「${targetUnit.name}」の特殊状態を解除`);
           break;
         case "CRYSTAL_BARRIER":
           targetUnit.barrier=true;

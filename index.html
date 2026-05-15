@@ -2300,8 +2300,9 @@ const stat=document.createElement("div");
       else if(c.atk<baseAtk) atkColor="#ff6666";
     }
     stat.innerHTML=`HP${c.hp} <span style="color:${atkColor}">AT${c.atk}</span>`;
-    if(c.disabled) stat.innerHTML+=" 🚫";
-    if(c.barrier)  stat.innerHTML+=" 💎";
+    if(c.disabled&&c.disabledCount!==undefined) stat.innerHTML+=" <span style='color:#44dd44'>【拘束】</span>";
+    else if(c.disabled) stat.innerHTML+=" <span style='color:#cc66ff'>【洗脳】</span>";
+    if(c.barrier) stat.innerHTML+=" <span style='color:#44ddff'>【結晶】</span>";
     if(c.denko && !c.attacked) stat.innerHTML+=" ⚡x2";
     if(c.denko && c.attacked && !c.denkoAttackedThisTurn) stat.innerHTML+=" ⚡x1";
     div.appendChild(img); div.appendChild(stat);
@@ -2421,8 +2422,9 @@ const stat=document.createElement("div");
       else if(c.atk<baseAtkMy) atkColorMy="#ff6666";
     }
     stat.innerHTML=`HP${c.hp} <span style="color:${atkColorMy}">AT${c.atk}</span>`;
-    if(c.disabled) stat.innerHTML+=" 🚫";
-    if(c.barrier)  stat.innerHTML+=" 🛡";
+    if(c.disabled&&c.disabledCount!==undefined) stat.innerHTML+=" <span style='color:#44dd44'>【拘束】</span>";
+    else if(c.disabled) stat.innerHTML+=" <span style='color:#cc66ff'>【洗脳】</span>";
+    if(c.barrier) stat.innerHTML+=" <span style='color:#44ddff'>【結晶】</span>";
     if(c.denko && !c.attacked) stat.innerHTML+=" ⚡x2";
     if(c.denko && c.attacked && !c.denkoAttackedThisTurn) stat.innerHTML+=" ⚡x1";
     div.appendChild(img); div.appendChild(stat);
