@@ -1,0 +1,20 @@
+{
+  "name": "Elemon",
+  "short_name": "エレモン",
+  "start_url": "/index_sp.html",
+  "display": "standalone",
+  "background_color": "#1a2a1a",
+  "theme_color": "#1a2a1a",
+  "icons": [
+    {
+      "src": "/icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

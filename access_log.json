@@ -1302,13 +1302,14 @@
     ]
   },
   "2026-05-15": {
-    "total": 33,
+    "total": 34,
     "hours": {
+      "0": 1,
       "22": 10,
       "23": 23
     },
     "pages": {
-      "index.html": 27,
+      "index.html": 28,
       "deck2.html": 2,
       "deck1.html": 4
     },
@@ -1543,6 +1544,13 @@
         "device": "PC",
         "browser": "Chrome",
         "ip": "::1"
+      },
+      {
+        "time": "2026-05-15 15:11:50",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
       }
     ]
   }
