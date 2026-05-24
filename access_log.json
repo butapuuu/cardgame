@@ -1553,5 +1553,76 @@
         "ip": "::ffff:127.0.0.1"
       }
     ]
+  },
+  "2026-05-21": {
+    "total": 3,
+    "hours": {
+      "0": 3
+    },
+    "pages": {
+      "index.html": 3
+    },
+    "visitors": [
+      {
+        "time": "2026-05-21 15:06:12",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-21 15:06:14",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-21 15:06:22",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
+  },
+  "2026-05-24": {
+    "total": 4,
+    "hours": {
+      "22": 4
+    },
+    "pages": {
+      "index.html": 4
+    },
+    "visitors": [
+      {
+        "time": "2026-05-24 13:29:49",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 13:29:53",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 13:30:17",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 13:30:18",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }
