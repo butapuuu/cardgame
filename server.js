@@ -477,6 +477,16 @@ function applyFieldSpellOnSummon(unit, ownerPlayer){
   if(game.fieldSpell[ownerPlayer]&&cards[game.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
     unit.atk+=1; unit.hp+=1;
   }
+  // 深海の神殿：自分フィールドスペルがある場合ATK+1
+  if(game.fieldSpell[ownerPlayer]&&cards[game.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_WATER_ENERGY"){
+    unit.atk+=1;
+  }
+  // 機甲要塞都市：ギアスカウト・プロトタイプユニット召喚時ATK+1
+  if(game.fieldSpell[ownerPlayer]&&cards[game.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_IRON_FACTORY"){
+    if(unit.name==="ギアスカウト"||unit.name==="プロトタイプユニット"){
+      unit.atk+=1;
+    }
+  }
   // 瘴気の迷宮：相手フィールドスペルがある場合ATK-1
   if(game.fieldSpell[op]&&cards[game.fieldSpell[op].name]?.effect==="PERM_SPELL_DARK_DEBUFF"){
     unit.atk=Math.max(0,unit.atk-1);
@@ -1145,11 +1155,13 @@ function processSpellEffect(cardName, p, socket){
       const dur=cards[cardName]?.durability||5;
       game.fieldSpell[p]={name:cardName,durability:dur};
       addLog(p,`「${cardName}」をフィールドに設置（耐久${dur}）`);
-      // 深海の神殿：発動時エネルギー+1
+      // 深海の神殿：発動時エネルギー+1、場のユニットATK+1
       if(eff==="PERM_SPELL_WATER_ENERGY"){
         game.maxEnergy[p]=Math.min(10,game.maxEnergy[p]+1);
         game.energy[p]=Math.min(game.maxEnergy[p],game.energy[p]+1);
         addLog(p,`「${cardName}」：エネルギー+1`);
+        game.board[p].forEach(u=>{u.atk+=1;});
+        addLog(p,`「${cardName}」：場の全ユニットATK+1`);
       }
       // 薬草の湿地：発動時ライフ+3
       if(eff==="PERM_SPELL_HERB_HEAL"){
@@ -1163,8 +1175,8 @@ function processSpellEffect(cardName, p, socket){
       }
       // 機甲要塞都市：場のギアトークン全体ATK+1、発動時ギギアトークン召喚
       if(eff==="PERM_SPELL_IRON_FACTORY"){
-        game.board[p].forEach(u=>{if(u.name==="ギアトークン"){u.atk+=1;}});
-        addLog(p,`「${cardName}」：場のギアトークンATK+1`);
+        game.board[p].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット"){u.atk+=1;}});
+        addLog(p,`「${cardName}」：場のギアトークン・ギアスカウト・プロトタイプユニットATK+1`);
         if(game.board[p].length<3){
           const gigaToken={name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true};
           game.board[p].push(gigaToken);
@@ -1326,10 +1338,15 @@ function destroyFieldSpell(ownerPlayer){
     game.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp=Math.max(1,u.hp-1);});
     addLog(ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK/HP-1`);
   }
+  // 深海の神殿：場の全ユニットATK-1（元に戻す）
+  if(eff==="PERM_SPELL_WATER_ENERGY"){
+    game.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);});
+    addLog(ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK-1`);
+  }
   // 機甲要塞都市：場のギアトークンATK-1
   if(eff==="PERM_SPELL_IRON_FACTORY"){
-    game.board[ownerPlayer].forEach(u=>{if(u.name==="ギアトークン"){u.atk=Math.max(0,u.atk-1);}});
-    addLog(ownerPlayer,`「${fs.name}」破壊：場のギアトークンATK-1`);
+    game.board[ownerPlayer].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット"){u.atk=Math.max(0,u.atk-1);}});
+    addLog(ownerPlayer,`「${fs.name}」破壊：場のギアトークン・ギアスカウト・プロトタイプユニットATK-1`);
   }
   // 瘴気の迷宮：相手場の全ユニットATK+1（元に戻す）
   if(eff==="PERM_SPELL_DARK_DEBUFF"){

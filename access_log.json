@@ -1587,12 +1587,13 @@
     ]
   },
   "2026-05-24": {
-    "total": 4,
+    "total": 10,
     "hours": {
-      "22": 4
+      "22": 4,
+      "23": 6
     },
     "pages": {
-      "index.html": 4
+      "index.html": 10
     },
     "visitors": [
       {
@@ -1618,6 +1619,48 @@
       },
       {
         "time": "2026-05-24 13:30:18",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 14:47:17",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 14:47:20",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 14:51:40",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 14:51:42",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 14:52:13",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-24 14:52:14",
         "page": "index.html",
         "device": "PC",
         "browser": "Chrome",
