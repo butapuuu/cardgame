@@ -2648,4 +2648,793 @@ case "UNIT_DES_SUM_C2":{
   });
 });
 
+// ===== ルーム対戦 =====
+const rooms={};
+const usedSpectateIds=new Set(); // 使用中の観戦IDを全ルーム横断で管理
+
+function generateSpectateId(){
+  let id;
+  do{
+    id=String(Math.floor(1000+Math.random()*9000));
+  }while(usedSpectateIds.has(id));
+  usedSpectateIds.add(id);
+  return id;
+}
+
+function getRoomBySpectateId(sid){
+  return Object.values(rooms).find(r=>r.spectateId===sid)||null;
+}
+
+function roomGetOpponent(room, id){
+  return id===room.player1 ? room.player2 : room.player1;
+}
+
+function roomGetAttr(cardName){
+  if(cardName==="ギアトークン") return "steel";
+  if(cardName==="ギギアトークン") return "steel";
+  if(cardName==="ギギギアトークン") return "steel";
+  if(cardName==="シードトークン") return "forest";
+  return cards[cardName]?.attr||"neutral";
+}
+
+function roomDraw(room, p){
+  if(room.decks[p].length===0){ room.winner=roomGetOpponent(room,p); return; }
+  room.hands[p].push(room.decks[p].shift());
+}
+function roomDrawN(room, p, n){ for(let i=0;i<n;i++) roomDraw(room,p); }
+
+function roomDiscardRandom(room, p){
+  if(room.hands[p].length===0) return null;
+  const idx=Math.floor(Math.random()*room.hands[p].length);
+  const card=room.hands[p][idx];
+  room.hands[p].splice(idx,1);
+  room.graves[p].push({name:card});
+  return card;
+}
+
+function roomDiscardAll(room, p){
+  const d=[...room.hands[p]];
+  d.forEach(c=>room.graves[p].push({name:c}));
+  room.hands[p]=[];
+  return d;
+}
+
+function roomAddLog(room, id, msg){
+  if(!room.turnLogs[id]) room.turnLogs[id]=[];
+  const prefix=id===room.player1?"[P1]":"[P2]";
+  const line=prefix+" "+msg;
+  room.turnLogs[id].push(line);
+  room.allLogs.push(line);
+}
+
+function roomShowEffect(room, cardName, isSpell){
+  roomSendAll(room, "showEffect", {cardName, isSpell:!!isSpell});
+}
+
+function roomDamageLife(room, p, amount){
+  room.life[p]-=amount;
+  if(room.life[p]<=0) room.winner=roomGetOpponent(room,p);
+  if(amount>0) roomSendDamagePop(room, p, amount, true, -1);
+}
+
+function roomSendDamagePop(room, targetPlayerId, amount, isLife, unitIdx){
+  const sent=new Set();
+  [room.player1, room.player2].forEach(id=>{
+    if(!id||sent.has(id)) return;
+    sent.add(id);
+    const s=io.sockets.sockets.get(id);
+    if(!s) return;
+    s.emit("damagePop",{amount,isLife,unitIdx,isEnemy:id!==targetPlayerId});
+  });
+  // 観戦者にも送信
+  (room.spectators||[]).forEach(sid=>{
+    const s=io.sockets.sockets.get(sid);
+    if(s) s.emit("damagePop",{amount,isLife,unitIdx,isEnemy:true});
+  });
+}
+
+function roomSendDamagePopAttacker(room, attackerPlayerId, amount, attackerUnitIdx){
+  const sent=new Set();
+  [room.player1, room.player2].forEach(id=>{
+    if(!id||sent.has(id)) return;
+    sent.add(id);
+    const s=io.sockets.sockets.get(id);
+    if(!s) return;
+    s.emit("damagePop",{amount,isLife:false,unitIdx:attackerUnitIdx,isEnemy:id!==attackerPlayerId,isCounter:true});
+  });
+}
+
+function roomSendAll(room, event, data){
+  [room.player1, room.player2].forEach(id=>{
+    if(!id) return;
+    const s=io.sockets.sockets.get(id);
+    if(s) s.emit(event, data);
+  });
+  (room.spectators||[]).forEach(sid=>{
+    const s=io.sockets.sockets.get(sid);
+    if(s) s.emit(event, data);
+  });
+}
+
+function roomSend(room){
+  [room.player1, room.player2].forEach(id=>{
+    if(!id) return;
+    const s=io.sockets.sockets.get(id);
+    if(!s) return;
+    const op=roomGetOpponent(room,id);
+    s.emit("roomUpdate",{
+      myBoard:room.board[id],
+      enemyBoard:room.board[op],
+      myHand:room.hands[id],
+      myEnergy:room.energy[id],
+      myMaxEnergy:room.maxEnergy[id],
+      enemyEnergy:room.energy[op],
+      enemyMaxEnergy:room.maxEnergy[op],
+      enemyHandCount:room.hands[op].length,
+      myDeckCount:room.decks[id].length,
+      enemyDeckCount:room.decks[op].length,
+      myLife:room.life[id],
+      enemyLife:room.life[op],
+      myGrave:room.graves[id],
+      enemyGrave:room.graves[op],
+      turn:room.turn,
+      winner:room.winner,
+      pendingDiscard:room.pendingDiscard[id]||0,
+      isSoulTrade:!!(room.pendingTarget&&room.pendingTarget.effect==="SOUL_TRADE_AFTER"&&room.pendingTarget.player===id),
+      isHandLimit:room.pendingHandLimitDiscard===id,
+      myFieldSpell:room.fieldSpell[id]||null,
+      enemyFieldSpell:room.fieldSpell[op]||null,
+      allLogs:[...room.allLogs],
+      currentTurnLogs:room.turnLogs[room.turn]||[],
+      playerRole:id===room.player1?"p1":"p2",
+      roomId:room.roomId,
+      spectateId:room.spectateId
+    });
+  });
+  // 観戦者送信（手札は枚数のみ）
+  (room.spectators||[]).forEach(sid=>{
+    const s=io.sockets.sockets.get(sid);
+    if(!s) return;
+    s.emit("roomUpdate",{
+      myBoard:room.board[room.player1],
+      enemyBoard:room.board[room.player2],
+      myHand:[],
+      myHandCount:room.hands[room.player1].length,
+      myEnergy:room.energy[room.player1],
+      myMaxEnergy:room.maxEnergy[room.player1],
+      enemyEnergy:room.energy[room.player2],
+      enemyMaxEnergy:room.maxEnergy[room.player2],
+      enemyHandCount:room.hands[room.player2].length,
+      myDeckCount:room.decks[room.player1].length,
+      enemyDeckCount:room.decks[room.player2].length,
+      myLife:room.life[room.player1],
+      enemyLife:room.life[room.player2],
+      myGrave:room.graves[room.player1],
+      enemyGrave:room.graves[room.player2],
+      turn:room.turn,
+      winner:room.winner,
+      myFieldSpell:room.fieldSpell[room.player1]||null,
+      enemyFieldSpell:room.fieldSpell[room.player2]||null,
+      allLogs:[...room.allLogs],
+      currentTurnLogs:room.turnLogs[room.turn]||[],
+      playerRole:"spectator",
+      roomId:room.roomId,
+      spectateId:room.spectateId
+    });
+  });
+}
+
+function roomNotifyPendingTarget(room){
+  if(!room.pendingTarget) return;
+  const pt=room.pendingTarget;
+  if(pt.effect==="DES_SUMMON_C2_HAND"){
+    const s=io.sockets.sockets.get(pt.player);
+    if(s) s.emit("selectTarget",{type:"handUnit_cost2",message:"グロウコア破壊時効果：コスト2以下のユニットを召喚してください"});
+  }
+  if(pt.effect==="UNIT_DES_SUM_C3_HAND"){
+    const s=io.sockets.sockets.get(pt.player);
+    if(s) s.emit("selectTarget",{type:"handUnit_cost3",message:"リンカーネーション：召喚するコスト3以下のユニットを手札から選択してください"});
+  }
+}
+
+function roomSummonToken(room, p, tokenName, n){
+  for(let i=0;i<n;i++){
+    if(room.board[p].length>=3) break;
+    const tokenAttr=tokenName==="ギアトークン"?"steel":"forest";
+    let tokenAtk=1, tokenHp=1;
+    if(tokenName==="ギアトークン"&&room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_IRON_FACTORY") tokenAtk+=1;
+    const newToken={name:tokenName,atk:tokenAtk,hp:tokenHp,attacked:false,attr:tokenAttr,isToken:true};
+    room.board[p].push(newToken);
+    roomApplyFieldSpellOnSummon(room,newToken,p);
+  }
+}
+
+function roomApplyFieldSpellOnSummon(room, unit, ownerPlayer){
+  const op=roomGetOpponent(room,ownerPlayer);
+  if(room.fieldSpell[ownerPlayer]&&cards[room.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_FOREST_BUFF"){unit.atk+=1;unit.hp+=1;}
+  if(room.fieldSpell[ownerPlayer]&&cards[room.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_WATER_ENERGY"){unit.atk+=1;}
+  if(room.fieldSpell[ownerPlayer]&&cards[room.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_IRON_FACTORY"){
+    if(unit.name==="ギアスカウト"||unit.name==="プロトタイプユニット") unit.atk+=1;
+  }
+  if(room.fieldSpell[op]&&cards[room.fieldSpell[op].name]?.effect==="PERM_SPELL_DARK_DEBUFF"){unit.atk=Math.max(0,unit.atk-1);}
+}
+
+function roomDestroyFieldSpell(room, ownerPlayer){
+  const fs=room.fieldSpell[ownerPlayer];
+  if(!fs) return;
+  const eff=cards[fs.name]?.effect||"";
+  if(eff==="PERM_SPELL_FOREST_BUFF"){room.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp=Math.max(1,u.hp-1);});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK/HP-1`);}
+  if(eff==="PERM_SPELL_WATER_ENERGY"){room.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK-1`);}
+  if(eff==="PERM_SPELL_IRON_FACTORY"){room.board[ownerPlayer].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット"){u.atk=Math.max(0,u.atk-1);}});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場のギアトークン等ATK-1`);}
+  if(eff==="PERM_SPELL_DARK_DEBUFF"){const op=roomGetOpponent(room,ownerPlayer);room.board[op].forEach(u=>{u.atk+=1;});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：相手場ATK+1`);}
+  roomAddLog(room,ownerPlayer,`フィールドスペル「${fs.name}」が破壊されました`);
+  delete room.fieldSpell[ownerPlayer];
+}
+
+function roomDamageAllUnits(room, targetPlayer, amount, attackerPlayer){
+  const toDestroy=[];
+  room.board[targetPlayer].forEach((u,i)=>{
+    const dmg=u.damageReduce?Math.min(1,amount):amount;
+    u.hp-=dmg;
+    if(dmg>0) roomSendDamagePop(room,targetPlayer,dmg,false,i);
+    if(u.hp<=0) toDestroy.push(i);
+  });
+  toDestroy.reverse().forEach(i=>{
+    const dead=room.board[targetPlayer][i];
+    room.board[targetPlayer].splice(i,1);
+    if(!dead.isToken) room.graves[targetPlayer].push(dead);
+    roomTriggerDestroyEffect(room,dead,targetPlayer);
+  });
+}
+
+function roomTriggerDestroyEffect(room, unit, ownerPlayer){
+  const c=cards[unit.name];
+  if(!c||!c.destroyEffect) return;
+  const op=roomGetOpponent(room,ownerPlayer);
+  roomShowEffect(room,unit.name);
+  const lp=room.turn||ownerPlayer;
+  switch(c.destroyEffect){
+    case "L_DMG1": roomDamageLife(room,op,1); roomAddLog(room,lp,`「${unit.name}」破壊時：相手ライフ-1`); break;
+    case "L_DMG3": roomDamageLife(room,op,3); roomAddLog(room,lp,`「${unit.name}」破壊時：相手ライフ-3`); break;
+    case "DRAW1": roomDraw(room,ownerPlayer); roomAddLog(room,lp,`「${unit.name}」破壊時：1枚ドロー`); break;
+    case "TOKEN2": roomSummonToken(room,ownerPlayer,"ギアトークン",2); roomAddLog(room,lp,`「${unit.name}」破壊時：ギアトークン2体召喚`); break;
+    case "DES_ALL_UNIT_DMG1": roomDamageAllUnits(room,op,1,ownerPlayer); roomAddLog(room,lp,`「${unit.name}」破壊時：相手全体1ダメージ`); break;
+    case "DES_BOTH_DISC1":{
+      const d1=roomDiscardRandom(room,ownerPlayer);
+      const d2=roomDiscardRandom(room,op);
+      roomAddLog(room,lp,`「${unit.name}」破壊時：両者手札1枚破棄`);
+      const so=io.sockets.sockets.get(ownerPlayer); if(so&&d2) so.emit("message",`相手の手札「${d2}」が捨て場に送られました`);
+      const sop=io.sockets.sockets.get(op); if(sop&&d1) sop.emit("message",`あなたの手札「${d1}」が捨て場に送られました`);
+      break;
+    }
+    case "DES_SUMMON_C3":
+      if(room.board[ownerPlayer].length<3){
+        const vh=room.hands[ownerPlayer].filter(name=>cards[name]?.type==="unit"&&(cards[name]?.cost||0)<=3&&roomGetAttr(name)==="forest");
+        if(vh.length>0){ room.pendingTarget={player:ownerPlayer,effect:"DES_SUMMON_C2_HAND",card:unit.name}; roomAddLog(room,lp,`「${unit.name}」破壊時：森ユニット召喚可能`); }
+      }
+      break;
+  }
+}
+
+function roomTriggerSummonEffect(room, unit, p, socket){
+  const c=cards[unit.name];
+  if(!c||!c.effect) return;
+  const op=roomGetOpponent(room,p);
+  const eff=c.effect;
+  const silent=["DAMAGE_REDUCE_1","END_A+1","START_TOKEN1","DES_SUMMON_C2","DENKOUSEKKA","ALL_ATTACK"];
+  if(!silent.includes(eff)) roomShowEffect(room,unit.name);
+  switch(eff){
+    case "SUM_L_DMG1": roomDamageLife(room,op,1); roomAddLog(room,p,`「${unit.name}」召喚時：相手ライフ-1`); break;
+    case "SUM_L+1": room.life[p]+=1; roomAddLog(room,p,`「${unit.name}」召喚時：自分ライフ+1`); break;
+    case "SUM_E+1": room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+1);room.energy[p]=Math.min(room.maxEnergy[p],room.energy[p]+1); roomAddLog(room,p,`「${unit.name}」召喚時：エネルギー+1`); break;
+    case "SUM_DRAW1": roomDraw(room,p); roomAddLog(room,p,`「${unit.name}」召喚時：1枚ドロー`); break;
+    case "SUM_L_SELF-2": room.life[p]-=2; if(room.life[p]<=0)room.winner=op; roomAddLog(room,p,`「${unit.name}」召喚時：自分ライフ-2`); break;
+    case "SUM_R_HAN1":{ const d=roomDiscardRandom(room,op); roomAddLog(room,p,`「${unit.name}」召喚時：相手手札「${d||"なし"}」破棄`); const s=io.sockets.sockets.get(p); if(s&&d) s.emit("message",`相手の手札「${d}」が捨て場に送られました`); break; }
+    case "SUM_OPP_E-1": room.maxEnergy[op]=Math.max(0,room.maxEnergy[op]-1);room.energy[op]=Math.min(room.energy[op],room.maxEnergy[op]); roomAddLog(room,p,`「${unit.name}」召喚時：相手エネルギー-1`); break;
+    case "SUM_ALL_UNIT_DMG1": roomDamageAllUnits(room,op,1,p); roomAddLog(room,p,`「${unit.name}」召喚時：相手全体1ダメージ`); break;
+    case "SUM_DES_COST1_ALL":{ const td=[]; room.board[op].forEach((u,i)=>{if((cards[u.name]?.cost||0)<=1)td.push(i);}); td.reverse().forEach(i=>{const d=room.board[op].splice(i,1)[0];room.graves[op].push(d);roomTriggerDestroyEffect(room,d,op);}); roomAddLog(room,p,`「${unit.name}」召喚時：相手コスト1以下全破壊`); break; }
+    case "SUM_TOKEN1": roomSummonToken(room,p,"ギアトークン",1); roomAddLog(room,p,`「${unit.name}」召喚時：ギアトークン1体召喚`); break;
+    case "SUM_BURNOUT": unit.burnout=true; roomAddLog(room,p,`「${unit.name}」召喚時：ターン終了時自壊`); break;
+    case "SUM_LIFE_8_A+4": if(room.life[p]<=8){unit.atk+=4;roomAddLog(room,p,`「${unit.name}」召喚時：ライフ8以下のためATK+4`);} break;
+    case "SUM_A_H_LOST_LIFE":{ const lost=15-room.life[p]; unit.atk=lost;unit.hp=lost; roomAddLog(room,p,`「${unit.name}」召喚時：ATK/HP=${lost}`); break; }
+    case "SUM_IRON_COUNT_X3_A":{ const ic=room.board[p].filter(u=>roomGetAttr(u.name)==="steel").length; unit.atk=ic*3; roomAddLog(room,p,`「${unit.name}」召喚時：ATK=${unit.atk}`); break; }
+    case "FIELD_A+1_F": room.board[p].forEach(u=>{if(roomGetAttr(u.name)==="fire")u.atk+=1;}); roomAddLog(room,p,`「${unit.name}」：火属性ATK+1`); break;
+    case "FIELD_A+1_L": room.board[p].forEach(u=>{if(roomGetAttr(u.name)==="thunder")u.atk+=1;}); roomAddLog(room,p,`「${unit.name}」：雷属性ATK+1`); break;
+    case "FIELD_H+2_D": room.board[p].forEach(u=>{if(roomGetAttr(u.name)==="dark")u.hp+=2;}); roomAddLog(room,p,`「${unit.name}」：闇属性HP+2`); break;
+    case "FIELD_A+1_P": room.board[p].forEach(u=>{if(roomGetAttr(u.name)==="poison")u.atk+=1;}); roomAddLog(room,p,`「${unit.name}」：毒属性ATK+1`); break;
+    case "FIELD_A+1_S": room.board[p].forEach(u=>{if(roomGetAttr(u.name)==="steel")u.atk+=1;}); roomAddLog(room,p,`「${unit.name}」：鉄属性ATK+1`); break;
+    case "FIELD_H+2_W": room.board[p].forEach(u=>{if(roomGetAttr(u.name)==="water")u.hp+=2;}); roomAddLog(room,p,`「${unit.name}」：水属性HP+2`); break;
+    case "FIELD_H+1_M": room.board[p].forEach(u=>{if(roomGetAttr(u.name)==="forest")u.hp+=1;}); roomAddLog(room,p,`「${unit.name}」：森属性HP+1`); break;
+    case "SUM_A_PERM-2":
+      if(room.board[op].length===0) break;
+      room.pendingTarget={player:p,effect:"SUM_A_PERM-2",card:unit.name};
+      socket.emit("selectTarget",{type:"enemyUnit",message:`「${unit.name}」召喚時：ATK-2する相手ユニットを選択`});
+      break;
+    case "SUM_UNIT_A_PERM+1":
+      if(room.board[p].length===0) break;
+      room.pendingTarget={player:p,effect:"SUM_UNIT_A_PERM+1",card:unit.name};
+      socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：ATK+1する味方ユニットを選択`});
+      break;
+    case "SUM_IRON_DES_A+":{ const iu=room.board[p].filter(u=>roomGetAttr(u.name)==="steel"&&u.name!==unit.name); if(iu.length===0){roomAddLog(room,p,`「${unit.name}」召喚時：対象なし`);break;} room.pendingTarget={player:p,effect:"SUM_IRON_DES_A+",card:unit.name}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊する鉄ユニットを選択`}); break; }
+    case "SUM_TOKEN_DES_UNIT_DMG2":{ const tk=room.board[p].filter(u=>u.isToken&&roomGetAttr(u.name)==="steel"); if(tk.length===0){roomAddLog(room,p,`「${unit.name}」召喚時：ギアトークンなし`);break;} if(room.board[op].length===0){roomAddLog(room,p,`「${unit.name}」召喚時：相手ユニットなし`);break;} room.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2",card:unit.name}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊するギアトークンを選択`}); break; }
+    case "SUM_DES_SUM_C2":{ if(room.board[p].length<=1){roomAddLog(room,p,`「${unit.name}」召喚時：他にユニットなし`);break;} room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2",card:unit.name}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊するユニットを選択`}); break; }
+    case "SUM_L_SELF-X_A+X": room.pendingTarget={player:p,effect:"SUM_L_SELF-X_A+X",card:unit.name,unit:unit}; socket.emit("selectTarget",{type:"lifeInput",message:`「${unit.name}」：支払うライフを入力（現在:${room.life[p]}）`}); break;
+    case "SUM_L_SELF-X_DRAWX": room.pendingTarget={player:p,effect:"SUM_L_SELF-X_DRAWX",card:unit.name}; socket.emit("selectTarget",{type:"lifeInput",message:`「${unit.name}」：支払うライフを入力（現在:${room.life[p]}）`}); break;
+    case "DENKOUSEKKA": unit.denko=true; roomAddLog(room,p,`「${unit.name}」：電光石火を持って召喚`); break;
+    case "END_A+1": break;
+    case "START_TOKEN1": break;
+    case "DAMAGE_REDUCE_1": break;
+    case "DES_SUMMON_C2": break;
+  }
+}
+
+function roomProcessSpellEffect(room, cardName, p, socket){
+  const c=cards[cardName];
+  if(!c) return false;
+  const op=roomGetOpponent(room,p);
+  const eff=c.effect||"";
+  switch(eff){
+    case "DRAW2": roomDrawN(room,p,2); roomAddLog(room,p,`「${cardName}」：2枚ドロー`); return true;
+    case "L+3_DRAW1": room.life[p]+=3; roomDraw(room,p); roomAddLog(room,p,`「${cardName}」：ライフ+3、1枚ドロー`); return true;
+    case "L+8": room.life[p]+=8; roomAddLog(room,p,`「${cardName}」：ライフ+8`); return true;
+    case "E+2": room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+2);room.energy[p]=Math.min(room.maxEnergy[p],room.energy[p]+2); roomAddLog(room,p,`「${cardName}」：エネルギー+2`); return true;
+    case "L_ADJ8": room.life[op]-=2;room.life[p]+=4; if(room.life[op]<=0)room.winner=p; roomAddLog(room,p,`「${cardName}」：相手ライフ-2、自分ライフ+4`); return true;
+    case "BOTH_L-3": room.life[p]-=3;room.life[op]-=3; if(room.life[p]<=0&&room.life[op]<=0)room.winner=null; else if(room.life[p]<=0)room.winner=op; else if(room.life[op]<=0)room.winner=p; roomAddLog(room,p,`「${cardName}」：両者ライフ-3`); return true;
+    case "ALL_UNIT_DMG2": roomDamageAllUnits(room,op,2,p); roomAddLog(room,p,`「${cardName}」：相手全体2ダメージ`); return true;
+    case "ALL_UNIT_DMG4": roomDamageAllUnits(room,op,4,p); roomAddLog(room,p,`「${cardName}」：相手全体4ダメージ`); return true;
+    case "ALL_UNIT_DMG1_L2": roomDamageAllUnits(room,op,1,p);roomDamageLife(room,op,2); roomAddLog(room,p,`「${cardName}」：相手全体-1、ライフ-2`); return true;
+    case "ALL_UNIT_BOUNCE": [[p],[op]].forEach(([pl])=>{[...room.board[pl]].forEach(u=>{if(!u.isToken)room.hands[pl].push(u.name);});room.board[pl]=[];}); roomAddLog(room,p,`「${cardName}」：全ユニット手札へ`); return true;
+    case "OPP_HAND_TO2":{ if(room.hands[op].length<=2){socket.emit("message","相手の手札が2枚以下のため不発");return false;} const d2=[]; while(room.hands[op].length>2){const d=roomDiscardRandom(room,op);if(d)d2.push(d);} roomAddLog(room,p,`「${cardName}」：相手手札${d2.length}枚破棄`); return true; }
+    case "HAN1_DRAW1":{ roomDraw(room,p); roomAddLog(room,p,`「${cardName}」：1枚ドロー`); if(room.hands[op].length>=3){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`「${cardName}」：相手手札「${d||"なし"}」破棄`);const s=io.sockets.sockets.get(p);if(s&&d)s.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`「${cardName}」：ハンデス不発`);} return true; }
+    case "DRAW2_DISC1": roomDrawN(room,p,2);room.pendingDiscard[p]=1; roomAddLog(room,p,`「${cardName}」：2枚ドロー（1枚捨て待ち）`); return true;
+    case "DRAW3_DISC2": roomDrawN(room,p,3);room.pendingDiscard[p]=2; roomAddLog(room,p,`「${cardName}」：3枚ドロー（2枚捨て待ち）`); return true;
+    case "L_SELF-2_DRAW3": room.life[p]-=2; if(room.life[p]<=0){room.winner=op;return true;} roomDrawN(room,p,3); roomAddLog(room,p,`「${cardName}」：ライフ-2、3枚ドロー`); return true;
+    case "L_SELF_HALF_DRAW5": room.life[p]=Math.floor(room.life[p]/2); if(room.life[p]<=0){room.winner=op;return true;} roomDrawN(room,p,5); roomAddLog(room,p,`「${cardName}」：ライフ半分、5枚ドロー`); return true;
+    case "ALL_H_PERM+2": room.board[p].forEach(u=>u.hp+=2); roomAddLog(room,p,`「${cardName}」：味方全体HP+2`); return true;
+    case "ALL_A_H_PERM+2": room.board[p].forEach(u=>{u.atk+=2;u.hp+=2;}); roomAddLog(room,p,`「${cardName}」：味方全体ATK/HP+2`); return true;
+    case "TURN_ALL_A+2": if(!room.turnBuffs[p])room.turnBuffs[p]={atk:0}; room.turnBuffs[p].atk+=2; room.board[p].forEach(u=>u.atk+=2); roomAddLog(room,p,`「${cardName}」：味方全体ATK+2（このターン）`); return true;
+    case "TURN_ALL_A+1_L_DMGX":{ if(!room.turnBuffs[p])room.turnBuffs[p]={atk:0}; room.turnBuffs[p].atk+=1; room.board[p].forEach(u=>u.atk+=1); const uc=room.board[p].length; if(uc>0)roomDamageLife(room,op,uc); roomAddLog(room,p,`「${cardName}」：全体ATK+1、ライフ-${uc}`); return true; }
+    case "SUM_TOKEN3": roomSummonToken(room,p,"ギアトークン",3); roomAddLog(room,p,`「${cardName}」：ギアトークン3体召喚`); return true;
+    case "SUM_S_TOKEN3": roomSummonToken(room,p,"シードトークン",3); roomAddLog(room,p,`「${cardName}」：シードトークン3体召喚`); return true;
+    case "LIFE_5_ALL_DES": if(room.life[p]>5){socket.emit("message","ライフが5以下の時のみ使用できます");return false;} { const td=[...room.board[op]]; room.board[op]=[]; td.forEach(u=>{room.graves[op].push(u);roomTriggerDestroyEffect(room,u,op);}); roomAddLog(room,p,`「${cardName}」：相手全ユニット破壊`); } return true;
+    case "OPP_E-1_HAN1": room.maxEnergy[op]=Math.max(0,room.maxEnergy[op]-1);room.energy[op]=Math.min(room.energy[op],room.maxEnergy[op]); roomAddLog(room,p,`「${cardName}」：相手エネルギー-1`); if(room.hands[op].length>=3){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`「${cardName}」：相手手札「${d||"なし"}」破棄`);const s=io.sockets.sockets.get(p);if(s&&d)s.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`「${cardName}」：ハンデス不発`);} return true;
+    case "L_SELF-2_ALL_DMG4": room.life[p]-=2; if(room.life[p]<=0){room.winner=op;return true;} roomDamageAllUnits(room,op,4,p); roomAddLog(room,p,`「${cardName}」：ライフ-2、相手全体4ダメージ`); return true;
+    case "UNIT_DMG3": case "UNIT_DMG2": if(room.board[op].length===0){socket.emit("message","対象ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"enemyUnit",message:`「${cardName}」の対象を選択`}); return "pending";
+    case "A_PERM+3": case "A+2_H+1": case "A_H_PERM+3": case "UNIT_FULL_HEAL": case "UNIT_DENKOUSEKKA": case "CRYSTAL_BARRIER": if(room.board[p].length===0){socket.emit("message","対象ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"myUnit",message:`「${cardName}」の対象を選択`}); return "pending";
+    case "PURIFY": if(room.board[p].length===0&&room.board[op].length===0){socket.emit("message","対象ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"anyUnit",message:`「${cardName}」：解除するユニットを選択`}); return "pending";
+    case "FLAME_BURN": if(room.board[p].length===0){socket.emit("message","自分の場にユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"myUnit",message:"フレイムバーン：破壊するユニットを選択"}); return "pending";
+    case "AQUA_RETURN":{ const mw=room.board[p].filter(u=>roomGetAttr(u.name)==="water"); if(mw.length===0){socket.emit("message","水ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"myUnit",message:"アクアリターン：手札に戻すユニットを選択"}); return "pending"; }
+    case "A_PERM-3": if(room.board[op].length===0){socket.emit("message","対象ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"enemyUnit",message:`「${cardName}」：弱体化する相手ユニットを選択`}); return "pending";
+    case "DISABLE1": if(room.board[op].length===0){socket.emit("message","対象ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"enemyUnit",message:"マインドコントロール：行動不能にする相手ユニットを選択"}); return "pending";
+    case "BOUNCE_UNIT": if(room.board[p].length===0&&room.board[op].length===0){socket.emit("message","場にユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"anyUnit",message:"リバース：手札に戻すユニットを選択"}); return "pending";
+    case "UNIT_DES_DRAW1": if(room.board[op].length===0){socket.emit("message","対象ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"enemyUnit",message:"サンダーストライク：破壊する相手ユニットを選択"}); return "pending";
+    case "UNIT_DES_COST_L_DMG": if(room.board[op].length===0){socket.emit("message","対象ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"enemyUnit",message:"業火の裁き：破壊する相手ユニットを選択"}); return "pending";
+    case "UNIT_DES_COST_LHEAL": if(room.board[op].length===0){socket.emit("message","対象ユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"enemyUnit",message:`「${cardName}」：破壊する相手ユニットを選択`}); return "pending";
+    case "UNIT_DES_L_HEAL": if(room.board[p].length===0){socket.emit("message","自分の場にユニットがいません");return false;} room.pendingTarget={player:p,effect:eff,card:cardName}; socket.emit("selectTarget",{type:"myUnit",message:"サクリファイス：破壊する自分のユニットを選択"}); return "pending";
+    case "IRON_COUNT_ALL_DMG1":{ const ic=room.board[p].filter(u=>roomGetAttr(u.name)==="steel").length; if(ic===0){socket.emit("message","鉄ユニットがいません");return false;} roomDamageAllUnits(room,op,ic,p); roomAddLog(room,p,`「${cardName}」：鉄${ic}体→相手全体${ic}ダメージ`); return true; }
+    case "ALL_UNIT_DMG3_MY_A_H+1": roomDamageAllUnits(room,op,3,p); room.board[p].forEach(u=>{u.atk+=1;u.hp+=1;}); roomAddLog(room,p,`「${cardName}」：相手全体3ダメ＋味方ATK/HP+1`); return true;
+    case "SOUL_TRADE": room.pendingTarget={player:p,effect:"SOUL_TRADE_AFTER",card:cardName}; roomAddLog(room,p,`「${cardName}」：手札から1枚捨ててください`); socket.emit("selectTarget",{type:"soulTrade",message:"ソウルトレード：捨てるカードを選択"}); return "pending";
+    case "DES_COST2_DRAW":{ const tg=[]; room.board[op].forEach((u,i)=>{if((cards[u.name]?.cost||0)<=2)tg.push(i);}); if(tg.length===0){socket.emit("message","コスト2以下ユニットがいません");return false;} tg.reverse().forEach(i=>{const d=room.board[op].splice(i,1)[0];room.graves[op].push(d);roomTriggerDestroyEffect(room,d,op);}); roomDrawN(room,p,tg.length); roomAddLog(room,p,`「${cardName}」：コスト2以下${tg.length}体破壊、${tg.length}枚ドロー`); return true; }
+    case "ALL_DISABLE_1T": if(room.board[op].length===0){socket.emit("message","相手の場にユニットがいません");return false;} room.board[op].forEach(u=>{u.disabled=true;u.disabledCount=1;}); roomAddLog(room,p,`「${cardName}」：相手全ユニット行動不能`); return true;
+    case "RECYCLE_IRON":{ const gl=room.graves[p].filter(u=>cards[u.name]?.type==="unit"&&roomGetAttr(u.name)==="steel"); if(gl.length===0){socket.emit("message","捨て場に鉄ユニットがいません");return false;} const gn=gl.map(u=>u.name); room.pendingTarget={player:p,effect:"RECYCLE_IRON_SELECT",card:cardName,graveNames:gn}; socket.emit("selectTarget",{type:"graveSelect",message:"リサイクル：手札に戻す鉄ユニットを選択",options:gn}); return "pending"; }
+    case "REVIVE_TOP":{ if(room.board[p].length>=3){socket.emit("message","場が満杯です");return false;} let ri=-1; for(let i=room.graves[p].length-1;i>=0;i--){if(cards[room.graves[p][i].name]?.type==="unit"){ri=i;break;}} if(ri===-1){socket.emit("message","捨て場にユニットがいません");return false;} const rv=room.graves[p].splice(ri,1)[0]; const rc=cards[rv.name]; const u={name:rv.name,atk:rc.atk,hp:rc.hp,attacked:false,attr:rc.attr||"neutral",damageReduce:rc.effect==="DAMAGE_REDUCE_1"}; room.board[p].push(u); roomApplyFieldSpellOnSummon(room,u,p); roomAddLog(room,p,`「${cardName}」：「${rv.name}」を蘇生`); roomTriggerSummonEffect(room,u,p,socket); return true; }
+    case "L_SELF-1_A+3": if(room.board[p].length===0){socket.emit("message","自分の場にユニットがいません");return false;} room.life[p]-=1; if(room.life[p]<=0){room.winner=op;return true;} room.pendingTarget={player:p,effect:"L_SELF-1_A+3",card:cardName}; roomAddLog(room,p,`「${cardName}」：ライフ-1`); socket.emit("selectTarget",{type:"myUnit",message:"インジェクション：強化するユニットを選択"}); return "pending";
+    case "SCRAP_BUILD_C3": if(room.board[p].filter(u=>roomGetAttr(u.name)==="steel").length===0){socket.emit("message","鉄ユニットがいません");return false;} room.pendingTarget={player:p,effect:"SCRAP_BUILD_C3",card:cardName}; socket.emit("selectTarget",{type:"myUnit",message:"スクラップ&ビルド：破壊する鉄ユニットを選択"}); return "pending";
+    case "IRON_DES_UNIT_DES": if(room.board[p].filter(u=>roomGetAttr(u.name)==="steel").length===0){socket.emit("message","鉄ユニットがいません");return false;} if(room.board[op].length===0){socket.emit("message","相手の場にユニットがいません");return false;} room.pendingTarget={player:p,effect:"IRON_DES_UNIT_DES_STEP1",card:cardName}; socket.emit("selectTarget",{type:"myUnit",message:"自爆装置：破壊する鉄ユニットを選択"}); return "pending";
+    case "UNIT_DES_SUM_C2": if(room.board[p].length===0){socket.emit("message","ユニットがいません");return false;} room.pendingTarget={player:p,effect:"UNIT_DES_SUM_C2",card:cardName}; socket.emit("selectTarget",{type:"myUnit",message:"エレキサーキット：破壊するユニットを選択"}); return "pending";
+    case "UNIT_DES_SUM_C3": if(room.board[p].length===0){socket.emit("message","ユニットがいません");return false;} room.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3",card:cardName}; socket.emit("selectTarget",{type:"myUnit",message:"リンカーネーション：破壊するユニットを選択"}); return "pending";
+    case "OVERLOAD_A+3_END_DES_ALL":{ const st=room.board[p].filter(u=>roomGetAttr(u.name)==="steel"); if(st.length===0){socket.emit("message","鉄ユニットがいません");return false;} st.forEach(u=>{u.atk+=3;u.overloadMark=true;}); roomAddLog(room,p,`「${cardName}」：鉄全体ATK+3（ターン終了時全破壊）`); return true; }
+    case "FUSION_IRON2": if(room.board[p].filter(u=>roomGetAttr(u.name)==="steel").length<2){socket.emit("message","鉄ユニットが2体以上必要です");return false;} room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP1",card:cardName,selected:[]}; socket.emit("selectTarget",{type:"myUnit",message:"メガギアフュージョン：1体目の鉄ユニットを選択"}); return "pending";
+    case "SUM_H_C3X2":{ const vh=room.hands[p].filter(name=>cards[name]?.type==="unit"&&(cards[name]?.cost||0)<=3); if(vh.length===0){socket.emit("message","コスト3以下のユニットがいません");return false;} room.pendingTarget={player:p,effect:"SUM_H_C3X2_STEP1",card:cardName}; socket.emit("selectTarget",{type:"handUnit_cost3",message:"シードスポーン：1体目を選択"}); return "pending"; }
+    case "PERM_SPELL_WATER_ENERGY": case "PERM_SPELL_HERB_HEAL": case "PERM_SPELL_FOREST_BUFF": case "PERM_SPELL_IRON_FACTORY": case "PERM_SPELL_FIRE_OVERFLOW": case "PERM_SPELL_THUNDER_NOREFLECT": case "PERM_SPELL_DARK_DEBUFF":{
+      if(room.fieldSpell[p]){socket.emit("message","すでにフィールドスペルがあります");return false;}
+      const dur=cards[cardName]?.durability||5;
+      room.fieldSpell[p]={name:cardName,durability:dur};
+      roomAddLog(room,p,`「${cardName}」をフィールドに設置（耐久${dur}）`);
+      if(eff==="PERM_SPELL_WATER_ENERGY"){room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+1);room.energy[p]=Math.min(room.maxEnergy[p],room.energy[p]+1);roomAddLog(room,p,`「${cardName}」：エネルギー+1`);room.board[p].forEach(u=>{u.atk+=1;});roomAddLog(room,p,`「${cardName}」：場の全ユニットATK+1`);}
+      if(eff==="PERM_SPELL_HERB_HEAL"){room.life[p]+=3;roomAddLog(room,p,`「${cardName}」：ライフ+3`);}
+      if(eff==="PERM_SPELL_FOREST_BUFF"){room.board[p].forEach(u=>{u.atk+=1;u.hp+=1;});roomAddLog(room,p,`「${cardName}」：全ユニットATK/HP+1`);}
+      if(eff==="PERM_SPELL_IRON_FACTORY"){room.board[p].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット"){u.atk+=1;}});roomAddLog(room,p,`「${cardName}」：ギアトークン等ATK+1`);if(room.board[p].length<3){const gt={name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true};room.board[p].push(gt);roomApplyFieldSpellOnSummon(room,gt,p);roomAddLog(room,p,`「${cardName}」：ギギアトークン召喚`);}}
+      if(eff==="PERM_SPELL_DARK_DEBUFF"){room.board[op].forEach(u=>{u.atk=Math.max(0,u.atk-1);});roomAddLog(room,p,`「${cardName}」：相手全ユニットATK-1`);}
+      return true;
+    }
+    case "DES_PERM_SPELL":{ const hp=room.fieldSpell[p]; const hop=room.fieldSpell[op]; if(!hp&&!hop){socket.emit("message","フィールドスペルがありません");return false;} room.pendingTarget={player:p,effect:"DES_PERM_SPELL",card:cardName}; socket.emit("selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択"}); return "pending"; }
+    default: return false;
+  }
+}
+
+function roomStartTurn(room, p){
+  room.turnBuffs[p]={atk:0};
+  roomDraw(room,p);
+  if(room.maxEnergy[p]===0){ room.maxEnergy[p]=(p===room.firstPlayer)?1:2; }
+  else{ room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+2); }
+  room.energy[p]=room.maxEnergy[p];
+  room.board[p].forEach(u=>{u.attacked=false;u.denkoAttackedThisTurn=false;u.rollbackAttack=false;});
+  room.board[p].forEach(u=>{const c=cards[u.name];if(c&&c.effect==="START_TOKEN1"){roomShowEffect(room,u.name);roomSummonToken(room,p,"ギアトークン",1);}});
+  const fs=room.fieldSpell[p];
+  if(fs){
+    const fe=cards[fs.name]?.effect||"";
+    if(fe==="PERM_SPELL_WATER_ENERGY"){room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+1);room.energy[p]=Math.min(room.maxEnergy[p],room.energy[p]+1);roomAddLog(room,p,`「${fs.name}」：エネルギー+1`);}
+    if(fe==="PERM_SPELL_HERB_HEAL"){room.life[p]+=3;roomAddLog(room,p,`「${fs.name}」：ライフ+3`);}
+    if(fe==="PERM_SPELL_IRON_FACTORY"){if(room.board[p].length<3){const gt={name:"ギギギアトークン",atk:3,hp:3,attacked:false,attr:"steel",isToken:true};room.board[p].push(gt);roomApplyFieldSpellOnSummon(room,gt,p);roomAddLog(room,p,`「${fs.name}」：ギギギアトークン召喚`);}}
+  }
+}
+
+function roomResetGame(room){
+  room.board={};room.hands={};room.decks={};room.graves={};
+  room.energy={};room.maxEnergy={};room.life={};room.winner=null;
+  room.noAttack={};room.pendingDiscard={};room.turnBuffs={};
+  room.pendingHandLimitDiscard=null;room.pendingNext=null;room.fieldSpell={};
+  room.allLogs=[];room.turnLogs={};room.prevLogs={};
+  [room.player1,room.player2].forEach(p=>{
+    room.decks[p]=shuffle([...(room.customDeck[p]||[])]);
+    room.hands[p]=[];room.graves[p]=[];room.board[p]=[];
+    room.energy[p]=0;room.maxEnergy[p]=0;room.life[p]=15;
+    room.turnLogs[p]=[];room.prevLogs[p]=[];
+    room.pendingDiscard[p]=0;room.turnBuffs[p]={atk:0};
+    for(let i=0;i<5;i++)roomDraw(room,p);
+  });
+  const first=Math.random()<0.5?room.player1:room.player2;
+  room.turn=first;room.firstPlayer=first;
+  roomStartTurn(room,first);
+  room.noAttack[first]=true;
+}
+
+// ルーム対戦のselect_target処理（フリー対戦のものを流用・room対応版）
+function roomHandleSelectTarget(room, socket, data){
+  if(!room.pendingTarget) return;
+  if(room.pendingTarget.player!==socket.id) return;
+  const pt=room.pendingTarget;
+  const p=pt.player;
+  const op=roomGetOpponent(room,p);
+  const eff=pt.effect;
+  const targetIndex=data.targetIndex;
+  const targetSide=data.targetSide;
+
+  if(eff==="SOUL_TRADE_AFTER"){
+    const hi=data.handIndex;
+    const ctd=room.hands[p][hi];
+    if(ctd===undefined||ctd===null){roomSend(room);return;}
+    room.hands[p].splice(hi,1);room.graves[p].push({name:ctd});
+    roomAddLog(room,p,`ソウルトレード：「${ctd}」を捨てました`);
+    roomDraw(room,p);
+    const stOp=roomGetOpponent(room,p);
+    const dST=roomDiscardRandom(room,stOp);
+    roomDraw(room,stOp);
+    roomAddLog(room,p,`ソウルトレード：相手「${dST||"なし"}」破棄、相手1ドロー`);
+    const ss=io.sockets.sockets.get(p);if(ss&&dST)ss.emit("message",`相手の手札「${dST}」が捨て場に送られました`);
+    room.pendingTarget=null;roomSend(room);return;
+  }
+
+  if(eff==="SUM_L_SELF-X_A+X"||eff==="SUM_L_SELF-X_DRAWX"){
+    const amount=data.lifeAmount;
+    const maxA=eff==="SUM_L_SELF-X_DRAWX"?Math.min(3,room.life[p]-1):room.life[p]-1;
+    if(!amount||amount<=0||amount>maxA){socket.emit("message",`有効なライフ量を入力してください`);room.pendingTarget=pt;socket.emit("selectTarget",{type:"lifeInput",message:`支払うライフを入力（現在:${room.life[p]}）`});roomSend(room);return;}
+    room.life[p]-=amount;
+    if(eff==="SUM_L_SELF-X_A+X"){const cv=room.board[p].find(u=>u.name===pt.card);if(cv)cv.atk+=amount;roomAddLog(room,p,`「${pt.card}」：ライフ${amount}→ATK+${amount}`);}
+    else{roomDrawN(room,p,amount);roomAddLog(room,p,`「${pt.card}」：ライフ${amount}→${amount}枚ドロー`);}
+    if(room.life[p]<=0)room.winner=op;
+    room.pendingTarget=null;roomSend(room);return;
+  }
+
+  if(eff==="RECYCLE_IRON_SELECT"){
+    const graveIdx=data.graveIndex;const gn=pt.graveNames||[];
+    if(graveIdx===undefined||graveIdx<0||graveIdx>=gn.length){socket.emit("message","有効なカードを選択してください");room.pendingTarget=pt;socket.emit("selectTarget",{type:"graveSelect",message:"手札に戻す鉄ユニットを選択",options:gn});roomSend(room);return;}
+    const sn=gn[graveIdx];const ri=room.graves[p].findIndex(u=>u.name===sn);
+    if(ri===-1){socket.emit("message","対象が見つかりません");room.pendingTarget=pt;socket.emit("selectTarget",{type:"graveSelect",message:"手札に戻す鉄ユニットを選択",options:gn});roomSend(room);return;}
+    room.graves[p].splice(ri,1);room.hands[p].push(sn);room.pendingTarget=null;
+    roomAddLog(room,p,`「${pt.card}」：「${sn}」を手札に回収`);roomSend(room);return;
+  }
+
+  if(eff==="SCRAP_BUILD_HAND"){
+    const hc=room.hands[p][data.handIndex];
+    if(!hc){roomSend(room);return;}
+    if(roomGetAttr(hc)!=="steel"||(cards[hc]?.cost||0)>3){socket.emit("message","コスト3以下の鉄ユニットを選択してください");roomSend(room);return;}
+    room.hands[p].splice(data.handIndex,1);
+    const sc=cards[hc];
+    const nu={name:hc,atk:(sc.atk||0)+1,hp:sc.hp||0,attacked:false,attr:"steel",damageReduce:sc.effect==="DAMAGE_REDUCE_1"};
+    room.board[p].push(nu);room.pendingTarget=null;
+    roomAddLog(room,p,`ビルド：「${hc}」をATK+1で召喚`);
+    roomTriggerSummonEffect(room,nu,p,socket);roomSend(room);return;
+  }
+
+  // 手札インデックス系
+  if(["UNIT_DES_SUM_C2_HAND","UNIT_DES_SUM_C3_HAND","SUM_DES_SUM_C2_HAND","DES_SUMMON_C2_HAND","FUSION_IRON2_HAND","SUM_H_C3X2_STEP1","SUM_H_C3X2_STEP2"].includes(eff)){
+    const hi=data.handIndex;const hcard=room.hands[p][hi];
+    const cl=(eff==="UNIT_DES_SUM_C2_HAND"||eff==="SUM_DES_SUM_C2_HAND")?2:(eff==="UNIT_DES_SUM_C3_HAND"||eff==="DES_SUMMON_C2_HAND"||eff==="SUM_H_C3X2_STEP1"||eff==="SUM_H_C3X2_STEP2")?3:999;
+    const so=eff==="FUSION_IRON2_HAND";
+    if(!hcard||cards[hcard]?.type!=="unit"||(cards[hcard]?.cost||0)>cl||(so&&roomGetAttr(hcard)!=="steel")){socket.emit("message",so?"鉄ユニットを選択してください":`コスト${cl}以下のユニットを選択してください`);room.pendingTarget=pt;socket.emit("selectTarget",{type:"handUnit",message:"有効なユニットを選択してください"});roomSend(room);return;}
+    room.hands[p].splice(hi,1);
+    const hc2=cards[hcard];const ba=pt.fusionBonusAtk||0;const bh=pt.fusionBonusHp||0;
+    const bAtk=so?hc2.atk+ba:hc2.atk;const bHp=so?hc2.hp+bh:hc2.hp;
+    if(room.board[p].length<3){
+      const nu={name:hcard,atk:bAtk,hp:bHp,attacked:false,attr:so?"steel":(hc2.attr||"neutral"),damageReduce:hc2.effect==="DAMAGE_REDUCE_1"};
+      room.board[p].push(nu);
+      if(eff!=="FUSION_IRON2_HAND")roomApplyFieldSpellOnSummon(room,nu,p);
+      const lbl=eff==="FUSION_IRON2_HAND"?`フュージョン（ATK+${ba}/HP+${bh}）`:eff==="DES_SUMMON_C2_HAND"?`「${pt.card}」破壊時`:(eff==="SUM_H_C3X2_STEP1"||eff==="SUM_H_C3X2_STEP2")?"シードスポーン":`「${pt.card}」`;
+      roomAddLog(room,p,`${lbl}：「${hcard}」を召喚`);
+      room.pendingTarget=null;
+      roomTriggerSummonEffect(room,nu,p,socket);
+      if(eff==="DES_SUMMON_C2_HAND"){const ts=io.sockets.sockets.get(room.turn);if(ts)ts.emit("growCoreResolved");if(pt.pendingNext){const nxt=pt.pendingNext;if(room.pendingTarget)room.pendingTarget.pendingNext=nxt;else room.pendingNext=nxt;}}
+      if(eff==="SUM_H_C3X2_STEP1"){const vv=room.hands[p].filter(n=>cards[n]?.type==="unit"&&(cards[n]?.cost||0)<=3);if(vv.length>0&&room.board[p].length<3){room.pendingTarget={player:p,effect:"SUM_H_C3X2_STEP2",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost3",message:"2体目：コスト3以下のユニットを選択"});roomSend(room);return;}}
+    }else{room.pendingTarget=null;}
+    roomNotifyPendingTarget(room);roomSend(room);return;
+  }
+
+  const targetBoard=targetSide==="my"?room.board[p]:room.board[op];
+  const targetUnit=targetBoard?targetBoard[targetIndex]:null;
+  if(!targetUnit){socket.emit("message","対象が見つかりません");return;}
+  room.pendingTarget=null;
+
+  switch(eff){
+    case "UNIT_DMG3":case "UNIT_DMG2":{const dmg=eff==="UNIT_DMG3"?3:2;const ac=targetUnit.damageReduce?Math.min(1,dmg):dmg;targetUnit.hp-=ac;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」に${ac}ダメージ`);if(targetUnit.hp<=0){room.board[op].splice(targetIndex,1);if(!targetUnit.isToken)room.graves[op].push(targetUnit);roomAddLog(room,p,`→「${targetUnit.name}」を破壊`);roomTriggerDestroyEffect(room,targetUnit,op);}break;}
+    case "A_PERM+3":targetUnit.atk+=3;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK+3`);break;
+    case "A+2_H+1":targetUnit.atk+=2;targetUnit.hp+=1;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK+2/HP+1`);break;
+    case "A_H_PERM+3":targetUnit.atk+=3;targetUnit.hp+=3;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK+3/HP+3`);break;
+    case "A_PERM-3":targetUnit.atk=Math.max(0,targetUnit.atk-3);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK-3`);break;
+    case "DISABLE1":targetUnit.disabled=true;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」行動不能`);break;
+    case "UNIT_DENKOUSEKKA":targetUnit.denko=true;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」電光石火付与`);break;
+    case "UNIT_FULL_HEAL":{const mh=cards[targetUnit.name]?.hp||targetUnit.hp;targetUnit.hp=mh;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」HP全回復`);break;}
+    case "PURIFY":targetUnit.disabled=false;delete targetUnit.disabledCount;targetUnit.barrier=false;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」特殊状態解除`);break;
+    case "CRYSTAL_BARRIER":targetUnit.barrier=true;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」バリア付与`);break;
+    case "BOUNCE_UNIT":{const oot=targetSide==="my"?p:op;if(targetUnit.isToken){targetBoard.splice(targetIndex,1);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」消滅`);}else{targetBoard.splice(targetIndex,1);room.hands[oot].push(targetUnit.name);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」手札へ`);}break;}
+    case "FLAME_BURN":room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);roomDamageLife(room,op,1);roomAddLog(room,p,`フレイムバーン：相手ライフ-1`);break;
+    case "AQUA_RETURN":{if(roomGetAttr(targetUnit.name)!=="water"){socket.emit("message","水属性ユニットを選択してください");room.pendingTarget={player:p,effect:eff,card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"水属性ユニットを選択"});roomSend(room);return;}room.board[p].splice(targetIndex,1);room.hands[p].push(targetUnit.name);roomDraw(room,p);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」手札へ、1枚ドロー`);break;}
+    case "UNIT_DES_DRAW1":room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,op);roomDraw(room,p);roomAddLog(room,p,`→1枚ドロー`);break;
+    case "UNIT_DES_COST_L_DMG":{const cost=cards[targetUnit.name]?.cost||0;room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」（コスト${cost}）破壊`);roomTriggerDestroyEffect(room,targetUnit,op);roomDamageLife(room,op,cost);roomAddLog(room,p,`→相手ライフ-${cost}`);break;}
+    case "UNIT_DES_COST_LHEAL":{const cost=cards[targetUnit.name]?.cost||0;room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,op);room.life[p]+=cost;roomAddLog(room,p,`→自分ライフ+${cost}`);break;}
+    case "UNIT_DES_L_HEAL":{const cost=cards[targetUnit.name]?.cost||0;room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.life[p]+=cost;roomAddLog(room,p,`→自分ライフ+${cost}`);break;}
+    case "SUM_A_PERM-2":targetUnit.atk=Math.max(0,targetUnit.atk-2);roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」ATK-2`);if(pt.pendingNext)room.pendingNext=pt.pendingNext;break;
+    case "SUM_UNIT_A_PERM+1":targetUnit.atk+=1;roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」ATK+1`);if(pt.pendingNext)room.pendingNext=pt.pendingNext;break;
+    case "L_SELF-1_A+3":targetUnit.atk+=3;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK+3`);break;
+    case "SCRAP_BUILD_C3":{if(roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"SCRAP_BUILD_C3",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"鉄ユニットを選択"});roomSend(room);return;}const vh=room.hands[p].filter(n=>roomGetAttr(n)==="steel"&&(cards[n]?.cost||0)<=3&&cards[n]?.type==="unit");if(vh.length===0){socket.emit("message","手札にコスト3以下の鉄ユニットがいません");roomSend(room);return;}room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`スクラップ：「${targetUnit.name}」を破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.pendingTarget={player:p,effect:"SCRAP_BUILD_HAND",card:pt.card};socket.emit("selectTarget",{type:"handUnit_steel_cost3",message:"召喚するコスト3以下の鉄ユニットを選択"});roomSend(room);return;}
+    case "IRON_DES_UNIT_DES_STEP1":{if(roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"IRON_DES_UNIT_DES_STEP1",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"鉄ユニットを選択"});roomSend(room);return;}room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`自爆：「${targetUnit.name}」を破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.pendingTarget={player:p,effect:"IRON_DES_UNIT_DES_STEP2",card:pt.card};socket.emit("selectTarget",{type:"enemyUnit",message:"破壊する相手ユニットを選択"});roomSend(room);return;}
+    case "IRON_DES_UNIT_DES_STEP2":room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`爆発：「${targetUnit.name}」を破壊`);roomTriggerDestroyEffect(room,targetUnit,op);break;
+    case "SUM_IRON_DES_A+":{if(roomGetAttr(targetUnit.name)!=="steel"||targetUnit.name===pt.card){socket.emit("message","自分以外の鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"SUM_IRON_DES_A+",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"鉄ユニットを選択"});roomSend(room);return;}const ga=targetUnit.atk;room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊（ATK${ga}獲得）`);roomTriggerDestroyEffect(room,targetUnit,p);const cv=room.board[p].find(u=>u.name===pt.card);if(cv)cv.atk+=ga;break;}
+    case "SUM_TOKEN_DES_UNIT_DMG2":case "SUM_TOKEN_DES_UNIT_DMG2_STEP1":{if(!targetUnit.isToken||roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","ギアトークンを選択してください");room.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"ギアトークンを選択"});roomSend(room);return;}room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」：ギアトークンを破壊`);room.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2_STEP2",card:pt.card};socket.emit("selectTarget",{type:"enemyUnit",message:"2ダメージを与える相手ユニットを選択"});roomSend(room);return;}
+    case "SUM_TOKEN_DES_UNIT_DMG2_STEP2":{const ad2=targetUnit.damageReduce?1:2;targetUnit.hp-=ad2;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」に${ad2}ダメージ`);if(targetUnit.hp<=0){room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`→「${targetUnit.name}」を破壊`);roomTriggerDestroyEffect(room,targetUnit,op);}break;}
+    case "SUM_DES_SUM_C2":{if(targetUnit.name===pt.card){socket.emit("message","自分自身は選択できません");room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"破壊するユニットを選択（自分以外）"});roomSend(room);return;}room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2_HAND",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを召喚"});roomSend(room);return;}
+    case "UNIT_DES_SUM_C2":room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.pendingTarget={player:p,effect:"UNIT_DES_SUM_C2_HAND",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを召喚"});roomSend(room);return;
+    case "UNIT_DES_SUM_C3":{room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);const lc=pt.card;roomTriggerDestroyEffect(room,targetUnit,p);if(room.pendingTarget&&room.pendingTarget.effect==="DES_SUMMON_C2_HAND"){room.pendingTarget.pendingNext={effect:"UNIT_DES_SUM_C3_HAND",card:lc,player:p};roomNotifyPendingTarget(room);roomSend(room);return;}room.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3_HAND",card:lc};roomNotifyPendingTarget(room);roomSend(room);return;}
+    case "FUSION_IRON2_STEP1":{if(roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP1",card:pt.card,selected:[]};socket.emit("selectTarget",{type:"myUnit",message:"1体目の鉄ユニットを選択"});roomSend(room);return;}room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP2",card:pt.card,selected:[targetIndex]};socket.emit("selectTarget",{type:"myUnit",message:"2体目の鉄ユニットを選択"});roomSend(room);return;}
+    case "FUSION_IRON2_STEP2":{if(roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP2",card:pt.card,selected:pt.selected};socket.emit("selectTarget",{type:"myUnit",message:"2体目の鉄ユニットを選択"});roomSend(room);return;}if(pt.selected.includes(targetIndex)){socket.emit("message","同じユニットは選択できません");room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP2",card:pt.card,selected:pt.selected};socket.emit("selectTarget",{type:"myUnit",message:"別のユニットを選択"});roomSend(room);return;}const idxs=[...pt.selected,targetIndex].sort((a,b)=>b-a);let fa=0,fh=0;idxs.forEach(i=>{const d=room.board[p].splice(i,1)[0];fa+=d.atk;fh+=d.hp;room.graves[p].push(d);roomAddLog(room,p,`フュージョン：「${d.name}」破壊`);roomTriggerDestroyEffect(room,d,p);});room.pendingTarget={player:p,effect:"FUSION_IRON2_HAND",card:pt.card,fusionBonusAtk:fa,fusionBonusHp:fh};socket.emit("selectTarget",{type:"handUnit_steel",message:`鉄ユニットを召喚（ATK+${fa}/HP+${fh}）`});roomSend(room);return;}
+    case "DES_PERM_SPELL":{const tgt=data.fieldSpellTarget;const tp=tgt==="my"?p:op;if(!room.fieldSpell[tp]){socket.emit("message","対象のフィールドスペルがありません");room.pendingTarget=pt;socket.emit("selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択"});roomSend(room);return;}roomDestroyFieldSpell(room,tp);room.pendingTarget=null;break;}
+    case "SUM_H_C3X2_STEP1":case "SUM_H_C3X2_STEP2":{const hc3=room.hands[p][data.handIndex];const sn=eff==="SUM_H_C3X2_STEP1"?1:2;if(!hc3||cards[hc3]?.type!=="unit"||(cards[hc3]?.cost||0)>3){socket.emit("message","コスト3以下のユニットを選択してください");room.pendingTarget=pt;socket.emit("selectTarget",{type:"handUnit_cost3",message:`${sn}体目：コスト3以下のユニットを選択`});roomSend(room);return;}room.hands[p].splice(data.handIndex,1);const hcc=cards[hc3];if(room.board[p].length<3){const nu={name:hc3,atk:hcc.atk,hp:hcc.hp,attacked:false,attr:hcc.attr||"neutral",damageReduce:hcc.effect==="DAMAGE_REDUCE_1"};room.board[p].push(nu);roomApplyFieldSpellOnSummon(room,nu,p);roomAddLog(room,p,`シードスポーン：「${hc3}」を召喚`);roomTriggerSummonEffect(room,nu,p,socket);}if(sn===1){const vv2=room.hands[p].filter(n=>cards[n]?.type==="unit"&&(cards[n]?.cost||0)<=3);if(vv2.length>0&&room.board[p].length<3){room.pendingTarget={player:p,effect:"SUM_H_C3X2_STEP2",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost3",message:"2体目：コスト3以下のユニットを選択"});roomSend(room);return;}}break;}
+    default: break;
+  }
+  if(!room.pendingTarget&&room.pendingNext){const nxt=room.pendingNext;room.pendingNext=null;room.pendingTarget={player:nxt.player,effect:nxt.effect,card:nxt.card};roomNotifyPendingTarget(room);}
+  roomSend(room);
+}
+
+// ルーム対戦のattack処理
+function roomHandleAttack(room, socket, data){
+  const p=socket.id;
+  const op=roomGetOpponent(room,p);
+  if(room.noAttack[p]){socket.emit("message","先攻1ターン目は攻撃できません");return;}
+  const atk=room.board[p][data.a];
+  if(!atk) return;
+  const isDirect=data.t===undefined&&data.target!=="fieldSpell";
+  if(isDirect&&room.board[op].length>0){socket.emit("message","相手ユニットがいる場合直接攻撃できません");roomSend(room);return;}
+  if(atk.disabled){socket.emit("message","このユニットは行動不能です");return;}
+  const hasDenko=atk.denko===true;
+  if(atk.attacked){if(hasDenko&&!atk.denkoAttackedThisTurn){}else{socket.emit("message","このユニットはすでに攻撃済みです");return;}}
+  const atkCard=cards[atk.name];
+  const isAllAttack=atkCard&&atkCard.effect==="ALL_ATTACK";
+  if(isAllAttack&&room.board[op].length>0){
+    const isSecA=atk.attacked&&hasDenko&&!atk.denkoAttackedThisTurn;
+    const isDFirst=hasDenko&&!isSecA;
+    if(isSecA){atk.attacked=true;atk.denkoAttackedThisTurn=true;}else{atk.attacked=true;}
+    const ap=isSecA?Math.floor(atk.atk/2):atk.atk;
+    let tc=0;const td=[];
+    room.board[op].forEach((def,i)=>{
+      const ad=def.damageReduce?Math.min(1,ap):ap;const bb=def.barrier;const rd=bb?0:ad;def.hp-=rd;
+      const nr=!!(room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
+      if(!isDFirst&&!nr){const cd=atk.damageReduce?Math.min(1,Math.floor(def.atk/2)):Math.floor(def.atk/2);tc+=cd;}
+      if(def.hp<=0)td.push(i);
+      roomAddLog(room,p,`「${atk.name}」が「${def.name}」に全体攻撃（${rd}ダメージ）`);
+    });
+    const aa=roomGetAttr(atk.name)||"neutral";
+    roomSendAll(room,"hitEffect",{targetIdx:0,attr:aa});
+    td.reverse().forEach(i=>{const d=room.board[op].splice(i,1)[0];if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を撃破`);roomTriggerDestroyEffect(room,d,op);});
+    atk.hp-=tc;if(tc>0)roomAddLog(room,p,`「${atk.name}」が反撃${tc}ダメージ`);
+    if(atk.hp<=0){const ai=room.board[p].indexOf(atk);if(ai!==-1){room.board[p].splice(ai,1);if(!atk.isToken)room.graves[p].push(atk);roomAddLog(room,p,`→「${atk.name}」が倒れた`);roomTriggerDestroyEffect(room,atk,p);}}
+    roomNotifyPendingTarget(room);roomSend(room);return;
+  }
+  const isSecond=atk.attacked&&hasDenko&&!atk.denkoAttackedThisTurn;
+  const isDFirst=hasDenko&&!isSecond;
+  if(isSecond){atk.attacked=true;atk.denkoAttackedThisTurn=true;}else{atk.attacked=true;}
+  // フィールドスペルへの攻撃
+  if(data.target==="fieldSpell"&&room.fieldSpell[op]){
+    const fs=room.fieldSpell[op];const ap=isSecond?Math.floor(atk.atk/2):atk.atk;
+    fs.durability-=ap;if(ap>0)roomSendDamagePop(room,op,ap,false,-2);
+    roomAddLog(room,p,`「${atk.name}」がFS「${fs.name}」に${ap}ダメ（残耐久${Math.max(0,fs.durability)}）`);
+    if(fs.durability<=0)roomDestroyFieldSpell(room,op);
+    if(atkCard&&atkCard.attackEffect){roomShowEffect(room,atk.name);if(atkCard.attackEffect==="L_DMG1"){roomDamageLife(room,op,1);roomAddLog(room,p,`攻撃時効果：相手ライフ-1`);}if(atkCard.attackEffect==="ATTACK_HEAL_DMG"){room.life[p]+=ap;roomAddLog(room,p,`攻撃時効果：自分ライフ+${ap}`);}if(atkCard.attackEffect==="ALL_UNIT_DMG1"){roomDamageAllUnits(room,op,1,p);roomAddLog(room,p,`攻撃時効果：相手全体1ダメ`);}}
+    roomNotifyPendingTarget(room);roomSend(room);return;
+  }
+  if(room.board[op].length>0){
+    if(atkCard&&atkCard.attackEffect==="ALL_UNIT_DMG1"&&!atk.rollbackAttack){
+      roomShowEffect(room,atk.name);
+      const tbef=room.board[op][data.t];
+      roomDamageAllUnits(room,op,1,p);
+      roomAddLog(room,p,`「${atk.name}」攻撃時効果：相手全体1ダメ`);
+      const still=tbef&&room.board[op].includes(tbef);
+      if(!still){
+        socket.emit("attackRollback",{attackerIndex:data.a});
+        atk.rollbackAttack=true;
+        if(isSecond){atk.attacked=true;atk.denkoAttackedThisTurn=false;}else if(isDFirst){atk.attacked=false;}else{atk.attacked=false;}
+        roomNotifyPendingTarget(room);roomSend(room);return;
+      }
+    }
+    const def=room.board[op][data.t];if(!def){roomSend(room);return;}
+    const ap=isSecond?Math.floor(atk.atk/2):atk.atk;
+    let aad=def.damageReduce?Math.min(1,ap):ap;if(def.barrier)aad=0;
+    const nr=!!(room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
+    const cb=(isDFirst||nr)?0:Math.floor(def.atk/2);const add=atk.damageReduce?Math.min(1,cb):cb;
+    def.hp-=aad;atk.hp-=add;
+    if(aad>0)roomSendDamagePop(room,op,aad,false,data.t);
+    if(add>0)roomSendDamagePopAttacker(room,p,add,data.a);
+    roomAddLog(room,p,`「${atk.name}」→「${def.name}」（${aad}ダメ、反撃${add}）`);
+    const aa2=roomGetAttr(atk.name)||"neutral";
+    const ops=io.sockets.sockets.get(op);if(ops)ops.emit("hitEffect",{targetIdx:data.t,attr:aa2,attackerIdx:data.a,hasAttackAnim:true});
+    socket.emit("hitEffect",{targetIdx:data.t,attr:aa2,isEnemy:true});
+    if(def.hp<=0){
+      if(room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_FIRE_OVERFLOW"){const ov=ap-def.atk;if(ov>0){roomDamageLife(room,op,ov);roomAddLog(room,p,`灼熱地獄：${ov}ダメ`);}}
+      room.board[op].splice(data.t,1);if(!def.isToken)room.graves[op].push(def);roomAddLog(room,p,`→「${def.name}」を撃破`);roomTriggerDestroyEffect(room,def,op);
+      if(room.pendingTarget&&room.pendingTarget.effect==="DES_SUMMON_C2_HAND"){const os2=io.sockets.sockets.get(room.pendingTarget.player);if(os2){os2.emit("selectTarget",{type:"handUnit_cost2",message:"グロウコア：コスト2以下のユニットを召喚"});socket.emit("message","相手がグロウコアの効果を処理中...");}}
+    }
+    if(atk.hp<=0){const ai=room.board[p].indexOf(atk);if(ai!==-1){room.board[p].splice(ai,1);if(!atk.isToken)room.graves[p].push(atk);roomAddLog(room,p,`→「${atk.name}」が反撃で倒れた`);roomTriggerDestroyEffect(room,atk,p);}}
+    if(atkCard&&atkCard.attackEffect&&!atk.rollbackAttack&&atkCard.attackEffect!=="ALL_UNIT_DMG1")roomShowEffect(room,atk.name);
+    if(atkCard&&atkCard.attackEffect==="L_DMG1"){roomDamageLife(room,op,1);roomAddLog(room,p,`攻撃時効果：ライフ-1`);}
+    if(atkCard&&atkCard.attackEffect==="HAN1"){if(room.hands[op].length>=2){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`攻撃時効果：相手手札「${d||"なし"}」破棄`);const sh=io.sockets.sockets.get(p);if(sh&&d)sh.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`攻撃時効果：ハンデス不発`);}}
+    if(atkCard&&atkCard.attackEffect==="ATTACK_HEAL_DMG"){room.life[p]+=aad;roomAddLog(room,p,`攻撃時効果：自分ライフ+${aad}`);}
+  }else{
+    const ap=isSecond?Math.floor(atk.atk/2):atk.atk;
+    roomDamageLife(room,op,ap);
+    roomAddLog(room,p,`「${atk.name}」で直接攻撃（${ap}ダメ、相手ライフ${room.life[op]}）`);
+    const ops2=io.sockets.sockets.get(op);if(ops2)ops2.emit("hitEffect",{targetIdx:-1,attr:roomGetAttr(atk.name)||"neutral",attackerIdx:data.a,hasAttackAnim:true,isDirect:true});
+    if(atkCard&&atkCard.attackEffect&&!atk.rollbackAttack)roomShowEffect(room,atk.name);
+    if(atkCard&&atkCard.attackEffect==="L_DMG1"){roomDamageLife(room,op,1);roomAddLog(room,p,`攻撃時効果：ライフ-1`);}
+    if(atkCard&&atkCard.attackEffect==="HAN1"){if(room.hands[op].length>=2){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`攻撃時効果：相手手札「${d||"なし"}」破棄`);const sh=io.sockets.sockets.get(p);if(sh&&d)sh.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`攻撃時効果：ハンデス不発`);}}
+    if(atkCard&&atkCard.attackEffect==="ATTACK_HEAL_DMG"){room.life[p]+=ap;roomAddLog(room,p,`攻撃時効果：自分ライフ+${ap}`);}
+  }
+  roomNotifyPendingTarget(room);roomSend(room);
+}
+
+// ルームソケット処理
+io.on("connection",(socket)=>{
+  // ルーム作成
+  socket.on("createRoom",(data)=>{
+    const roomId=data.roomId;
+    if(!roomId||roomId.trim()===""){socket.emit("roomError","ルームIDを入力してください");return;}
+    if(rooms[roomId]){socket.emit("roomError","そのルームIDはすでに使用されています");return;}
+    const spectateId=generateSpectateId();
+    rooms[roomId]={
+      roomId,spectateId,
+      player1:socket.id,player2:null,
+      spectators:[],
+      customDeck:{},
+      board:{},hands:{},decks:{},graves:{},
+      energy:{},maxEnergy:{},life:{},winner:null,
+      noAttack:{},pendingDiscard:{},turnBuffs:{},
+      pendingHandLimitDiscard:null,pendingNext:null,fieldSpell:{},
+      allLogs:[],turnLogs:{},prevLogs:{},turn:null,firstPlayer:null
+    };
+    rooms[roomId].customDeck[socket.id]=data.deck||[];
+    socket.join("room_"+roomId);
+    socket.emit("roomCreated",{roomId,spectateId,playerRole:"p1"});
+  });
+
+  // ルーム参加
+  socket.on("joinRoom",(data)=>{
+    const roomId=data.roomId;
+    const room=rooms[roomId];
+    if(!room){socket.emit("roomError","ルームが見つかりません");return;}
+    if(room.player2){socket.emit("roomError","そのルームはすでに満員です");return;}
+    room.player2=socket.id;
+    room.customDeck[socket.id]=data.deck||[];
+    socket.join("room_"+roomId);
+    socket.emit("roomJoined",{roomId,spectateId:room.spectateId,playerRole:"p2"});
+    // 両プレイヤー揃ったらゲーム開始
+    roomResetGame(room);
+    roomSend(room);
+  });
+
+  // 観戦参加
+  socket.on("joinSpectate",(data)=>{
+    const spectateId=data.spectateId;
+    const room=getRoomBySpectateId(spectateId);
+    if(!room){socket.emit("roomError","観戦IDが正しくありません");return;}
+    room.spectators=room.spectators||[];
+    room.spectators.push(socket.id);
+    socket.join("room_"+room.roomId);
+    socket.emit("spectateJoined",{roomId:room.roomId,spectateId,playerRole:"spectator"});
+    roomSend(room);
+  });
+
+  // ルームアクション
+  socket.on("roomAction",(data)=>{
+    // どのルームか特定
+    let room=null;
+    for(const r of Object.values(rooms)){
+      if(r.player1===socket.id||r.player2===socket.id){room=r;break;}
+    }
+    if(!room||room.winner) return;
+    if(socket.id!==room.turn){
+      if(data.type==="select_target"&&room.pendingTarget&&room.pendingTarget.player===socket.id){}
+      else return;
+    }
+    const op=roomGetOpponent(room,socket.id);
+    if(data.type==="surrender"){room.winner=op;roomAddLog(room,socket.id,"降参しました");roomSend(room);return;}
+    if(data.type==="reset"){
+      if(room.player1&&room.player2){roomResetGame(room);roomSend(room);}
+      return;
+    }
+    if(data.type==="discard_hand"){
+      if((room.pendingDiscard[socket.id]||0)<=0)return;
+      const idx=room.hands[socket.id].indexOf(data.card);if(idx===-1)return;
+      room.hands[socket.id].splice(idx,1);room.graves[socket.id].push({name:data.card});
+      room.pendingDiscard[socket.id]--;
+      roomAddLog(room,socket.id,`手札「${data.card}」を捨てた`);
+      if(room.pendingHandLimitDiscard===socket.id&&(room.pendingDiscard[socket.id]||0)===0){
+        if(room.hands[socket.id].length<=7){room.pendingHandLimitDiscard=null;room.noAttack[socket.id]=false;room.prevLogs[socket.id]=[...(room.turnLogs[socket.id]||[])];room.turnLogs[socket.id]=[];room.turn=op;roomStartTurn(room,room.turn);roomNotifyPendingTarget(room);roomSend(room);return;}
+      }
+      roomSend(room);return;
+    }
+    if(data.type==="attack"){roomHandleAttack(room,socket,data);return;}
+    if(data.type==="select_target"){roomHandleSelectTarget(room,socket,data);return;}
+    if(data.type==="play_card"){
+      const c=cards[data.card];
+      if(room.energy[socket.id]<c.cost){socket.emit("message","エネルギーが不足しています");return;}
+      if(c.type==="unit"&&room.board[socket.id].length>=3){socket.emit("message","場に出せるユニットは3体までです");return;}
+      room.energy[socket.id]-=c.cost;
+      const idx=room.hands[socket.id].indexOf(data.card);room.hands[socket.id].splice(idx,1);
+      if(c.type==="unit"){
+        const unit={name:data.card,atk:c.atk,hp:c.hp,attacked:false,attr:c.attr||"neutral",damageReduce:c.effect==="DAMAGE_REDUCE_1"};
+        room.board[socket.id].push(unit);
+        roomAddLog(room,socket.id,`「${data.card}」を召喚（ATK${unit.atk}/HP${unit.hp}）`);
+        roomApplyFieldSpellOnSummon(room,unit,socket.id);
+        roomTriggerSummonEffect(room,unit,socket.id,socket);
+      }else{
+        const handled=roomProcessSpellEffect(room,data.card,socket.id,socket);
+        if(handled===false){room.energy[socket.id]+=c.cost;room.hands[socket.id].push(data.card);}
+        else{roomAddLog(room,socket.id,`スペル「${data.card}」を使用`);roomShowEffect(room,data.card,true);if(c.effect!=="PERM_SPELL_WATER_ENERGY"&&c.effect!=="PERM_SPELL_HERB_HEAL"&&c.effect!=="PERM_SPELL_FOREST_BUFF"&&c.effect!=="PERM_SPELL_IRON_FACTORY"&&c.effect!=="PERM_SPELL_FIRE_OVERFLOW"&&c.effect!=="PERM_SPELL_THUNDER_NOREFLECT"&&c.effect!=="PERM_SPELL_DARK_DEBUFF"){room.graves[socket.id].push({name:data.card});}}
+      }
+      roomNotifyPendingTarget(room);roomSend(room);return;
+    }
+    if(data.type==="end_turn"){
+      if(room.turnBuffs[socket.id]&&room.turnBuffs[socket.id].atk>0){room.board[socket.id].forEach(u=>u.atk-=room.turnBuffs[socket.id].atk);room.turnBuffs[socket.id].atk=0;}
+      if(room.board[socket.id].some(u=>u.overloadMark)){const as=[...room.board[socket.id].filter(u=>roomGetAttr(u.name)==="steel")];as.forEach(u=>{const i=room.board[socket.id].indexOf(u);if(i!==-1){room.board[socket.id].splice(i,1);room.graves[socket.id].push(u);roomAddLog(room,socket.id,`オーバーロード：「${u.name}」破壊`);roomTriggerDestroyEffect(room,u,socket.id);}});}
+      room.board[socket.id].forEach(u=>{if(u.disabledCount!==undefined&&u.disabledCount>0){u.disabledCount--;if(u.disabledCount<=0){u.disabled=false;delete u.disabledCount;}}});
+      room.board[op].forEach(u=>{if(u.barrier)u.barrier=false;});
+      const bo=room.board[socket.id].filter(u=>u.burnout);bo.forEach(u=>{const i=room.board[socket.id].indexOf(u);room.board[socket.id].splice(i,1);if(!u.isToken)room.graves[socket.id].push(u);roomTriggerDestroyEffect(room,u,socket.id);});
+      room.board[socket.id].forEach(u=>{const c=cards[u.name];if(c&&c.effect==="END_A+1"){roomShowEffect(room,u.name);u.atk+=1;}});
+      if(room.hands[socket.id].length>7){const ex=room.hands[socket.id].length-7;room.pendingDiscard[socket.id]=(room.pendingDiscard[socket.id]||0)+ex;room.pendingHandLimitDiscard=socket.id;const s=io.sockets.sockets.get(socket.id);if(s)s.emit("message",`手札が7枚を超えています。${ex}枚捨ててください`);roomNotifyPendingTarget(room);roomSend(room);return;}
+      room.pendingHandLimitDiscard=null;
+      room.noAttack[socket.id]=false;room.prevLogs[socket.id]=[...(room.turnLogs[socket.id]||[])];room.turnLogs[socket.id]=[];room.turn=op;
+      roomStartTurn(room,room.turn);roomNotifyPendingTarget(room);roomSend(room);return;
+    }
+  });
+
+  // 切断時：ルームから削除
+  socket.on("disconnect",()=>{
+    for(const [roomId,room] of Object.entries(rooms)){
+      if(room.player1===socket.id||room.player2===socket.id){
+        // 相手に通知
+        const op2=room.player1===socket.id?room.player2:room.player1;
+        const ops3=io.sockets.sockets.get(op2);
+        if(ops3) ops3.emit("message","相手が切断しました");
+        // 観戦IDを解放
+        usedSpectateIds.delete(room.spectateId);
+        delete rooms[roomId];
+        break;
+      }
+      // 観戦者の切断
+      if(room.spectators&&room.spectators.includes(socket.id)){
+        room.spectators=room.spectators.filter(s=>s!==socket.id);
+      }
+    }
+  });
+});
+
 http.listen(3000);

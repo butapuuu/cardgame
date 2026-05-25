@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<title>Elemon ルーム対戦</title>
+<style>
+*{ box-sizing:border-box; margin:0; padding:0; }
+body{
+  background:#1a2a1a; color:#eee; font-family:sans-serif;
+  min-height:100vh; display:flex; justify-content:center; padding:10px;
+  transition:background 0.8s;
+}
+#root{ display:flex; gap:10px; width:100%; max-width:1200px; }
+
+/* ===== ロビー ===== */
+#lobby{
+  width:100%; max-width:500px; margin:60px auto;
+  background:rgba(0,0,0,0.45); border:1px solid #3a6a3a;
+  border-radius:12px; padding:32px;
+}
+#lobby h2{ color:#ffe066; font-size:20px; margin-bottom:20px; text-align:center; letter-spacing:2px; }
+#lobby input{
+  width:100%; background:#0e1a0e; color:#eee;
+  border:1px solid #3a6a3a; border-radius:6px;
+  padding:10px 14px; font-size:14px; margin-bottom:10px;
+}
+#lobby input::placeholder{ color:#556655; }
+.lobby-btn{
+  width:100%; padding:11px; font-size:13px; font-weight:bold;
+  border-radius:6px; cursor:pointer; letter-spacing:1px;
+  margin-bottom:8px; transition:all 0.2s;
+}
+.btn-create{
+  background:linear-gradient(135deg,#0d2a0d,#1a4a1a);
+  color:#88ff88; border:1px solid #2a8a2a;
+  box-shadow:0 0 8px rgba(40,180,40,0.25);
+}
+.btn-create:hover{ background:linear-gradient(135deg,#1a4a1a,#2a6a2a); box-shadow:0 0 14px rgba(40,220,40,0.4); }
+.btn-join{
+  background:linear-gradient(135deg,#0a1a2a,#1a2a3a);
+  color:#88aaff; border:1px solid #2a4a8a;
+  box-shadow:0 0 8px rgba(40,80,200,0.25);
+}
+.btn-join:hover{ background:linear-gradient(135deg,#1a2a3a,#2a3a5a); box-shadow:0 0 14px rgba(40,100,220,0.4); }
+.btn-spectate{
+  background:linear-gradient(135deg,#1a1a0a,#2a2a1a);
+  color:#ffcc44; border:1px solid #6a6a22;
+  box-shadow:0 0 8px rgba(180,160,0,0.25);
+}
+.btn-spectate:hover{ background:linear-gradient(135deg,#2a2a1a,#3a3a2a); box-shadow:0 0 14px rgba(200,180,0,0.4); }
+#lobbyStatus{ color:#aaa; font-size:13px; text-align:center; margin-top:10px; min-height:20px; }
+#lobbyError{ color:#ff6666; font-size:13px; text-align:center; margin-top:6px; min-height:18px; }
+.lobby-divider{ border:none; border-top:1px solid #2a4a2a; margin:18px 0; }
+.lobby-label{ color:#aaddaa; font-size:12px; margin-bottom:6px; letter-spacing:1px; }
+#spectateIdDisplay{
+  background:rgba(255,200,0,0.1); border:1px solid rgba(255,200,0,0.4);
+  border-radius:8px; padding:12px; margin-top:10px; display:none;
+  text-align:center;
+}
+#spectateIdDisplay .sid-label{ color:#aaa; font-size:11px; letter-spacing:1px; }
+#spectateIdDisplay .sid-val{ color:#ffe066; font-size:28px; font-weight:bold; letter-spacing:6px; margin-top:4px; }
+#spectateIdDisplay .sid-note{ color:#888; font-size:11px; margin-top:4px; }
+
+/* ===== 待機中 ===== */
+#waitingScreen{
+  display:none; width:100%; max-width:500px; margin:60px auto;
+  background:rgba(0,0,0,0.45); border:1px solid #3a6a3a;
+  border-radius:12px; padding:32px; text-align:center;
+}
+#waitingScreen h3{ color:#ffe066; font-size:16px; margin-bottom:16px; }
+#waitingRoomId{ color:#88ff88; font-size:24px; font-weight:bold; letter-spacing:4px; margin-bottom:8px; }
+#waitingSpectateId{ color:#aaa; font-size:13px; margin-bottom:16px; }
+.waiting-anim{ color:#aaddaa; font-size:13px; animation:waitBlink 1.2s ease-in-out infinite; }
+@keyframes waitBlink{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+/* ===== ゲーム画面（index.htmlと同じ構造） ===== */
+#gameArea{ display:none; width:100%; }
+#sidePreview{ width:300px; flex-shrink:0; position:sticky; top:10px; align-self:flex-start; }
+#sidePreview img{ width:300px; border-radius:8px; box-shadow:0 0 12px #000; }
+#mat{ flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; }
+#logPanel{ width:260px; flex-shrink:0; display:flex; flex-direction:column; gap:8px; position:sticky; top:10px; align-self:flex-start; }
+#logTitle{ font-size:13px; font-weight:bold; color:#ffe066; padding:4px 0; border-bottom:1px solid #444; margin-bottom:4px; }
+#logBox{ background:rgba(0,0,0,0.45); border:1px solid #333; border-radius:8px; padding:8px; font-size:12px; color:#ccc; line-height:1.6; min-height:200px; max-height:60vh; overflow-y:auto; }
+#logBox .logLine{ padding:2px 0; border-bottom:1px solid #2a2a2a; }
+#allLogBtn{ background:linear-gradient(135deg,#0a0a1a,#1a1a2a); color:#8899cc; border:1px solid #334488; border-radius:6px; padding:7px; font-size:11px; font-weight:bold; letter-spacing:2px; cursor:pointer; text-align:center; }
+#allLogBtn:hover{ background:linear-gradient(135deg,#1a1a2a,#2a2a4a); color:#aabbee; }
+
+/* モーダル類 */
+#graveModal{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:1000; justify-content:center; align-items:center; }
+#graveModal.open{ display:flex; }
+#graveModalInner{ background:#1e1e2e; border:1px solid #555; border-radius:10px; padding:20px; width:60%; max-width:700px; min-width:320px; max-height:80vh; overflow-y:auto; position:relative; }
+#graveModalInner h3{ color:#ffe066; margin-bottom:12px; font-size:15px; }
+#graveModalCards{ display:flex; flex-wrap:wrap; gap:8px; }
+#graveModalCards img{ width:64px; border-radius:5px; box-shadow:0 2px 6px #000; cursor:pointer; transition:transform 0.15s; }
+#graveModalCards img:hover{ transform:translateY(-4px); }
+#gravePreview{ position:fixed; top:50%; left:20px; transform:translateY(-50%); z-index:1100; pointer-events:none; display:none; }
+#gravePreview img{ width:300px; border-radius:8px; box-shadow:0 0 16px #000; }
+#logModal{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:1000; justify-content:center; align-items:center; }
+#logModal.open{ display:flex; }
+#logModalInner{ background:#1e2e1e; border:1px solid #444; border-radius:10px; padding:20px; width:90%; max-width:600px; max-height:80vh; overflow-y:auto; font-size:13px; color:#ccc; line-height:1.8; }
+#logModalInner h3{ color:#ffe066; margin-bottom:12px; }
+#logModalClose{ margin-top:12px; background:#444; color:#eee; border:1px solid #666; border-radius:6px; padding:6px 20px; cursor:pointer; font-size:13px; }
+
+/* ヘッダー */
+#header{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+#header button{ background:linear-gradient(135deg,#1a2a1a,#2a3a2a); color:#aaddaa; border:1px solid #3a6a3a; border-radius:6px; padding:6px 14px; cursor:pointer; font-size:12px; font-weight:bold; letter-spacing:1px; transition:all 0.2s; white-space:nowrap; }
+#header button:hover{ background:linear-gradient(135deg,#2a3a2a,#3a5a3a); color:#ccffcc; }
+#header select{ background:#0e1a0e; color:#aaddaa; border:1px solid #3a6a3a; border-radius:6px; padding:4px 8px; font-size:12px; max-width:130px; cursor:pointer; }
+#turn{ font-size:16px; font-weight:bold; color:#ffe066; }
+#winner{ font-size:18px; font-weight:bold; color:#ff6666; }
+.infoBar{ background:rgba(0,0,0,0.4); border-radius:8px; padding:6px 12px; font-size:13px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+
+/* フィールド・カード（index.htmlと同じ） */
+:root{ --field-bg:rgba(0,80,0,0.35); --field-border:#2d6a2d; --enemy-field-bg:rgba(80,0,0,0.25); --enemy-field-border:#6a2d2d; }
+.pm-wrapper{ display:flex; flex-direction:column; gap:6px; width:100%; }
+.pm-half{ display:flex; align-items:stretch; gap:8px; min-height:180px; position:relative; }
+.pm-side{ display:flex; flex-direction:column; justify-content:center; align-items:center; gap:8px; flex-shrink:0; width:110px; }
+.life-circle{ width:72px; height:72px; border-radius:50%; background:radial-gradient(circle at 40% 35%,#5a1a1a,#1a0808); border:3px solid #cc4444; box-shadow:0 0 12px rgba(200,50,50,0.5),inset 0 0 8px rgba(0,0,0,0.6); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.life-circle .lc-val{ font-size:22px; font-weight:bold; color:#ffaaaa; line-height:1; font-family:Georgia,serif; }
+.life-circle .lc-label{ font-size:9px; color:#cc6666; letter-spacing:2px; margin-top:1px; }
+.energy-plate{ background:linear-gradient(135deg,#0a1a2a,#0d2a3a); border:1px solid #2266aa; border-radius:8px; padding:5px 10px; text-align:center; box-shadow:0 0 8px rgba(40,120,200,0.3); width:100%; }
+.energy-plate .ep-label{ font-size:9px; color:#4488cc; letter-spacing:1px; }
+.energy-plate .ep-val{ font-size:13px; font-weight:bold; color:#88ccff; }
+.deck-grave-area{ display:flex; flex-direction:column; gap:6px; align-items:center; justify-content:center; }
+.deck-pile{ position:relative; width:56px; cursor:default; }
+.deck-pile img{ width:56px; border-radius:5px; box-shadow:1px 1px 0 #222,2px 2px 0 #1a1a1a,3px 3px 0 #141414,4px 4px 0 #0e0e0e,5px 5px 0 #080808,0 6px 12px rgba(0,0,0,0.7); }
+.deck-pile .deck-count{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:15px; font-weight:bold; text-shadow:0 0 6px #000,0 0 12px #000; pointer-events:none; z-index:10; }
+.grave-pile{ position:relative; width:56px; cursor:pointer; }
+.grave-pile img{ width:56px; border-radius:5px; box-shadow:0 2px 6px #000; transition:transform 0.15s; }
+.grave-pile:hover img{ transform:translateY(-4px); }
+.grave-pile .grave-empty{ width:56px; height:80px; border:1px solid rgba(180,140,80,0.4); border-radius:5px; display:flex; align-items:center; justify-content:center; color:rgba(180,140,80,0.4); font-size:9px; letter-spacing:2px; font-weight:bold; background:rgba(180,140,80,0.04); }
+.pm-center{ flex:1; display:flex; flex-direction:column; gap:6px; }
+.field-row{ display:flex; align-items:center; gap:8px; background:var(--field-bg); border:2px solid var(--field-border); border-radius:10px; min-height:130px; padding:8px 10px; flex:1; transition:background 0.8s,border-color 0.8s; }
+.field-row.enemy-row{ background:var(--enemy-field-bg); border-color:var(--enemy-field-border); }
+.unit-slots{ display:flex; gap:8px; align-items:center; flex:1; position:relative; min-height:110px; }
+.unit-slot-empty{ width:72px; height:100px; border:1px solid rgba(255,255,255,0.18); border-radius:6px; flex-shrink:0; background:rgba(255,255,255,0.03); display:flex; align-items:center; justify-content:center; }
+.unit-slot-empty::before{ content:"UNIT"; font-size:9px; color:rgba(255,255,255,0.18); letter-spacing:3px; font-weight:bold; pointer-events:none; }
+.fs-slot{ width:80px; flex-shrink:0; display:flex; align-items:center; justify-content:center; min-height:110px; border:1px solid rgba(255,215,0,0.45); border-radius:6px; position:relative; background:rgba(255,215,0,0.04); }
+.fs-slot::before{ content:"FIELD"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:10px; color:rgba(255,215,0,0.3); letter-spacing:3px; pointer-events:none; font-weight:bold; }
+.fs-slot:not(:empty)::before{ display:none; }
+.enemy-hand-area{ display:flex; gap:3px; justify-content:center; flex-wrap:wrap; padding:4px 0; min-height:40px; }
+.enemy-hand-card img{ width:40px; border-radius:3px; box-shadow:0 1px 4px #000; }
+.pm-divider{ height:2px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent); margin:2px 0; }
+.card{ display:inline-flex; flex-direction:column; align-items:center; cursor:pointer; transition:transform 0.15s; position:relative; z-index:1; flex-shrink:0; }
+.card:hover{ transform:translateY(-10px) !important; z-index:100 !important; }
+.card img{ width:72px; border-radius:5px; box-shadow:0 2px 6px #000; }
+.card .stat{ font-size:11px; color:#ffe066; margin-top:2px; background:rgba(0,0,0,0.6); border-radius:3px; padding:1px 4px; }
+.card.selected img{ outline:3px solid #ff4444; border-radius:5px; }
+#enemyPlayerZone{ background:linear-gradient(135deg,rgba(80,0,0,0.25),rgba(120,0,0,0.15)); border:1px solid rgba(180,60,60,0.4); border-radius:6px; height:36px; display:flex; align-items:center; justify-content:center; color:rgba(220,100,100,0.7); font-size:11px; font-weight:bold; letter-spacing:3px; cursor:pointer; transition:all 0.2s; }
+#enemyPlayerZone:hover{ background:linear-gradient(135deg,rgba(160,20,20,0.4),rgba(100,0,0,0.3)); border-color:rgba(255,80,80,0.7); color:rgba(255,150,150,0.95); }
+#handArea{ background:rgba(0,0,0,0.3); border:2px solid #2d4a2d; border-radius:10px; min-height:110px; padding:8px 16px; display:flex; align-items:flex-end; justify-content:center; flex-wrap:nowrap; overflow:visible; position:relative; }
+#endTurnBtn{ background:linear-gradient(135deg,#0d2a0d,#1a4a1a); color:#88ff88; border:1px solid #2a8a2a; border-radius:8px; padding:10px 16px; font-size:13px; font-weight:bold; cursor:pointer; width:100%; }
+#endTurnBtn:hover{ background:linear-gradient(135deg,#1a4a1a,#2a6a2a); }
+#surrenderBtn{ background:linear-gradient(135deg,#2a0808,#4a1212) !important; color:#ff8888 !important; border:1px solid #8a2222 !important; border-radius:8px !important; padding:8px 16px !important; font-size:13px !important; font-weight:bold !important; cursor:pointer !important; width:100% !important; }
+
+/* 観戦バナー */
+#spectateBanner{ background:rgba(255,200,0,0.15); border:1px solid rgba(255,200,0,0.4); border-radius:8px; padding:8px 16px; text-align:center; color:#ffe066; font-size:13px; font-weight:bold; letter-spacing:2px; }
+
+/* アニメーション */
+@keyframes attackMoveUp{ 0%{transform:translateY(0);} 45%{transform:translateY(-220px);} 100%{transform:translateY(0);} }
+@keyframes screenShake{ 0%{transform:translate(0,0) rotate(0deg);} 15%{transform:translate(-6px,-4px) rotate(-0.5deg);} 30%{transform:translate(6px,4px) rotate(0.5deg);} 45%{transform:translate(-5px,3px) rotate(-0.3deg);} 60%{transform:translate(5px,-3px) rotate(0.3deg);} 75%{transform:translate(-3px,2px) rotate(-0.2deg);} 90%{transform:translate(3px,-2px) rotate(0.2deg);} 100%{transform:translate(0,0) rotate(0deg);} }
+.shaking{ animation:screenShake 0.45s ease-in-out; }
+#turnChangeOverlay{ position:fixed; top:0; left:-100%; width:100%; height:100%; z-index:3000; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+#turnChangeOverlay img{ width:80%; max-width:700px; filter:drop-shadow(0 0 30px rgba(255,200,50,0.8)); }
+@keyframes turnChangeSlide{ 0%{left:-100%;opacity:0;} 15%{left:0%;opacity:1;} 75%{left:0%;opacity:1;} 100%{left:100%;opacity:0;} }
+.turn-change-anim{ animation:turnChangeSlide 1.4s cubic-bezier(0.22,1,0.36,1) forwards !important; }
+#drawCardAnim{ position:fixed; pointer-events:none; z-index:2500; display:none; border-radius:8px; box-shadow:0 0 20px rgba(255,220,100,0.8); width:72px; }
+#drawCardAnimFront{ position:fixed; pointer-events:none; z-index:2500; display:none; border-radius:8px; box-shadow:0 0 28px rgba(255,220,100,0.9); width:260px; }
+@keyframes damagePopAnim{ 0%{transform:translate(-50%,-150%) scale(0.5);opacity:0;} 15%{transform:translate(-50%,-180%) scale(1.3);opacity:1;} 40%{transform:translate(-50%,-200%) scale(1.0);opacity:1;} 100%{transform:translate(-50%,-280%) scale(0.8);opacity:0;} }
+.damage-pop{ position:fixed; pointer-events:none; z-index:1800; font-family:Georgia,'Times New Roman',serif; font-weight:bold; text-shadow:0 0 8px rgba(0,0,0,0.9); animation:damagePopAnim 1.2s ease-out forwards; white-space:nowrap; }
+.damage-pop.dmg-unit{ font-size:28px; color:#ff4444; }
+.damage-pop.dmg-life{ font-size:36px; color:#ff2222; }
+.damage-pop.dmg-enemy{ color:#ffaa00; }
+#resultOverlay{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:2000; justify-content:center; align-items:center; cursor:pointer; }
+#resultOverlay img{ max-width:60%; max-height:60%; }
+</style>
+</head>
+<body>
+
+<img id="drawCardAnim" src="images/card_back.png">
+<img id="drawCardAnimFront" src="images/card_back.png">
+<div id="turnChangeOverlay"><img src="images/TURN CHANGE.png" alt="TURN CHANGE"></div>
+<div id="resultOverlay" onclick="closeResult()"><img id="resultImg" src=""></div>
+<div id="gravePreview"></div>
+
+<div id="graveModal">
+  <div id="graveModalInner">
+    <h3 id="graveModalTitle">🪦 捨て場</h3>
+    <div id="graveModalCards"></div>
+    <br>
+    <button onclick="closeGraveModal()" style="background:#444;color:#eee;border:1px solid #666;border-radius:6px;padding:6px 20px;cursor:pointer;font-size:13px;">閉じる</button>
+  </div>
+</div>
+
+<div id="logModal">
+  <div id="logModalInner">
+    <h3>📜 ゲームログ（全履歴）</h3>
+    <div id="logModalContent"></div>
+    <br>
+    <button id="logModalClose" onclick="closeLogModal()">閉じる</button>
+  </div>
+</div>
+
+<!-- ロビー -->
+<div id="lobby">
+  <h2>⚔ ELEMON ルーム対戦</h2>
+
+  <div class="lobby-label">デッキ選択（P1）</div>
+  <select id="deckSelectLobby" style="width:100%;background:#0e1a0e;color:#aaddaa;border:1px solid #3a6a3a;border-radius:6px;padding:6px 8px;font-size:12px;margin-bottom:10px;">
+    <option value="-1">デッキ選択</option>
+  </select>
+
+  <hr class="lobby-divider">
+
+  <div class="lobby-label">ルームIDを入力して作成 / 参加</div>
+  <input type="text" id="roomIdInput" placeholder="ルームID（好きな言葉）" maxlength="20">
+
+  <button class="lobby-btn btn-create" onclick="createRoom()">🏠 ルームを作成する</button>
+  <button class="lobby-btn btn-join" onclick="joinRoom()">🚪 ルームに参加する</button>
+
+  <div id="spectateIdDisplay">
+    <div class="sid-label">観戦ID（対戦相手・観戦者に教えてください）</div>
+    <div class="sid-val" id="spectateIdVal">----</div>
+    <div class="sid-note">この数字を知っている人は観戦できます</div>
+  </div>
+
+  <hr class="lobby-divider">
+
+  <div class="lobby-label">観戦IDを入力して観戦</div>
+  <input type="text" id="spectateIdInput" placeholder="観戦ID（4桁の数字）" maxlength="4">
+  <button class="lobby-btn btn-spectate" onclick="joinSpectate()">👁 観戦する</button>
+
+  <div id="lobbyStatus"></div>
+  <div id="lobbyError"></div>
+
+  <hr class="lobby-divider">
+  <button class="lobby-btn" onclick="location.href='index.html'" style="background:rgba(0,0,0,0.3);color:#888;border:1px solid #444;">← フリー対戦に戻る</button>
+</div>
+
+<!-- 待機中 -->
+<div id="waitingScreen">
+  <h3>⏳ 対戦相手を待っています</h3>
+  <div id="waitingRoomId"></div>
+  <div id="waitingSpectateId"></div>
+  <div class="waiting-anim">接続待機中...</div>
+  <br>
+  <button onclick="location.reload()" style="background:rgba(0,0,0,0.3);color:#888;border:1px solid #444;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:12px;">キャンセル</button>
+</div>
+
+<!-- ゲーム画面 -->
+<div id="gameArea">
+<div id="root">
+  <div id="sidePreview"><div id="preview"></div></div>
+  <div id="mat">
+    <div id="header" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span id="roomInfoLabel" style="color:#ffe066;font-size:12px;font-weight:bold;"></span>
+        <span id="turn"></span>
+        <span id="winner"></span>
+        <button id="bgmToggleBtn" onclick="toggleBGM()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">🎵 BGM</button>
+        <button id="seToggleBtn" onclick="toggleSE()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">🔊 SE</button>
+      </div>
+    </div>
+    <div id="spectateBanner" style="display:none;">👁 観戦モード（手札は非公開）</div>
+    <div class="pm-wrapper">
+      <div class="pm-half">
+        <div class="pm-side">
+          <div class="deck-grave-area">
+            <div class="grave-pile" id="enemyGravePile" onclick="showEnemyGrave()"><div class="grave-empty" id="enemyGraveEmpty">GRAVE</div></div>
+            <div class="deck-pile"><img src="images/card_back.png" id="enemyDeckImg"><div class="deck-count" id="enemyDeck">-</div></div>
+          </div>
+        </div>
+        <div class="pm-center">
+          <div class="enemy-hand-area" id="enemyHandArea"></div>
+          <div id="enemyPlayerZone">⚔ DIRECT ATTACK</div>
+          <div class="field-row enemy-row" id="enemyField">
+            <div id="enemyUnits" class="unit-slots"><div class="unit-slot-empty"></div><div class="unit-slot-empty"></div><div class="unit-slot-empty"></div></div>
+            <div id="enemyFieldSpell" class="fs-slot"></div>
+          </div>
+        </div>
+        <div class="pm-side">
+          <div class="life-circle"><span class="lc-val" id="enemyLife">-</span><span class="lc-label">LIFE</span></div>
+          <div class="energy-plate"><div class="ep-label">ENERGY</div><div class="ep-val" id="enemyEnergy">-/-</div></div>
+        </div>
+      </div>
+      <div class="pm-divider"></div>
+      <div class="pm-half">
+        <div class="pm-side">
+          <div class="life-circle"><span class="lc-val" id="myLife">-</span><span class="lc-label">LIFE</span></div>
+          <div class="energy-plate"><div class="ep-label">ENERGY</div><div class="ep-val" id="myEnergy">-/-</div></div>
+        </div>
+        <div class="pm-center">
+          <div class="field-row" id="myField">
+            <div id="myFieldSpell" class="fs-slot"></div>
+            <div style="width:20px;flex-shrink:0;"></div>
+            <div id="myUnits" class="unit-slots"><div class="unit-slot-empty"></div><div class="unit-slot-empty"></div><div class="unit-slot-empty"></div></div>
+          </div>
+          <div id="handArea"></div>
+        </div>
+        <div class="pm-side">
+          <div class="deck-grave-area">
+            <div class="deck-pile"><img src="images/card_back.png" id="myDeckImg"><div class="deck-count" id="myDeck">-</div></div>
+            <div class="grave-pile" id="myGravePile" onclick="showMyGrave()"><div class="grave-empty" id="myGraveEmpty">GRAVE</div></div>
+          </div>
+          <button id="endTurnBtn" onclick="endTurn()">TURN END</button>
+          <button id="surrenderBtn" onclick="surrender()">SURRENDER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="logPanel">
+    <div id="logTitle">GAME LOG</div>
+    <div id="logBox"></div>
+    <button id="allLogBtn" onclick="openLogModal()">ALL LOG</button>
+  </div>
+</div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket=io();
+
+// ===== BGM・SE =====
+const BGM_WIN=new Audio("sounds/勝利.mp3"); BGM_WIN.volume=0.8;
+const BGM_LOSE=new Audio("sounds/敗北.mp3"); BGM_LOSE.volume=0.8;
+let bgmContext=null,bgmSource=null,bgmBuffer=null,bgmStarted=false;
+let resultShown=false;
+let _bgmEnabled=true,_seEnabled=true;
+
+async function startBGM(){
+  if(bgmStarted||!_bgmEnabled)return;
+  bgmStarted=true;
+  try{
+    bgmContext=new(window.AudioContext||window.webkitAudioContext)();
+    if(!bgmBuffer){const res=await fetch("sounds/BGM.mp3");const ab=await res.arrayBuffer();bgmBuffer=await bgmContext.decodeAudioData(ab);}
+    bgmSource=bgmContext.createBufferSource();bgmSource.buffer=bgmBuffer;bgmSource.loop=true;
+    const gain=bgmContext.createGain();gain.gain.value=0.12;bgmSource.connect(gain);gain.connect(bgmContext.destination);bgmSource.start(0);
+  }catch(e){}
+}
+function stopBGM(){if(bgmSource){try{bgmSource.stop();}catch(e){}bgmSource=null;}if(bgmContext){try{bgmContext.close();}catch(e){}bgmContext=null;}bgmBuffer=null;bgmStarted=false;}
+function toggleBGM(){_bgmEnabled=!_bgmEnabled;const btn=document.getElementById("bgmToggleBtn");if(_bgmEnabled){btn.style.color="#88aacc";btn.style.opacity="1";btn.innerText="🎵 BGM";startBGM();}else{btn.style.color="#666";btn.style.opacity="0.6";btn.innerText="🔇 BGM";stopBGM();}}
+function toggleSE(){_seEnabled=!_seEnabled;const btn=document.getElementById("seToggleBtn");if(_seEnabled){btn.style.color="#88aacc";btn.style.opacity="1";btn.innerText="🔊 SE";}else{btn.style.color="#666";btn.style.opacity="0.6";btn.innerText="🔇 SE";}}
+
+const SE={spell:new Audio("sounds/spell.mp3"),effect:new Audio("sounds/effect.mp3"),draw:new Audio("sounds/draw.mp3"),summon:new Audio("sounds/summon.mp3"),atk:{fire:new Audio("sounds/attack_fire.mp3"),water:new Audio("sounds/attack_water.mp3"),thunder:new Audio("sounds/attack_thunder.mp3"),forest:new Audio("sounds/attack_forest.mp3"),dark:new Audio("sounds/attack_dark.mp3"),poison:new Audio("sounds/attack_poison.mp3"),steel:new Audio("sounds/attack_steel.mp3"),neutral:new Audio("sounds/attack_fire.mp3")}};
+Object.values(SE).forEach(v=>{if(v instanceof Audio)v.volume=1.0;});Object.values(SE.atk).forEach(v=>{v.volume=1.0;});SE.draw.volume=0.9;
+const SE_TC=new Audio("sounds/turn_change.mp3");SE_TC.volume=1.0;
+function playSE(se){if(!se||!_seEnabled)return;se.currentTime=0;se.play().catch(()=>{});}
+
+// ===== 状態 =====
+let playerRole=""; // "p1","p2","spectator"
+let selectedUnitIndex=null,selectedUnitName=null;
+let selectTargetMode=null;
+let latestState={};
+let myGraveData=[],enemyGraveData=[],allLogsData=[];
+let lastDisplayedLogs=[];
+let prevMyDeckCount=null,prevEnemyDeckCount=null;
+let prevMyBoardCount=null,prevEnemyBoardCount=null;
+let prevAllLogsLen=0;
+let pendingAttackerIndex=null;
+let hitEffectActiveEnemy=false,hitEffectActiveMy=false;
+let hitEffectEnemyTimer=null,hitEffectMyTimer=null;
+let _prevTurn=null,_turnChangeFinishTime=0;
+
+// ===== 属性カラー =====
+const attrColors={fire:{body:"#2a1010",fieldBg:"rgba(180,40,0,0.25)",fieldBorder:"#8a3a2a",enemyBg:"rgba(120,0,0,0.25)",enemyBorder:"#6a2020"},water:{body:"#0e1a2a",fieldBg:"rgba(0,60,150,0.25)",fieldBorder:"#2a4a8a",enemyBg:"rgba(0,30,100,0.25)",enemyBorder:"#1a3060"},thunder:{body:"#1a1a10",fieldBg:"rgba(150,130,0,0.25)",fieldBorder:"#7a7020",enemyBg:"rgba(100,80,0,0.25)",enemyBorder:"#605010"},forest:{body:"#0e1e0e",fieldBg:"rgba(0,100,0,0.30)",fieldBorder:"#2a6a2a",enemyBg:"rgba(0,60,0,0.25)",enemyBorder:"#1a4a1a"},dark:{body:"#12091a",fieldBg:"rgba(60,0,100,0.28)",fieldBorder:"#4a2a7a",enemyBg:"rgba(40,0,70,0.25)",enemyBorder:"#301a5a"},poison:{body:"#071a00",fieldBg:"rgba(150,255,50,0.25)",fieldBorder:"#aaff33",enemyBg:"rgba(100,220,20,0.25)",enemyBorder:"#88dd22"},steel:{body:"#18181e",fieldBg:"rgba(130,130,150,0.30)",fieldBorder:"#707088",enemyBg:"rgba(90,90,110,0.28)",enemyBorder:"#505068"},neutral:{body:"#1a2a1a",fieldBg:"rgba(0,80,0,0.35)",fieldBorder:"#2d6a2d",enemyBg:"rgba(80,0,0,0.25)",enemyBorder:"#6a2d2d"}};
+const _clientAttrMap={"フレイムスパーク":"fire","ファイアウルフ":"fire","ブレイズリザード":"fire","マグマウルフ":"fire","フレイムナイト":"fire","アッシュソルジャー":"fire","フレイムレオン":"fire","ボルケーノタートル":"fire","インフェルノドラゴン":"fire","バーンアウト":"fire","フレイムパージャー":"fire","ブレイズフェニックス":"fire","フレイムエンペラー":"fire","メガフレアドラゴン":"fire","ウォータードロップ":"water","アクアフィッシュ":"water","アイスウォリアー":"water","エナジーカラパス":"water","クリスタルシェル":"water","フロストビースト":"water","アイスガーディアン":"water","バーストパファー":"water","トレントサーペント":"water","アクアドラゴン":"water","オーシャンナイト":"water","テンペストシャーク":"water","タイダルリヴァイアサン":"water","フローズンキング":"water","サンダービート":"thunder","スパークマウス":"thunder","ライトニングラプター":"thunder","ボルトウォリアー":"thunder","ボルトホーク":"thunder","ライトニングウルフ":"thunder","スパークレパード":"thunder","エレキドラゴン":"thunder","プラズマメイジ":"thunder","ボルトチェンジャー":"thunder","サンダーランページ":"thunder","サンダーロード":"thunder","ストームタイタン":"thunder","ボルトエンペラー":"thunder","フォレストラビット":"forest","グリーンナイト":"forest","ウッドゴーレム":"forest","グロウコア":"forest","アーマードライノス":"forest","フォレストビースト":"forest","モスストーン":"forest","フォレストエルフ":"forest","フォレストスイーパー":"forest","エンシェントツリー":"forest","ジャングルタイラント":"forest","ワイルドベア":"forest","グリーンドラゴン":"forest","ネイチャーロード":"forest","シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark","ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison","ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel","ギアトークン":"steel","ギギアトークン":"steel","ギギギアトークン":"steel","シードトークン":"forest"};
+function getClientAttr(name){return _clientAttrMap[name]||"neutral";}
+const _baseAtkMap={"フレイムスパーク":2,"ファイアウルフ":3,"ブレイズリザード":2,"マグマウルフ":3,"フレイムナイト":3,"アッシュソルジャー":3,"フレイムレオン":4,"ボルケーノタートル":3,"インフェルノドラゴン":5,"バーンアウト":5,"フレイムパージャー":4,"ブレイズフェニックス":4,"フレイムエンペラー":5,"メガフレアドラゴン":8,"ウォータードロップ":1,"アクアフィッシュ":2,"アイスウォリアー":3,"エナジーカラパス":2,"クリスタルシェル":1,"フロストビースト":4,"アイスガーディアン":3,"バーストパファー":2,"トレントサーペント":2,"アクアドラゴン":4,"オーシャンナイト":5,"テンペストシャーク":6,"タイダルリヴァイアサン":5,"フローズンキング":3,"サンダービート":2,"スパークマウス":1,"ライトニングラプター":3,"ボルトウォリアー":6,"ボルトホーク":3,"ライトニングウルフ":3,"スパークレパード":4,"エレキドラゴン":5,"プラズマメイジ":4,"ボルトチェンジャー":3,"サンダーランページ":3,"サンダーロード":6,"ストームタイタン":7,"ボルトエンペラー":5,"フォレストラビット":1,"グリーンナイト":3,"ウッドゴーレム":1,"グロウコア":2,"アーマードライノス":2,"フォレストビースト":3,"モスストーン":4,"フォレストエルフ":4,"フォレストスイーパー":3,"エンシェントツリー":3,"ジャングルタイラント":5,"ワイルドベア":4,"グリーンドラゴン":6,"ネイチャーロード":3,"シャドウバット":2,"ダークスライム":1,"シャドウアサシン":4,"ダークナイト":3,"ナイトメアビースト":2,"アビスナイト":4,"ナイトリカー":4,"ダークサイフォナー":3,"カースドラゴン":4,"ヘルハウンド":6,"ナイトテラー":5,"ダークロード":7,"シャドウキング":4,"アビスウォール":2,"ポイズンインプ":4,"トキシックスライム":2,"トキシックビースト":5,"プラーグハウンド":3,"ブライトレッチ":4,"ポイズンドレイン":3,"マッドサイエンティスト":3,"ヴェノムアルケミスト":0,"マイアズマウォーカー":5,"ヴェノムロード":4,"ベインブリンガー":4,"ポイズンナイト":6,"コラプトジャイアント":5,"トキシックドラゴン":0,"ギアスカウト":1,"プロトタイプユニット":1,"メタルブルート":2,"ギアコンバーター":2,"スチールブレイバー":3,"スチールビースト":5,"オートマトンファクトリー":2,"メカニカルアーチャー":4,"ヘビィタンク":4,"ギアドレイク":5,"ギアタイタン":4,"フェルムマスター":4,"アイアンレイダー":4,"メガコンストラクト":0,"ギアトークン":1,"ギギアトークン":2,"ギギギアトークン":3,"シードトークン":1};
+function getBaseAtk(name){return _baseAtkMap[name]??null;}
+
+function applyAttrColor(attr){const c=attrColors[attr]||attrColors.neutral;document.body.style.background=c.body;const r=document.documentElement;r.style.setProperty("--field-bg",c.fieldBg);r.style.setProperty("--field-border",c.fieldBorder);r.style.setProperty("--enemy-field-bg",c.enemyBg);r.style.setProperty("--enemy-field-border",c.enemyBorder);}
+function detectDeckAttr(deck){if(!deck||!deck.length)return"neutral";const counts={};deck.forEach(n=>{const a=_clientAttrMap[n];if(a)counts[a]=(counts[a]||0)+1;});let mx="neutral",mn=0;Object.entries(counts).forEach(([a,n])=>{if(n>mn){mn=n;mx=a;}});return mx;}
+
+// ===== デッキ選択 =====
+function loadDeckOptions(){
+  const sel=document.getElementById("deckSelectLobby"); if(!sel)return;
+  const all=JSON.parse(localStorage.getItem("decks_p1")||"[]");
+  sel.innerHTML="<option value='-1'>デッキ選択</option>";
+  all.forEach((d,i)=>{if(!d)return;const opt=document.createElement("option");opt.value=i;opt.innerText="["+(i+1)+"] "+(d.name||"名称未設定");sel.appendChild(opt);});
+}
+loadDeckOptions();
+
+function getSelectedDeck(){
+  const sel=document.getElementById("deckSelectLobby");
+  const idx=parseInt(sel.value,10);
+  if(idx>=0){const all=JSON.parse(localStorage.getItem("decks_p1")||"[]");return(all[idx]&&all[idx].cards)||[];}
+  return JSON.parse(localStorage.getItem("deck1")||"[]");
+}
+
+// ===== ロビー操作 =====
+function setLobbyStatus(msg){document.getElementById("lobbyStatus").innerText=msg;}
+function setLobbyError(msg){document.getElementById("lobbyError").innerText=msg;}
+
+function createRoom(){
+  const roomId=document.getElementById("roomIdInput").value.trim();
+  if(!roomId){setLobbyError("ルームIDを入力してください");return;}
+  const deck=getSelectedDeck();
+  if(!deck||!deck.length){setLobbyError("デッキを選択してください");return;}
+  setLobbyError("");
+  applyAttrColor(detectDeckAttr(deck));
+  socket.emit("createRoom",{roomId,deck});
+}
+
+function joinRoom(){
+  const roomId=document.getElementById("roomIdInput").value.trim();
+  if(!roomId){setLobbyError("ルームIDを入力してください");return;}
+  const deck=getSelectedDeck();
+  if(!deck||!deck.length){setLobbyError("デッキを選択してください");return;}
+  setLobbyError("");
+  applyAttrColor(detectDeckAttr(deck));
+  socket.emit("joinRoom",{roomId,deck});
+}
+
+function joinSpectate(){
+  const sid=document.getElementById("spectateIdInput").value.trim();
+  if(!sid){setLobbyError("観戦IDを入力してください");return;}
+  setLobbyError("");
+  socket.emit("joinSpectate",{spectateId:sid});
+}
+
+// ===== ロビーイベント =====
+socket.on("roomCreated",(data)=>{
+  playerRole=data.playerRole;
+  document.getElementById("lobby").style.display="none";
+  const ws=document.getElementById("waitingScreen");
+  ws.style.display="block";
+  document.getElementById("waitingRoomId").innerText="ルームID: "+data.roomId;
+  document.getElementById("waitingSpectateId").innerText="観戦ID: "+data.spectateId;
+  // ロビーにも観戦ID表示
+  document.getElementById("spectateIdVal").innerText=data.spectateId;
+  document.getElementById("spectateIdDisplay").style.display="block";
+  startBGM();
+});
+
+socket.on("roomJoined",(data)=>{
+  playerRole=data.playerRole;
+  document.getElementById("lobby").style.display="none";
+  document.getElementById("waitingScreen").style.display="none";
+  document.getElementById("gameArea").style.display="block";
+  document.getElementById("roomInfoLabel").innerText="ルーム: "+data.roomId+" | 観戦ID: "+data.spectateId;
+  document.getElementById("spectateBanner").style.display="none";
+  document.getElementById("endTurnBtn").style.display="";
+  document.getElementById("surrenderBtn").style.display="";
+  startBGM();
+});
+
+socket.on("spectateJoined",(data)=>{
+  playerRole="spectator";
+  document.getElementById("lobby").style.display="none";
+  document.getElementById("waitingScreen").style.display="none";
+  document.getElementById("gameArea").style.display="block";
+  document.getElementById("roomInfoLabel").innerText="観戦中: "+data.roomId;
+  document.getElementById("spectateBanner").style.display="block";
+  document.getElementById("endTurnBtn").style.display="none";
+  document.getElementById("surrenderBtn").style.display="none";
+  startBGM();
+});
+
+socket.on("roomError",(msg)=>{
+  setLobbyError(msg);
+  document.getElementById("lobby").style.display="block";
+  document.getElementById("waitingScreen").style.display="none";
+});
+
+// ===== ゲーム操作 =====
+function clearSelection(){selectedUnitIndex=null;selectedUnitName=null;document.querySelectorAll("#myField .card").forEach(el=>el.classList.remove("selected"));}
+function endTurn(){if(playerRole==="spectator")return;clearSelection();socket.emit("roomAction",{type:"end_turn"});}
+function surrender(){if(playerRole==="spectator")return;if(!confirm("本当に降参しますか？"))return;socket.emit("roomAction",{type:"surrender"});}
+
+// ===== 勝敗 =====
+function showResult(isWinner){
+  if(resultShown)return;resultShown=true;stopBGM();
+  document.getElementById("resultImg").src=isWinner?"images/YouWin.png":"images/YouLose.png";
+  document.getElementById("resultOverlay").style.display="flex";
+  if(isWinner){BGM_WIN.currentTime=0;BGM_WIN.play().catch(()=>{});}
+  else{BGM_LOSE.currentTime=0;BGM_LOSE.play().catch(()=>{});}
+}
+function closeResult(){document.getElementById("resultOverlay").style.display="none";BGM_WIN.pause();BGM_WIN.currentTime=0;BGM_LOSE.pause();BGM_LOSE.currentTime=0;}
+
+// ===== 捨て場 =====
+function showMyGrave(){openGraveModal(myGraveData,"🪦 自分の捨て場");}
+function showEnemyGrave(){openGraveModal(enemyGraveData,"🪦 相手の捨て場");}
+function openGraveModal(graveData,title){
+  document.getElementById("graveModalTitle").innerText=title;
+  const container=document.getElementById("graveModalCards");container.innerHTML="";
+  if(!graveData||!graveData.length){container.innerHTML="<div style='color:#888;font-size:13px'>まだカードがありません</div>";}
+  else{graveData.forEach(c=>{const img=document.createElement("img");img.src="images/"+c.name+".png";img.title=c.name;img.onmouseenter=()=>{const p=document.getElementById("gravePreview");p.innerHTML=`<img src="images/${c.name}.png">`;p.style.display="block";};img.onmouseleave=()=>{const p=document.getElementById("gravePreview");p.style.display="none";p.innerHTML="";};container.appendChild(img);});}
+  document.getElementById("graveModal").classList.add("open");
+}
+function closeGraveModal(){document.getElementById("graveModal").classList.remove("open");const p=document.getElementById("gravePreview");p.style.display="none";p.innerHTML="";}
+function openLogModal(){document.getElementById("logModalContent").innerHTML=allLogsData.length===0?"まだログがありません":allLogsData.map(l=>`<div style="border-bottom:1px solid #333;padding:3px 0">${l}</div>`).join("");document.getElementById("logModal").classList.add("open");}
+function closeLogModal(){document.getElementById("logModal").classList.remove("open");}
+
+// ===== 捨て場パイル描画 =====
+function _renderGravePile(pileId,emptyId,graveData){
+  const pile=document.getElementById(pileId);if(!pile)return;
+  [...pile.querySelectorAll("img.grave-top")].forEach(el=>el.remove());
+  [...pile.querySelectorAll(".grave-count")].forEach(el=>el.remove());
+  const emptyDiv=document.getElementById(emptyId);
+  if(!graveData||!graveData.length){if(emptyDiv)emptyDiv.style.display="flex";return;}
+  if(emptyDiv)emptyDiv.style.display="none";
+  const top=graveData[graveData.length-1];
+  const img=document.createElement("img");img.src="images/"+top.name+".png";img.className="grave-top";
+  img.style.cssText="width:56px;border-radius:5px;box-shadow:0 2px 6px #000;display:block;";
+  img.onmouseenter=()=>{document.getElementById("preview").innerHTML=`<img src="images/${top.name}.png">`;};
+  img.onmouseleave=()=>{document.getElementById("preview").innerHTML="";};
+  pile.insertBefore(img,emptyDiv);
+  const countDiv=document.createElement("div");countDiv.className="grave-count";
+  countDiv.style.cssText="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:15px;font-weight:bold;text-shadow:0 0 6px #000;pointer-events:none;z-index:10;";
+  countDiv.innerText=graveData.length;pile.appendChild(countDiv);
+}
+
+// ===== フィールドスペル描画 =====
+function renderFieldSpell(elementId,fsData){
+  const el=document.getElementById(elementId);if(!el)return;
+  if(!fsData||!fsData.name){setTimeout(()=>{const e=document.getElementById(elementId);if(e)e.innerHTML="";},400);return;}
+  el.innerHTML="";
+  const div=document.createElement("div");div.className="card";
+  const img=document.createElement("img");img.src=`images/${fsData.name}.png`;img.style.cssText="width:72px;border-radius:5px;box-shadow:0 2px 6px #000;";
+  img.onerror=()=>{img.style.display="none";};
+  img.onmouseenter=()=>{document.getElementById("preview").innerHTML=`<img src="images/${fsData.name}.png">`;};
+  img.onmouseleave=()=>{document.getElementById("preview").innerHTML="";};
+  const dur=document.createElement("div");dur.className="stat";dur.style.cssText="font-size:11px;color:#ffe066;margin-top:2px;background:rgba(0,0,0,0.6);border-radius:3px;padding:1px 4px;";
+  dur.textContent=`耐久:${fsData.durability}`;
+  div.appendChild(img);div.appendChild(dur);
+  if(elementId==="enemyFieldSpell"&&playerRole!=="spectator"){
+    div.onclick=()=>{
+      if(selectedUnitIndex===null)return;
+      const atkIdx=selectedUnitIndex;const atkName=latestState?.myBoard?.[atkIdx]?.name||"ユニット";
+      if(!confirm(`「${atkName}」で「${fsData.name}」に攻撃しますか？`))return;
+      const myContainer=document.getElementById("myUnits");const myCards=myContainer.querySelectorAll(".card");
+      const myBoardLen=myCards.length;const displayAtkIdx=myBoardLen>0?myBoardLen-1-atkIdx:atkIdx;
+      const atkCardEl=myCards[displayAtkIdx];const fsDiv=document.getElementById("enemyFieldSpell")?.querySelector(".card");
+      if(atkCardEl&&fsDiv){const ar=atkCardEl.getBoundingClientRect(),tr=fsDiv.getBoundingClientRect();const dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7,dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;atkCardEl.style.transition="none";atkCardEl.style.transform="translate(0,0)";void atkCardEl.offsetWidth;atkCardEl.style.transition="transform 0.18s ease-out";atkCardEl.style.transform=`translate(${dx}px,${dy}px)`;setTimeout(()=>{atkCardEl.style.transition="transform 0.16s ease-in";atkCardEl.style.transform="translate(0,0)";setTimeout(()=>{atkCardEl.style.transition="";atkCardEl.style.transform="";},180);},200);}
+      clearSelection();
+      playSE(SE.atk[getClientAttr(atkName)]||SE.atk.neutral);
+      setTimeout(()=>socket.emit("roomAction",{type:"attack",a:atkIdx,target:"fieldSpell"}),200);
+    };
+  }
+  el.appendChild(div);
+}
+
+// ===== TURN CHANGEアニメーション =====
+function showTurnChangeAnim(){
+  const overlay=document.getElementById("turnChangeOverlay");if(!overlay)return;
+  overlay.classList.remove("turn-change-anim");void overlay.offsetWidth;overlay.classList.add("turn-change-anim");
+  _turnChangeFinishTime=Date.now()+1500;setTimeout(()=>overlay.classList.remove("turn-change-anim"),1500);
+  SE_TC.currentTime=0;SE_TC.play().catch(()=>{});
+}
+
+// ===== ドローアニメーション =====
+let _drawQueue=[],_drawPlaying=false;
+function playDrawAnim(cardName){return new Promise(resolve=>{_drawQueue.push({cardName,resolve,onPhase1Done:null});if(!_drawPlaying)_startDrawWhenReady();});}
+function playDrawAnimWithCallback(cardName,onPhase1Done){return new Promise(resolve=>{_drawQueue.push({cardName,resolve,onPhase1Done});if(!_drawPlaying)_startDrawWhenReady();});}
+function _startDrawWhenReady(){const wait=Math.max(0,_turnChangeFinishTime-Date.now());if(wait>0)setTimeout(()=>_processDrawQueue(),wait);else _processDrawQueue();}
+function _processDrawQueue(){
+  if(_drawQueue.length===0){_drawPlaying=false;return;}_drawPlaying=true;
+  const{cardName,resolve,onPhase1Done}=_drawQueue.shift();
+  const back=document.getElementById("drawCardAnim"),front=document.getElementById("drawCardAnimFront");
+  if(!back||!front){resolve();_processDrawQueue();return;}
+  const deckImg=document.getElementById("myDeckImg");const dr=deckImg?deckImg.getBoundingClientRect():{left:window.innerWidth-80,top:window.innerHeight/2,width:56,height:80};
+  const dcx=dr.left+dr.width/2,dcy=dr.top+dr.height/2,cx=window.innerWidth/2,cy=window.innerHeight/2;
+  const d1=250,d2=380,d3=380,d4=200;
+  playSE(SE.draw);back.src="images/card_back.png";back.style.display="block";back.style.transition="none";back.style.left=dcx+"px";back.style.top=dcy+"px";back.style.transform="translate(-50%,-50%)";back.style.opacity="1";back.style.width="56px";
+  void back.offsetWidth;back.style.transition=`top ${d1}ms ease-in,opacity ${d1*0.6}ms ${d1*0.4}ms ease-in`;back.style.top=(window.innerHeight+100)+"px";back.style.opacity="0";
+  setTimeout(()=>{back.style.display="none";if(onPhase1Done)onPhase1Done();
+    front.src=cardName?"images/"+cardName+".png":"images/card_back.png";front.style.display="block";front.style.transition="none";front.style.left=cx+"px";front.style.top=(window.innerHeight+200)+"px";front.style.transform="translate(-50%,-50%)";front.style.opacity="0";front.style.width="260px";
+    void front.offsetWidth;front.style.transition=`top ${d2}ms cubic-bezier(0.22,1,0.36,1),opacity ${d2*0.3}ms ease-out`;front.style.top=cy+"px";front.style.opacity="1";
+    setTimeout(()=>{setTimeout(()=>{front.style.transition=`opacity ${d4}ms ease-out`;front.style.opacity="0";setTimeout(()=>{front.style.display="none";resolve();_processDrawQueue();},d4+30);},d3);},d2+30);
+  },d1+30);
+}
+
+// ===== ダメージポップ =====
+socket.off("damagePop");
+socket.on("damagePop",(data)=>{
+  const now=Date.now();if(!window._dpLast)window._dpLast={};
+  const key=`${data.amount}_${data.isLife}_${data.unitIdx}_${data.isEnemy}_${data.isCounter||false}`;
+  if(window._dpLast[key]&&now-window._dpLast[key]<200)return;
+  window._dpLast[key]=now;
+  setTimeout(()=>_showDamagePop(data),80);
+});
+function _showDamagePop(data){
+  const{amount,isLife,unitIdx,isEnemy}=data;let cx,cy;
+  if(isLife){if(isEnemy){const el=document.getElementById("enemyPlayerZone");if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=200;}}else{const el=document.getElementById("handArea");if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top;}else{cx=window.innerWidth/2;cy=window.innerHeight-150;}}}
+  else if(unitIdx===-2){const fsId=isEnemy?"enemyFieldSpell":"myFieldSpell";const fsEl=document.getElementById(fsId)?.querySelector(".card");if(fsEl){const r=fsEl.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
+  else{const cid=isEnemy?"enemyUnits":"myUnits";const c=document.getElementById(cid);if(c){const cards=Array.from(c.querySelectorAll(".card"));let tc=null;if(isEnemy){tc=cards[unitIdx]||null;}else{const ml=latestState?.myBoard?.length??0,dl=cards.length;if(ml===dl&&dl>0)tc=cards[dl-1-unitIdx]||null;else if(dl>0)tc=cards[Math.min(unitIdx,dl-1)]||null;}if(tc){const r=tc.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
+  const pop=document.createElement("div");pop.className="damage-pop"+(isLife?" dmg-life":" dmg-unit")+(isEnemy?" dmg-enemy":"");pop.innerText="-"+amount;pop.style.left=cx+"px";pop.style.top=cy+"px";document.body.appendChild(pop);setTimeout(()=>pop.remove(),1300);
+}
+
+// ===== hitEffect =====
+socket.on("hitEffect",(data)=>{
+  if(data.isEnemy){hitEffectActiveEnemy=true;clearTimeout(hitEffectEnemyTimer);hitEffectEnemyTimer=setTimeout(()=>{hitEffectActiveEnemy=false;},520);}
+  else{hitEffectActiveMy=true;clearTimeout(hitEffectMyTimer);hitEffectMyTimer=setTimeout(()=>{hitEffectActiveMy=false;},520);}
+  const attr=data.attr||"fire";
+  if(data.isEnemy){if(data.targetIdx===-1)return;const ec=Array.from(document.getElementById("enemyUnits")?.querySelectorAll(".card")||[]);const c=ec[data.targetIdx];if(!c)return;const r=c.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;}
+  if(data.targetIdx===-1)return;const mc=Array.from(document.getElementById("myUnits")?.querySelectorAll(".card")||[]);const ml=mc.length;const di=ml>0?ml-1-data.targetIdx:data.targetIdx;const c2=mc[di];if(!c2)return;const r=c2.getBoundingClientRect();const fx2=document.createElement("img");fx2.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx2.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx2);setTimeout(()=>fx2.remove(),500);
+});
+
+// ===== showEffect =====
+socket.on("showEffect",(data)=>{
+  const old=document.getElementById("effectPopup");if(old)old.remove();
+  const popup=document.createElement("div");popup.id="effectPopup";popup.style.cssText="position:fixed;top:50%;left:50%;z-index:900;pointer-events:none;";
+  popup.innerHTML=`<img src="images/${data.cardName}.png" style="width:260px;border-radius:10px;box-shadow:0 0 24px #ffe066;">`;
+  document.body.appendChild(popup);
+  if(data.isSpell)playSE(SE.spell);else playSE(SE.effect);
+  setTimeout(()=>{const el=document.getElementById("effectPopup");if(el)el.remove();},1100);
+});
+
+// ===== attackRollback =====
+socket.on("attackRollback",(data)=>{
+  pendingAttackerIndex=data.attackerIndex;
+  const old=document.getElementById("rollbackToast");if(old)old.remove();
+  const t=document.createElement("div");t.id="rollbackToast";t.style.cssText="position:fixed;top:120px;left:50%;transform:translateX(-50%);background:rgba(80,40,0,0.95);color:#ffcc88;padding:10px 22px;border-radius:8px;font-size:14px;z-index:700;border:2px solid #cc8833;text-align:center;pointer-events:none;";
+  t.innerText="⚠️ 攻撃対象が破壊されました。改めて選択してください";document.body.appendChild(t);
+  setTimeout(()=>{const el=document.getElementById("rollbackToast");if(el)el.remove();},3000);
+});
+
+// ===== growCoreResolved =====
+socket.on("growCoreResolved",()=>{const el=document.getElementById("growCoreWaitMsg");if(el)el.remove();});
+
+// ===== message =====
+socket.on("message",(msg)=>{
+  if(msg.includes("グロウコアの効果でユニットを選択中")){const old=document.getElementById("growCoreWaitMsg");if(old)old.remove();const d=document.createElement("div");d.id="growCoreWaitMsg";d.style.cssText="position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,80,0.9);color:#aaddff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:600;border:2px solid #6699ff;text-align:center;";d.innerText="⏳ "+msg;document.body.appendChild(d);}
+  else if(msg.includes("捨て場に送られました")){const old=document.getElementById("handToast");if(old)old.remove();const t=document.createElement("div");t.id="handToast";t.style.cssText="position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(80,0,0,0.92);color:#ffaaaa;padding:10px 22px;border-radius:8px;font-size:14px;z-index:700;border:2px solid #cc4444;text-align:center;pointer-events:none;";t.innerText="🃏 "+msg;document.body.appendChild(t);setTimeout(()=>{const el=document.getElementById("handToast");if(el)el.remove();},3000);}
+  else{alert(msg);}
+});
+
+// ===== selectTarget =====
+socket.on("selectTarget",(data)=>{
+  if(playerRole==="spectator")return;
+  selectTargetMode=data;
+  document.getElementById("turn").innerText="⚔ "+data.message;
+  if(data.type==="fieldSpell"){
+    const myFs=latestState?.myFieldSpell,enFs=latestState?.enemyFieldSpell;
+    let msg="崩壊：破壊するフィールドスペルを選択\n";
+    if(myFs)msg+="[自分] "+myFs.name+"（耐久"+myFs.durability+"）\n";
+    if(enFs)msg+="[相手] "+enFs.name+"（耐久"+enFs.durability+"）\n";
+    const choice=confirm(msg+"OKで相手、キャンセルで自分のFSを破壊");
+    socket.emit("roomAction",{type:"select_target",fieldSpellTarget:choice?"op":"my"});
+    selectTargetMode=null;return;
+  }
+  if(data.type==="lifeInput"){
+    const maxVal=data.message.includes("1〜")?3:99;
+    const input=prompt(data.message)||"0";const amount=parseInt(input,10);
+    if(amount>0&&amount<=maxVal){socket.emit("roomAction",{type:"select_target",targetSide:"life",lifeAmount:amount});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";}
+    else socket.emit("roomAction",{type:"select_target",targetSide:"life",lifeAmount:0});return;
+  }
+  if(data.type==="graveSelect"){
+    const options=data.options||[];const choice=prompt(data.message+"\n"+options.map((n,i)=>i+": "+n).join("\n"))||"";const idx=parseInt(choice,10);
+    if(!isNaN(idx)&&idx>=0&&idx<options.length){socket.emit("roomAction",{type:"select_target",targetSide:"grave",graveIndex:idx});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";}return;
+  }
+  const notice=document.createElement("div");notice.id="targetNotice";notice.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#ffe066;padding:16px 28px;border-radius:10px;font-size:15px;z-index:500;border:2px solid #ffe066;text-align:center;pointer-events:none;";notice.innerText="⚔ "+data.message;document.body.appendChild(notice);setTimeout(()=>{const el=document.getElementById("targetNotice");if(el)el.remove();},2000);
+});
+
+// ===== roomUpdate（メインのゲーム状態受信） =====
+socket.on("roomUpdate",(g)=>{
+  latestState=g;
+
+  if(_prevTurn!==null&&_prevTurn!==g.turn&&!g.winner)showTurnChangeAnim();
+  _prevTurn=g.turn;
+
+  // ドロー検知（観戦者はスキップ）
+  let drawAnimPromise=Promise.resolve();let _didDrawAnim=false;
+  if(playerRole!=="spectator"&&prevMyDeckCount!==null&&g.myDeckCount<prevMyDeckCount){
+    const drawCount=prevMyDeckCount-g.myDeckCount;
+    const drawnCards=[];
+    for(let i=0;i<drawCount;i++)drawnCards.push(g.myHand[g.myHand.length-drawCount+i]||null);
+    const handBefore=g.myHand.slice(0,g.myHand.length-drawCount);
+    _renderHand(handBefore,g);_didDrawAnim=true;
+    let ddc=prevMyDeckCount;document.getElementById("myDeck").innerText=ddc;
+    const mdi=document.getElementById("myDeckImg");if(mdi)mdi.style.opacity=ddc>0?"1":"0.2";
+    drawAnimPromise=(async()=>{for(let i=0;i<drawCount;i++){await playDrawAnimWithCallback(drawnCards[i],()=>{ddc--;document.getElementById("myDeck").innerText=ddc;if(mdi)mdi.style.opacity=ddc>0?"1":"0.2";});handBefore.push(drawnCards[i]);_renderHand(handBefore,g);}})();
+  }
+  if(prevEnemyDeckCount!==null&&g.enemyDeckCount<prevEnemyDeckCount){const dc=prevEnemyDeckCount-g.enemyDeckCount;const w=Math.max(0,_turnChangeFinishTime-Date.now());setTimeout(()=>{for(let i=0;i<dc;i++)setTimeout(()=>playSE(SE.draw),i*100);},w);}
+  prevMyDeckCount=g.myDeckCount;prevEnemyDeckCount=g.enemyDeckCount;
+
+  if(prevMyBoardCount!==null&&g.myBoard.length>prevMyBoardCount)playSE(SE.summon);
+  if(prevEnemyBoardCount!==null&&g.enemyBoard.length>prevEnemyBoardCount)playSE(SE.summon);
+  prevMyBoardCount=g.myBoard.length;prevEnemyBoardCount=g.enemyBoard.length;
+
+  const newLogs=(g.allLogs||[]).slice(prevAllLogsLen);
+  newLogs.forEach(log=>{if(log.includes("に攻撃（")||log.includes("でプレイヤーに直接攻撃")||log.includes("に全体攻撃")){const m=log.match(/「(.+?)」(?:で|が)/);if(m)playSE(SE.atk[getClientAttr(m[1])]||SE.atk.neutral);if(log.includes("でプレイヤーに直接攻撃")){document.body.classList.remove("shaking");void document.body.offsetWidth;document.body.classList.add("shaking");setTimeout(()=>document.body.classList.remove("shaking"),460);}}});
+  prevAllLogsLen=(g.allLogs||[]).length;
+
+  if(!selectTargetMode){
+    if(playerRole==="spectator")document.getElementById("turn").innerText=g.turn?"対戦中":"待機中";
+    else document.getElementById("turn").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
+  }
+  document.getElementById("winner").innerText=g.winner?(playerRole==="spectator"?"対戦終了":(g.winner===socket.id?"YOU WIN！":"YOU LOSE")):"";
+  if(g.winner&&!resultShown&&playerRole!=="spectator")setTimeout(()=>showResult(g.winner===socket.id),300);
+  if(!g.winner)resultShown=false;
+
+  // 待機画面→ゲーム画面切り替え（P1がroomUpdateを受け取った場合）
+  if(document.getElementById("waitingScreen").style.display!=="none"){
+    document.getElementById("waitingScreen").style.display="none";
+    document.getElementById("gameArea").style.display="block";
+    document.getElementById("roomInfoLabel").innerText="ルーム: "+g.roomId+" | 観戦ID: "+g.spectateId;
+    document.getElementById("endTurnBtn").style.display="";
+    document.getElementById("surrenderBtn").style.display="";
+  }
+
+  // 相手手札（裏向き）
+  const ehArea=document.getElementById("enemyHandArea");if(ehArea){ehArea.innerHTML="";for(let i=0;i<g.enemyHandCount;i++){const d=document.createElement("div");d.className="enemy-hand-card";const img=document.createElement("img");img.src="images/card_back.png";d.appendChild(img);ehArea.appendChild(d);}}
+
+  document.getElementById("enemyLife").innerText=g.enemyLife;
+  document.getElementById("enemyEnergy").innerText=g.enemyEnergy+"/"+g.enemyMaxEnergy;
+  document.getElementById("enemyDeck").innerText=g.enemyDeckCount;
+  const edi=document.getElementById("enemyDeckImg");if(edi)edi.style.opacity=g.enemyDeckCount>0?"1":"0.2";
+
+  allLogsData=g.allLogs||[];
+  const logBox=document.getElementById("logBox");
+  const cl=g.currentTurnLogs||[];if(cl.length>0)lastDisplayedLogs=cl;
+  const dl=lastDisplayedLogs;
+  if(!dl.length)logBox.innerHTML=`<div style="color:#666;font-size:12px">（まだログがありません）</div>`;
+  else{logBox.innerHTML=dl.map(l=>`<div class="logLine">${l}</div>`).join("");logBox.scrollTop=logBox.scrollHeight;}
+  document.getElementById("logTitle").innerText="GAME LOG";
+
+  renderFieldSpell("myFieldSpell",g.myFieldSpell);
+  renderFieldSpell("enemyFieldSpell",g.enemyFieldSpell);
+
+  // 相手フィールド
+  const _renderEnemyField=()=>{
+    const ef=document.getElementById("enemyUnits");if(!ef)return;ef.innerHTML="";
+    for(let si=0;si<3;si++){const s=document.createElement("div");s.className="unit-slot-empty";ef.appendChild(s);}
+    g.enemyBoard.forEach((c,i)=>{
+      const div=document.createElement("div");div.className="card";
+      const img=document.createElement("img");img.src="images/"+c.name+".png";
+      img.onmouseenter=()=>{document.getElementById("preview").innerHTML=`<img src="images/${c.name}.png">`;};
+      img.onmouseleave=()=>{document.getElementById("preview").innerHTML="";};
+      div.onclick=()=>{
+        if(playerRole==="spectator")return;
+        if(selectTargetMode&&(selectTargetMode.type==="enemyUnit"||selectTargetMode.type==="anyUnit")){socket.emit("roomAction",{type:"select_target",targetIndex:i,targetSide:"enemy"});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
+        if(selectedUnitIndex!==null){if(confirm(`${selectedUnitName} で ${c.name} に攻撃？`)){const ai=selectedUnitIndex,ti=i;clearSelection();playAttackAnim(ai,ti,false);setTimeout(()=>socket.emit("roomAction",{type:"attack",a:ai,t:ti}),200);}else clearSelection();}
+      };
+      const stat=document.createElement("div");stat.className="stat";const ba=getBaseAtk(c.name);let ac="#ffe066";if(ba!==null){if(c.atk>ba)ac="#66aaff";else if(c.atk<ba)ac="#ff6666";}
+      stat.innerHTML=`HP${c.hp} <span style="color:${ac}">AT${c.atk}</span>`;
+      if(c.disabled&&c.disabledCount!==undefined)stat.innerHTML+=" <span style='color:#44dd44'>【拘束】</span>";else if(c.disabled)stat.innerHTML+=" <span style='color:#cc66ff'>【洗脳】</span>";
+      if(c.barrier)stat.innerHTML+=" <span style='color:#44ddff'>【結晶】</span>";
+      if(c.denko&&!c.attacked)stat.innerHTML+=" ⚡x2";if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)stat.innerHTML+=" ⚡x1";
+      div.appendChild(img);div.appendChild(stat);ef.appendChild(div);
+    });
+    const es=ef.querySelectorAll(".unit-slot-empty"),cc=ef.querySelectorAll(".card").length;
+    es.forEach((s,i)=>{s.style.display=i<(3-cc)?"flex":"none";});
+  };
+  if(hitEffectActiveEnemy)setTimeout(_renderEnemyField,400);else _renderEnemyField();
+
+  // 直接攻撃ゾーン
+  const epz=document.getElementById("enemyPlayerZone");
+  epz.onclick=()=>{
+    if(playerRole==="spectator")return;
+    if(selectedUnitIndex!==null){if(confirm(`${selectedUnitName} でプレイヤーに直接攻撃？`)){const ai=selectedUnitIndex;clearSelection();playAttackAnim(ai,null,true);setTimeout(()=>socket.emit("roomAction",{type:"attack",a:ai}),200);}else clearSelection();}
+  };
+
+  // 自分フィールド
+  const _renderMyField=()=>{
+    const myUnits=document.getElementById("myUnits");if(!myUnits)return;myUnits.innerHTML="";
+    for(let si=0;si<3;si++){const s=document.createElement("div");s.className="unit-slot-empty";myUnits.appendChild(s);}
+    const rev=[...g.myBoard].reverse();
+    rev.forEach((c,i)=>{
+      const originalIdx=g.myBoard.length-1-i;
+      const div=document.createElement("div");div.className="card";
+      const img=document.createElement("img");img.src="images/"+c.name+".png";
+      img.onmouseenter=()=>{document.getElementById("preview").innerHTML=`<img src="images/${c.name}.png">`;};
+      img.onmouseleave=()=>{document.getElementById("preview").innerHTML="";};
+      img.draggable=true;
+      div.onclick=()=>{
+        if(playerRole==="spectator")return;
+        if(selectTargetMode&&(selectTargetMode.type==="myUnit"||selectTargetMode.type==="anyUnit")){socket.emit("roomAction",{type:"select_target",targetIndex:originalIdx,targetSide:"my"});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
+        if(selectedUnitIndex===originalIdx){if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)return;clearSelection();return;}
+        clearSelection();selectedUnitIndex=originalIdx;selectedUnitName=c.name;div.classList.add("selected");
+      };
+      const stat=document.createElement("div");stat.className="stat";const ba=getBaseAtk(c.name);let ac="#ffe066";if(ba!==null){if(c.atk>ba)ac="#66aaff";else if(c.atk<ba)ac="#ff6666";}
+      stat.innerHTML=`HP${c.hp} <span style="color:${ac}">AT${c.atk}</span>`;
+      if(c.disabled&&c.disabledCount!==undefined)stat.innerHTML+=" <span style='color:#44dd44'>【拘束】</span>";else if(c.disabled)stat.innerHTML+=" <span style='color:#cc66ff'>【洗脳】</span>";
+      if(c.barrier)stat.innerHTML+=" <span style='color:#44ddff'>【結晶】</span>";
+      if(c.denko&&!c.attacked)stat.innerHTML+=" ⚡x2";if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)stat.innerHTML+=" ⚡x1";
+      div.appendChild(img);div.appendChild(stat);myUnits.appendChild(div);
+    });
+    const mes=myUnits.querySelectorAll(".unit-slot-empty"),mc=myUnits.querySelectorAll(".card").length;
+    mes.forEach((s,i)=>{s.style.display=i<(3-mc)?"flex":"none";});
+    if(pendingAttackerIndex!==null){const cards=myUnits.querySelectorAll(".card");const di=g.myBoard.length-1-pendingAttackerIndex;if(cards[di]){selectedUnitIndex=pendingAttackerIndex;selectedUnitName=g.myBoard[pendingAttackerIndex]?.name||"";cards[di].classList.add("selected");}pendingAttackerIndex=null;}
+  };
+  if(hitEffectActiveMy)setTimeout(_renderMyField,400);else _renderMyField();
+
+  document.getElementById("myLife").innerText=g.myLife;
+  document.getElementById("myEnergy").innerText=g.myEnergy+"/"+g.myMaxEnergy;
+  if(!_didDrawAnim){document.getElementById("myDeck").innerText=g.myDeckCount;const mdi=document.getElementById("myDeckImg");if(mdi)mdi.style.opacity=g.myDeckCount>0?"1":"0.2";}
+  myGraveData=g.myGrave;enemyGraveData=g.enemyGrave;
+  _renderGravePile("myGravePile","myGraveEmpty",g.myGrave);
+  _renderGravePile("enemyGravePile","enemyGraveEmpty",g.enemyGrave);
+
+  if(g.pendingDiscard&&g.pendingDiscard>0){if(g.isHandLimit)document.getElementById("turn").innerText=`⚠️ 手札上限超過！${g.pendingDiscard}枚捨ててください`;else if(g.isSoulTrade)document.getElementById("turn").innerText="🔄 ソウルトレード：捨てるカードを選択";}
+
+  if(!_didDrawAnim)_renderHand(g.myHand,g);
+  if(!_didDrawAnim){document.getElementById("myDeck").innerText=g.myDeckCount;const mdi=document.getElementById("myDeckImg");if(mdi)mdi.style.opacity=g.myDeckCount>0?"1":"0.2";}
+  void drawAnimPromise;
+});
+
+// ===== 攻撃アニメーション =====
+function playAttackAnim(attackerIdx,targetIdx,isDirect){
+  const myContainer=document.getElementById("myUnits");if(!myContainer)return;
+  const myCards=myContainer.querySelectorAll(".card");const myBoardLen=latestState?.myBoard?.length||0;
+  const displayAtkIdx=myBoardLen>0?myBoardLen-1-attackerIdx:attackerIdx;const card=myCards[displayAtkIdx];if(!card)return;
+  let dx=0,dy=-120;
+  if(isDirect){dx=0;dy=-220;}
+  else if(targetIdx!==null&&targetIdx!==undefined){const ar=card.getBoundingClientRect();const ec=document.getElementById("enemyUnits");if(ec){const en=ec.querySelectorAll(".card");const tc=en[targetIdx];if(tc){const tr=tc.getBoundingClientRect();dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7;dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;}}}
+  card.style.transition="none";card.style.transform="translate(0,0)";void card.offsetWidth;card.style.transition="transform 0.18s ease-out";card.style.transform=`translate(${dx}px,${dy}px)`;
+  setTimeout(()=>{card.style.transition="transform 0.16s ease-in";card.style.transform="translate(0,0)";setTimeout(()=>{card.style.transition="";card.style.transform="";},180);},200);
+}
+
+// ===== 手札描画 =====
+function _renderHand(handCards,g){
+  if(playerRole==="spectator"){document.getElementById("handArea").innerHTML="";return;}
+  const hand=document.getElementById("handArea");hand.innerHTML="";
+  const hc=handCards.length;const maxAngle=Math.min(3*hc,24);const overlapPx=hc<=4?0:Math.min((hc-4)*12,44);
+  handCards.forEach((card,hi)=>{
+    const div=document.createElement("div");div.className="card";
+    const ratio=hc<=1?0:(hi/(hc-1))*2-1;const rotate=ratio*maxAngle;const ty=Math.abs(ratio)*Math.abs(rotate)*0.4;const ml=hi===0?0:-overlapPx;
+    div.style.cssText=`transform:rotate(${rotate}deg) translateY(${ty}px);transform-origin:center bottom;z-index:${hi};margin-left:${ml}px;`;
+    div.onmouseenter=()=>{div.style.cssText=`transform:rotate(${rotate}deg) translateY(${ty-12}px);transform-origin:center bottom;z-index:100;transition:transform 0.18s ease;margin-left:${ml}px;`;};
+    div.onmouseleave=()=>{div.style.cssText=`transform:rotate(${rotate}deg) translateY(${ty}px);transform-origin:center bottom;z-index:${hi};transition:transform 0.18s ease;margin-left:${ml}px;`;};
+    const img=document.createElement("img");img.src="images/"+card+".png";
+    img.onmouseenter=()=>{document.getElementById("preview").innerHTML=`<img src="images/${card}.png">`;};
+    img.onmouseleave=()=>{document.getElementById("preview").innerHTML="";};
+    img.draggable=true;
+    div.onclick=()=>{
+      if(playerRole==="spectator")return;
+      if(g.pendingDiscard&&g.pendingDiscard>0){if(confirm(card+" を捨てますか？"))socket.emit("roomAction",{type:"discard_hand",card});return;}
+      if(selectTargetMode&&(selectTargetMode.type==="handUnit_steel_cost3"||selectTargetMode.type==="handUnit_cost2"||selectTargetMode.type==="handUnit_cost3"||selectTargetMode.type==="handUnit_steel")){const hi2=g.myHand.indexOf(card);socket.emit("roomAction",{type:"select_target",targetIndex:hi2,targetSide:"hand",handIndex:hi2});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
+      if(selectTargetMode&&selectTargetMode.type==="soulTrade"){if(confirm(card+" を捨てますか？")){const hi2=g.myHand.indexOf(card);socket.emit("roomAction",{type:"select_target",targetSide:"soulTrade",handIndex:hi2,card:card});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";}return;}
+      if(confirm(card+" を使用しますか？"))socket.emit("roomAction",{type:"play_card",card});
+    };
+    div.appendChild(img);hand.appendChild(div);
+  });
+}
+</script>
+</body>
+</html>
