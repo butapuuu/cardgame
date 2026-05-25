@@ -860,6 +860,8 @@ body{
         <button onclick="window.open('deck2.html','_blank')">P2 DECK</button>
         <span id="turn" style="font-size:15px;font-weight:bold;color:#ffe066;"></span>
         <span id="winner" style="font-size:16px;font-weight:bold;color:#ff6666;"></span>
+        <button id="bgmToggleBtn" onclick="toggleBGM()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🎵 BGM</button>
+        <button id="seToggleBtn" onclick="toggleSE()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🔊 SE</button>
       </div>
     </div>
 
@@ -1070,6 +1072,7 @@ SE.summon.volume=1.0;
 
 function playSE(se){
   if(!se) return;
+  if(!_seEnabled) return;
   se.currentTime=0;
   se.play().catch(()=>{});
 }
@@ -1559,6 +1562,44 @@ function openGraveModal(graveData, title){
     });
   }
   document.getElementById("graveModal").classList.add("open");
+}
+
+// ===== BGM・SE オンオフ =====
+let _bgmEnabled=true;
+let _seEnabled=true;
+
+function toggleBGM(){
+  _bgmEnabled=!_bgmEnabled;
+  const btn=document.getElementById("bgmToggleBtn");
+  if(_bgmEnabled){
+    btn.style.color="#88aacc";
+    btn.style.borderColor="#2a4a6a";
+    btn.style.opacity="1";
+    btn.innerText="🎵 BGM";
+    startBGM();
+  }else{
+    btn.style.color="#666";
+    btn.style.borderColor="#444";
+    btn.style.opacity="0.6";
+    btn.innerText="🔇 BGM";
+    stopBGM();
+  }
+}
+
+function toggleSE(){
+  _seEnabled=!_seEnabled;
+  const btn=document.getElementById("seToggleBtn");
+  if(_seEnabled){
+    btn.style.color="#88aacc";
+    btn.style.borderColor="#2a4a6a";
+    btn.style.opacity="1";
+    btn.innerText="🔊 SE";
+  }else{
+    btn.style.color="#666";
+    btn.style.borderColor="#444";
+    btn.style.opacity="0.6";
+    btn.innerText="🔇 SE";
+  }
 }
 
 function stopBGM(){

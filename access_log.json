@@ -1667,5 +1667,51 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-05-25": {
+    "total": 5,
+    "hours": {
+      "22": 5
+    },
+    "pages": {
+      "index.html": 5
+    },
+    "visitors": [
+      {
+        "time": "2026-05-25 13:41:22",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-25 13:41:28",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-25 13:41:43",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-25 13:42:18",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-25 13:42:19",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }

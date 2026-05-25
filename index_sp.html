@@ -442,6 +442,8 @@ img{
       <button onclick="window.open('deck2.html','_blank')" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border-color:#2a4a6a;">P2 DECK</button>
       <span id="spTurnLabel" style="margin-left:auto;"></span>
       <span id="spWinner"></span>
+      <button id="spBgmBtn" onclick="spToggleBGM()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:bold;cursor:pointer;">🎵</button>
+      <button id="spSeBtn" onclick="spToggleSE()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:bold;cursor:pointer;">🔊</button>
     </div>
   </div>
 
@@ -672,7 +674,46 @@ Object.values(SP_SE).forEach(v=>{if(v instanceof Audio)v.volume=1.0;});
 Object.values(SP_SE.atk).forEach(v=>{v.volume=1.0;});
 SP_SE.draw.volume=0.9;
 const SE_TC_SP=new Audio("sounds/turn_change.mp3"); SE_TC_SP.volume=1.0;
-function spPlaySE(se){if(!se)return;se.currentTime=0;se.play().catch(()=>{});}
+
+// ===== BGM・SE オンオフ =====
+let _spBgmEnabled=true;
+let _spSeEnabled=true;
+
+function spToggleBGM(){
+  _spBgmEnabled=!_spBgmEnabled;
+  const btn=document.getElementById("spBgmBtn");
+  if(_spBgmEnabled){
+    btn.style.color="#88aacc";
+    btn.style.borderColor="#2a4a6a";
+    btn.style.opacity="1";
+    btn.innerText="🎵";
+    spStartBGM();
+  }else{
+    btn.style.color="#666";
+    btn.style.borderColor="#444";
+    btn.style.opacity="0.5";
+    btn.innerText="🔇";
+    spStopBGM();
+  }
+}
+
+function spToggleSE(){
+  _spSeEnabled=!_spSeEnabled;
+  const btn=document.getElementById("spSeBtn");
+  if(_spSeEnabled){
+    btn.style.color="#88aacc";
+    btn.style.borderColor="#2a4a6a";
+    btn.style.opacity="1";
+    btn.innerText="🔊";
+  }else{
+    btn.style.color="#666";
+    btn.style.borderColor="#444";
+    btn.style.opacity="0.5";
+    btn.innerText="🔇";
+  }
+}
+
+function spPlaySE(se){if(!se)return;if(!_spSeEnabled)return;se.currentTime=0;se.play().catch(()=>{});}
 
 // ===== 状態 =====
 let spSelectedUnitIndex=null, spSelectedUnitName=null;
