@@ -1669,12 +1669,13 @@
     ]
   },
   "2026-05-25": {
-    "total": 5,
+    "total": 7,
     "hours": {
-      "22": 5
+      "22": 5,
+      "23": 2
     },
     "pages": {
-      "index.html": 5
+      "index.html": 7
     },
     "visitors": [
       {
@@ -1707,6 +1708,20 @@
       },
       {
         "time": "2026-05-25 13:42:19",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-25 14:14:01",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-25 14:14:04",
         "page": "index.html",
         "device": "PC",
         "browser": "Chrome",

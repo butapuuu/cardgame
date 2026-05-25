@@ -214,7 +214,7 @@ const cards = {
 "フォレストラビット":{cost:1,atk:1,hp:2,type:"unit",attr:"forest",effect:"SUM_UNIT_A_PERM+1"},
 "グリーンナイト":{cost:2,atk:3,hp:3,type:"unit",attr:"forest"},
 "ウッドゴーレム":{cost:2,atk:1,hp:4,type:"unit",attr:"forest",effect:"SUM_A_PERM-2"},
-"グロウコア":{cost:2,atk:2,hp:3,type:"unit",attr:"forest",destroyEffect:"DES_SUMMON_C3"},
+"グロウコア":{cost:2,atk:2,hp:2,type:"unit",attr:"forest",destroyEffect:"DES_SUMMON_C3"},
 "アーマードライノス":{cost:3,atk:2,hp:4,type:"unit",attr:"forest",effect:"DAMAGE_REDUCE_1"},
 "フォレストビースト":{cost:3,atk:3,hp:4,type:"unit",attr:"forest",effect:"END_A+1"},
 "モスストーン":{cost:3,atk:4,hp:4,type:"unit",attr:"forest"},
@@ -321,7 +321,7 @@ const cards = {
 //汎用
 "ダブルドロー":{cost:1,type:"spell",attr:"neutral",effect:"DRAW2"},
 "解放の光":{cost:2,type:"spell",attr:"neutral",effect:"PURIFY"},
-"リバース":{cost:3,type:"spell",attr:"neutral",effect:"BOUNCE_UNIT"},
+"リバース":{cost:2,type:"spell",attr:"neutral",effect:"BOUNCE_UNIT"},
 "崩壊":{cost:1,type:"spell",attr:"neutral",effect:"DES_PERM_SPELL"}
 };
 
