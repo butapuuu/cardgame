@@ -238,7 +238,7 @@ const cards = {
 "世界樹の聖域":{cost:3,type:"spell",attr:"forest",effect:"PERM_SPELL_FOREST_BUFF",durability:7},
 
 //🌑闇
-"シャドウバット":{cost:2,atk:2,hp:1,type:"unit",attr:"dark",effect:"SUM_R_HAN1_C2"},
+"シャドウバット":{cost:2,atk:2,hp:1,type:"unit",attr:"dark",effect:"SUM_R_HAN1_C3"},
 "ダークスライム":{cost:1,atk:1,hp:3,type:"unit",attr:"dark"},
 "シャドウアサシン":{cost:3,atk:4,hp:2,type:"unit",attr:"dark",effect:"SUM_A_PERM-2"},
 "ダークナイト":{cost:2,atk:3,hp:3,type:"unit",attr:"dark"},
@@ -1914,11 +1914,15 @@ const op=getOpponent(socket.id);
                           (eff==="UNIT_DES_SUM_C3_HAND"||eff==="DES_SUMMON_C2_HAND") ? 3 :
                           (eff==="SUM_H_C3X2_STEP1"||eff==="SUM_H_C3X2_STEP2") ? 3 : 999;
         const steelOnly = eff==="FUSION_IRON2_HAND";
+        const isSeedSpawn = (eff==="SUM_H_C3X2_STEP1"||eff==="SUM_H_C3X2_STEP2");
         if(!handCard||cards[handCard]?.type!=="unit"||(cards[handCard]?.cost||0)>costLimit||(steelOnly&&getAttr(handCard)!=="steel")){
           const msg=steelOnly?"鉄ユニットを選択してください":`コスト${costLimit}以下のユニットを選択してください`;
           socket.emit("message",msg);
           game.pendingTarget=pt;
-          socket.emit("selectTarget",{type:"handUnit",message:msg});
+          const selectType=isSeedSpawn?"handUnit_cost3":"handUnit";
+          const stepNum2=eff==="SUM_H_C3X2_STEP1"?1:2;
+          const selectMsg=isSeedSpawn?`${stepNum2}体目：コスト3以下のユニットを選択してください`:msg;
+          socket.emit("selectTarget",{type:selectType,message:selectMsg});
           send();return;
         }
         game.hands[p].splice(hi,1);
@@ -2046,6 +2050,7 @@ const op=getOpponent(socket.id);
             addLog(p,`→「${targetUnit.name}」を破壊`);
             triggerDestroyEffect(targetUnit,op);
           }
+          if(game.pendingTarget){notifyPendingTarget();if(game.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");send();return;}
           break;
         }
         case "A_PERM+3":
@@ -2129,6 +2134,7 @@ const op=getOpponent(socket.id);
           triggerDestroyEffect(targetUnit,op);
           draw(p);
           addLog(p,`→1枚ドロー`);
+          if(game.pendingTarget){notifyPendingTarget();if(game.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");send();return;}
           break;
         }
         case "UNIT_DES_COST_L_DMG":{
@@ -2139,6 +2145,7 @@ const op=getOpponent(socket.id);
           triggerDestroyEffect(targetUnit,op);
           damageLife(op,cost);
           addLog(p,`→相手ライフ-${cost}`);
+          if(game.pendingTarget){notifyPendingTarget();if(game.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");send();return;}
           break;
         }
         case "UNIT_DES_COST_LHEAL":{
@@ -2149,6 +2156,7 @@ const op=getOpponent(socket.id);
           triggerDestroyEffect(targetUnit,op);
           game.life[p]+=cost;
           addLog(p,`→自分ライフ+${cost}`);
+          if(game.pendingTarget){notifyPendingTarget();if(game.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");send();return;}
           break;
         }
         case "UNIT_DES_L_HEAL":{
@@ -2446,7 +2454,7 @@ case "UNIT_DES_SUM_C2":{
         case "SUM_H_C3X2_STEP2":{
           const handCard=game.hands[p][data.handIndex];
           const stepNum=eff==="SUM_H_C3X2_STEP1"?1:2;
-          if(!handCard||cards[handCard]?.type!=="unit"||(cards[handCard]?.cost||0)>3){
+          if(!handCard||cards[handCard]?.type!=="unit"||(cards[handCard]?.cost||0)>3||cards[handCard]===undefined){
             socket.emit("message","コスト3以下のユニットを選択してください");
             game.pendingTarget=pt;
             socket.emit("selectTarget",{type:"handUnit_cost3",message:`${stepNum}体目：コスト3以下のユニットを選択してください`});
@@ -3143,7 +3151,14 @@ function roomHandleSelectTarget(room, socket, data){
     const hi=data.handIndex;const hcard=room.hands[p][hi];
     const cl=(eff==="UNIT_DES_SUM_C2_HAND"||eff==="SUM_DES_SUM_C2_HAND")?2:(eff==="UNIT_DES_SUM_C3_HAND"||eff==="DES_SUMMON_C2_HAND"||eff==="SUM_H_C3X2_STEP1"||eff==="SUM_H_C3X2_STEP2")?3:999;
     const so=eff==="FUSION_IRON2_HAND";
-    if(!hcard||cards[hcard]?.type!=="unit"||(cards[hcard]?.cost||0)>cl||(so&&roomGetAttr(hcard)!=="steel")){socket.emit("message",so?"鉄ユニットを選択してください":`コスト${cl}以下のユニットを選択してください`);room.pendingTarget=pt;socket.emit("selectTarget",{type:"handUnit",message:"有効なユニットを選択してください"});roomSend(room);return;}
+    const isSeedR=(eff==="SUM_H_C3X2_STEP1"||eff==="SUM_H_C3X2_STEP2");
+    if(!hcard||cards[hcard]?.type!=="unit"||(cards[hcard]?.cost||0)>cl||(so&&roomGetAttr(hcard)!=="steel")){
+      const errMsg=so?"鉄ユニットを選択してください":`コスト${cl}以下のユニットを選択してください`;
+      socket.emit("message",errMsg);room.pendingTarget=pt;
+      const sType=isSeedR?"handUnit_cost3":"handUnit";
+      const sNum=eff==="SUM_H_C3X2_STEP1"?1:2;
+      const sMsg=isSeedR?`${sNum}体目：コスト3以下のユニットを選択してください`:errMsg;
+      socket.emit("selectTarget",{type:sType,message:sMsg});roomSend(room);return;}
     room.hands[p].splice(hi,1);
     const hc2=cards[hcard];const ba=pt.fusionBonusAtk||0;const bh=pt.fusionBonusHp||0;
     const bAtk=so?hc2.atk+ba:hc2.atk;const bHp=so?hc2.hp+bh:hc2.hp;
@@ -3167,7 +3182,7 @@ function roomHandleSelectTarget(room, socket, data){
   room.pendingTarget=null;
 
   switch(eff){
-    case "UNIT_DMG3":case "UNIT_DMG2":{const dmg=eff==="UNIT_DMG3"?3:2;const ac=targetUnit.damageReduce?Math.min(1,dmg):dmg;targetUnit.hp-=ac;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」に${ac}ダメージ`);if(targetUnit.hp<=0){room.board[op].splice(targetIndex,1);if(!targetUnit.isToken)room.graves[op].push(targetUnit);roomAddLog(room,p,`→「${targetUnit.name}」を破壊`);roomTriggerDestroyEffect(room,targetUnit,op);}break;}
+    case "UNIT_DMG3":case "UNIT_DMG2":{const dmg=eff==="UNIT_DMG3"?3:2;const ac=targetUnit.damageReduce?Math.min(1,dmg):dmg;targetUnit.hp-=ac;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」に${ac}ダメージ`);if(targetUnit.hp<=0){room.board[op].splice(targetIndex,1);if(!targetUnit.isToken)room.graves[op].push(targetUnit);roomAddLog(room,p,`→「${targetUnit.name}」を破壊`);roomTriggerDestroyEffect(room,targetUnit,op);}if(room.pendingTarget){roomNotifyPendingTarget(room);if(room.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");roomSend(room);return;}break;}
     case "A_PERM+3":targetUnit.atk+=3;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK+3`);break;
     case "A+2_H+1":targetUnit.atk+=2;targetUnit.hp+=1;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK+2/HP+1`);break;
     case "A_H_PERM+3":targetUnit.atk+=3;targetUnit.hp+=3;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK+3/HP+3`);break;
@@ -3180,9 +3195,9 @@ function roomHandleSelectTarget(room, socket, data){
     case "BOUNCE_UNIT":{const oot=targetSide==="my"?p:op;if(targetUnit.isToken){targetBoard.splice(targetIndex,1);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」消滅`);}else{targetBoard.splice(targetIndex,1);room.hands[oot].push(targetUnit.name);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」手札へ`);}break;}
     case "FLAME_BURN":room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);roomDamageLife(room,op,1);roomAddLog(room,p,`フレイムバーン：相手ライフ-1`);break;
     case "AQUA_RETURN":{if(roomGetAttr(targetUnit.name)!=="water"){socket.emit("message","水属性ユニットを選択してください");room.pendingTarget={player:p,effect:eff,card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"水属性ユニットを選択"});roomSend(room);return;}room.board[p].splice(targetIndex,1);room.hands[p].push(targetUnit.name);roomDraw(room,p);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」手札へ、1枚ドロー`);break;}
-    case "UNIT_DES_DRAW1":room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,op);roomDraw(room,p);roomAddLog(room,p,`→1枚ドロー`);break;
-    case "UNIT_DES_COST_L_DMG":{const cost=cards[targetUnit.name]?.cost||0;room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」（コスト${cost}）破壊`);roomTriggerDestroyEffect(room,targetUnit,op);roomDamageLife(room,op,cost);roomAddLog(room,p,`→相手ライフ-${cost}`);break;}
-    case "UNIT_DES_COST_LHEAL":{const cost=cards[targetUnit.name]?.cost||0;room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,op);room.life[p]+=cost;roomAddLog(room,p,`→自分ライフ+${cost}`);break;}
+    case "UNIT_DES_DRAW1":room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,op);roomDraw(room,p);roomAddLog(room,p,`→1枚ドロー`);if(room.pendingTarget){roomNotifyPendingTarget(room);if(room.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");roomSend(room);return;}break;
+    case "UNIT_DES_COST_L_DMG":{const cost=cards[targetUnit.name]?.cost||0;room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」（コスト${cost}）破壊`);roomTriggerDestroyEffect(room,targetUnit,op);roomDamageLife(room,op,cost);roomAddLog(room,p,`→相手ライフ-${cost}`);if(room.pendingTarget){roomNotifyPendingTarget(room);if(room.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");roomSend(room);return;}break;}
+    case "UNIT_DES_COST_LHEAL":{const cost=cards[targetUnit.name]?.cost||0;room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,op);room.life[p]+=cost;roomAddLog(room,p,`→自分ライフ+${cost}`);if(room.pendingTarget){roomNotifyPendingTarget(room);if(room.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");roomSend(room);return;}break;}
     case "UNIT_DES_L_HEAL":{const cost=cards[targetUnit.name]?.cost||0;room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.life[p]+=cost;roomAddLog(room,p,`→自分ライフ+${cost}`);break;}
     case "SUM_A_PERM-2":targetUnit.atk=Math.max(0,targetUnit.atk-2);roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」ATK-2`);if(pt.pendingNext)room.pendingNext=pt.pendingNext;break;
     case "SUM_UNIT_A_PERM+1":targetUnit.atk+=1;roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」ATK+1`);if(pt.pendingNext)room.pendingNext=pt.pendingNext;break;
@@ -3199,7 +3214,15 @@ function roomHandleSelectTarget(room, socket, data){
     case "FUSION_IRON2_STEP1":{if(roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP1",card:pt.card,selected:[]};socket.emit("selectTarget",{type:"myUnit",message:"1体目の鉄ユニットを選択"});roomSend(room);return;}room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP2",card:pt.card,selected:[targetIndex]};socket.emit("selectTarget",{type:"myUnit",message:"2体目の鉄ユニットを選択"});roomSend(room);return;}
     case "FUSION_IRON2_STEP2":{if(roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP2",card:pt.card,selected:pt.selected};socket.emit("selectTarget",{type:"myUnit",message:"2体目の鉄ユニットを選択"});roomSend(room);return;}if(pt.selected.includes(targetIndex)){socket.emit("message","同じユニットは選択できません");room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP2",card:pt.card,selected:pt.selected};socket.emit("selectTarget",{type:"myUnit",message:"別のユニットを選択"});roomSend(room);return;}const idxs=[...pt.selected,targetIndex].sort((a,b)=>b-a);let fa=0,fh=0;idxs.forEach(i=>{const d=room.board[p].splice(i,1)[0];fa+=d.atk;fh+=d.hp;room.graves[p].push(d);roomAddLog(room,p,`フュージョン：「${d.name}」破壊`);roomTriggerDestroyEffect(room,d,p);});room.pendingTarget={player:p,effect:"FUSION_IRON2_HAND",card:pt.card,fusionBonusAtk:fa,fusionBonusHp:fh};socket.emit("selectTarget",{type:"handUnit_steel",message:`鉄ユニットを召喚（ATK+${fa}/HP+${fh}）`});roomSend(room);return;}
     case "DES_PERM_SPELL":{const tgt=data.fieldSpellTarget;const tp=tgt==="my"?p:op;if(!room.fieldSpell[tp]){socket.emit("message","対象のフィールドスペルがありません");room.pendingTarget=pt;socket.emit("selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択"});roomSend(room);return;}roomDestroyFieldSpell(room,tp);room.pendingTarget=null;break;}
-    case "SUM_H_C3X2_STEP1":case "SUM_H_C3X2_STEP2":{const hc3=room.hands[p][data.handIndex];const sn=eff==="SUM_H_C3X2_STEP1"?1:2;if(!hc3||cards[hc3]?.type!=="unit"||(cards[hc3]?.cost||0)>3){socket.emit("message","コスト3以下のユニットを選択してください");room.pendingTarget=pt;socket.emit("selectTarget",{type:"handUnit_cost3",message:`${sn}体目：コスト3以下のユニットを選択`});roomSend(room);return;}room.hands[p].splice(data.handIndex,1);const hcc=cards[hc3];if(room.board[p].length<3){const nu={name:hc3,atk:hcc.atk,hp:hcc.hp,attacked:false,attr:hcc.attr||"neutral",damageReduce:hcc.effect==="DAMAGE_REDUCE_1"};room.board[p].push(nu);roomApplyFieldSpellOnSummon(room,nu,p);roomAddLog(room,p,`シードスポーン：「${hc3}」を召喚`);roomTriggerSummonEffect(room,nu,p,socket);}if(sn===1){const vv2=room.hands[p].filter(n=>cards[n]?.type==="unit"&&(cards[n]?.cost||0)<=3);if(vv2.length>0&&room.board[p].length<3){room.pendingTarget={player:p,effect:"SUM_H_C3X2_STEP2",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost3",message:"2体目：コスト3以下のユニットを選択"});roomSend(room);return;}}break;}
+
+case "SUM_H_C3X2_STEP1":
+case "SUM_H_C3X2_STEP2":{
+const hc3=room.hands[p][data.handIndex];
+const sn=eff==="SUM_H_C3X2_STEP1"?1:2;
+if(!hc3||cards[hc3]?.type!=="unit"||(cards[hc3]?.cost||0)>3){
+socket.emit("message","コスト3以下のユニットを選択してください");
+room.pendingTarget=pt;
+socket.emit("selectTarget",{type:"handUnit_cost3",message:`${sn}体目：コスト3以下のユニットを選択`});roomSend(room);return;}room.hands[p].splice(data.handIndex,1);const hcc=cards[hc3];if(room.board[p].length<3){const nu={name:hc3,atk:hcc.atk,hp:hcc.hp,attacked:false,attr:hcc.attr||"neutral",damageReduce:hcc.effect==="DAMAGE_REDUCE_1"};room.board[p].push(nu);roomApplyFieldSpellOnSummon(room,nu,p);roomAddLog(room,p,`シードスポーン：「${hc3}」を召喚`);roomTriggerSummonEffect(room,nu,p,socket);}if(sn===1){const vv2=room.hands[p].filter(n=>cards[n]?.type==="unit"&&(cards[n]?.cost||0)<=3);if(vv2.length>0&&room.board[p].length<3){room.pendingTarget={player:p,effect:"SUM_H_C3X2_STEP2",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost3",message:"2体目：コスト3以下のユニットを選択"});roomSend(room);return;}}break;}
     default: break;
   }
   if(!room.pendingTarget&&room.pendingNext){const nxt=room.pendingNext;room.pendingNext=null;room.pendingTarget={player:nxt.player,effect:nxt.effect,card:nxt.card};roomNotifyPendingTarget(room);}
