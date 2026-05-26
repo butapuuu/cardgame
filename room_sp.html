@@ -223,8 +223,11 @@ img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; poi
   <select id="spDeckSelectLobby" style="width:100%;background:#0e1a0e;color:#aaddaa;border:1px solid #3a6a3a;border-radius:6px;padding:8px;font-size:12px;margin-bottom:10px;">
     <option value="-1">デッキ選択</option>
   </select>
+  <button class="sp-lobby-btn" onclick="location.href='deck1_sp.html'" style="background:linear-gradient(135deg,#1a0a2a,#2a1a3a);color:#cc88ff;border:1px solid #6a3a8a;margin-bottom:8px;">⚔ デッキ構築</button>
 
   <hr class="sp-lobby-divider">
+
+  <div id="spLobbyStatus"></div>
 
   <div class="sp-lobby-label">ルームIDを入力して作成 / 参加</div>
   <input type="text" id="spRoomIdInput" placeholder="ルームID（好きな言葉）" maxlength="20">
@@ -246,8 +249,6 @@ img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; poi
   <div id="spLobbyStatus"></div>
   <div id="spLobbyError"></div>
 
-  <hr class="sp-lobby-divider">
-  <button class="sp-lobby-btn sp-btn-back" onclick="location.href='index_sp.html'">← フリー対戦に戻る</button>
 </div>
 
 <!-- 待機中 -->
@@ -433,7 +434,7 @@ function spCreateRoom(){
   socket.emit("createRoom",{roomId,deck});
 }
 function spJoinRoom(){
-  const roomId=document.getElementById("spRoomIdInput").value.trim();
+  const roomId=document.getElementById("spJoinRoomIdInput").value.trim();
   if(!roomId){setSpLobbyError("ルームIDを入力してください");return;}
   const deck=spGetSelectedDeck();
   if(!deck||!deck.length){setSpLobbyError("デッキを選択してください");return;}
@@ -568,7 +569,7 @@ function spShowAfterGameDialog(){
     <div style="display:flex;flex-direction:column;gap:9px;">
       <button onclick="spReplayRoom()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">🔄 このルームで再戦</button>
       <button onclick="location.reload()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aaff;border:1px solid #2a4a8a;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">🚪 別のルームへ</button>
-      <button onclick="location.href='index_sp.html'" style="background:rgba(0,0,0,0.4);color:#888;border:1px solid #444;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">← フリー対戦へ</button>
+
     </div>`;
   document.body.appendChild(d);
 }

@@ -808,13 +808,13 @@ function spSelectPlayer(num){
   const sel=document.getElementById("spDeckSelectP"+num);
   const slotIdx=parseInt(sel.value,10);
   let deck;
-  if(slotIdx>=0){
-    const all=JSON.parse(localStorage.getItem("decks_p"+num)||"[]");
-    deck=(all[slotIdx]&&all[slotIdx].cards)||[];
-  }else{
-    deck=JSON.parse(localStorage.getItem("deck"+num)||"[]");
+  if(slotIdx<0){
+    alert("デッキを選択してください（SLOT1〜10）");
+    return;
   }
-  if(!deck||deck.length===0){alert("デッキを選択してください");return;}
+  const all=JSON.parse(localStorage.getItem("decks_p"+num)||"[]");
+  deck=(all[slotIdx]&&all[slotIdx].cards)||[];
+  if(!deck||deck.length===0){ alert("デッキを選択してください（SLOT1〜10）"); return; }
   socket.emit("join",{player:num,deck});
   spApplyAttrColor(spDetectDeckAttr(deck));
   // BGMはSTARTボタンで開始するためここでは開始しない

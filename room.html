@@ -215,6 +215,7 @@ body{
   <select id="deckSelectLobby" style="width:100%;background:#0e1a0e;color:#aaddaa;border:1px solid #3a6a3a;border-radius:6px;padding:6px 8px;font-size:12px;margin-bottom:10px;">
     <option value="-1">デッキ選択</option>
   </select>
+  <button class="lobby-btn" onclick="window.open('deck1.html','_blank')" style="background:linear-gradient(135deg,#1a0a2a,#2a1a3a);color:#cc88ff;border:1px solid #6a3a8a;margin-bottom:8px;">⚔ デッキ構築</button>
 
   <hr class="lobby-divider">
 
@@ -239,8 +240,6 @@ body{
   <div id="lobbyStatus"></div>
   <div id="lobbyError"></div>
 
-  <hr class="lobby-divider">
-  <button class="lobby-btn" onclick="location.href='index.html'" style="background:rgba(0,0,0,0.3);color:#888;border:1px solid #444;">← フリー対戦に戻る</button>
 </div>
 
 <!-- 待機中 -->
@@ -409,7 +408,7 @@ function createRoom(){
 }
 
 function joinRoom(){
-  const roomId=document.getElementById("roomIdInput").value.trim();
+  const roomId=document.getElementById("joinRoomIdInput").value.trim();
   if(!roomId){setLobbyError("ルームIDを入力してください");return;}
   const deck=getSelectedDeck();
   if(!deck||!deck.length){setLobbyError("デッキを選択してください");return;}
@@ -507,7 +506,7 @@ function showAfterGameDialog(){
     <div style="display:flex;flex-direction:column;gap:10px;">
       <button onclick="replayRoom()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🔄 このルームで再戦</button>
       <button onclick="location.reload()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aaff;border:1px solid #2a4a8a;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🚪 別のルームへ</button>
-      <button onclick="location.href='index.html'" style="background:rgba(0,0,0,0.4);color:#888;border:1px solid #444;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">← フリー対戦へ戻る</button>
+
     </div>`;
   document.body.appendChild(d);
 }

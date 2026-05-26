@@ -10,7 +10,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>デッキ構築 - Player 1</title>
+<title>デッキ構築</title>
 <style>
 *{ box-sizing:border-box; margin:0; padding:0; }
 
@@ -392,9 +392,8 @@ body{
 
 <!-- ヘッダー -->
 <div id="pageHeader">
-  <h2>⚔ DECK BUILDER — PLAYER 1</h2>
-  <a href="index.html">← GAME</a>
-  <a href="deck2.html">P2 DECK →</a>
+  <h2>⚔ DECK BUILDER</h2>
+  <a href="room.html">🏠 ルーム対戦</a>
 </div>
 
 <!-- メインレイアウト -->
@@ -755,6 +754,12 @@ function renderCards(){
     badge.innerText="×"+countInDeck;
     div.appendChild(img);
     div.appendChild(badge);
+    if(limitedCards.includes(cd.name)){
+      const lbadge=document.createElement("div");
+      lbadge.style.cssText="position:absolute;bottom:2px;left:2px;background:rgba(180,0,0,0.88);color:#fff;font-size:9px;font-weight:bold;border-radius:3px;padding:1px 4px;letter-spacing:1px;pointer-events:none;";
+      lbadge.textContent="制限";
+      div.appendChild(lbadge);
+    }
     div.onclick=()=>{
       if(deck.length>=20){ showToast("デッキは20枚まで"); return; }
       const inDeckCount=deck.filter(x=>x===cd.name).length;

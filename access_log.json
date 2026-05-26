@@ -1901,19 +1901,21 @@
     ]
   },
   "2026-05-26": {
-    "total": 127,
+    "total": 158,
     "hours": {
       "9": 22,
       "11": 6,
       "13": 41,
       "14": 24,
-      "15": 34
+      "15": 34,
+      "19": 20,
+      "20": 11
     },
     "pages": {
-      "index.html": 63,
-      "room.html": 61,
-      "deck1.html": 1,
-      "deck2.html": 2
+      "index.html": 77,
+      "room.html": 70,
+      "deck1.html": 8,
+      "deck2.html": 3
     },
     "visitors": [
       {
@@ -2801,6 +2803,223 @@
       {
         "time": "2026-05-26 06:49:21",
         "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:18:05",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:18:07",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:18:08",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:18:12",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:18:16",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:18:30",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:18:50",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:18:56",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:19:23",
+        "page": "deck2.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:19:29",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:20:47",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:20:48",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:20:50",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:21:05",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:21:57",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-05-26 10:21:58",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-05-26 10:22:01",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:22:05",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:29:09",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 10:29:14",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:05:13",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:05:15",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:05:16",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:05:20",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:05:25",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-05-26 11:09:08",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:13:31",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:13:32",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:13:34",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-05-26 11:13:36",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-26 11:13:43",
+        "page": "room.html",
         "device": "PC",
         "browser": "Chrome",
         "ip": "::1"
