@@ -174,6 +174,11 @@ body{
 .damage-pop.dmg-enemy{ color:#ffaa00; }
 #resultOverlay{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:2000; justify-content:center; align-items:center; cursor:pointer; }
 #resultOverlay img{ max-width:60%; max-height:60%; }
+
+#gameArea{
+  display:contents;
+}
+
 </style>
 </head>
 <body>
@@ -250,7 +255,7 @@ body{
 
 <!-- ゲーム画面 -->
 <div id="gameArea">
-<div id="root">
+<div id="root" style="display:flex;gap:10px;width:100%;max-width:1200px;">
   <div id="sidePreview"><div id="preview"></div></div>
   <div id="mat">
     <div id="header" style="flex-direction:column;align-items:flex-start;gap:6px;">
@@ -263,6 +268,7 @@ body{
       </div>
     </div>
     <div id="spectateBanner" style="display:none;">👁 観戦モード（手札は非公開）</div>
+    <div id="spectateIdBadge" style="display:none;position:fixed;bottom:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,200,0,0.4);border-radius:6px;padding:4px 10px;font-size:11px;color:#ffe066;z-index:200;pointer-events:none;">👁 観戦ID: <span id="spectateIdBadgeVal">----</span></div>
     <div class="pm-wrapper">
       <div class="pm-half">
         <div class="pm-side">
@@ -437,8 +443,10 @@ socket.on("roomJoined",(data)=>{
   playerRole=data.playerRole;
   document.getElementById("lobby").style.display="none";
   document.getElementById("waitingScreen").style.display="none";
-  document.getElementById("gameArea").style.display="block";
-  document.getElementById("roomInfoLabel").innerText="ルーム: "+data.roomId+" | 観戦ID: "+data.spectateId;
+  document.getElementById("gameArea").style.display="contents";
+  document.getElementById("roomInfoLabel").innerText="ルーム: "+data.roomId;
+  document.getElementById("spectateIdBadgeVal").innerText=data.spectateId;
+  document.getElementById("spectateIdBadge").style.display="block";
   document.getElementById("spectateBanner").style.display="none";
   document.getElementById("endTurnBtn").style.display="";
   document.getElementById("surrenderBtn").style.display="";
@@ -449,7 +457,7 @@ socket.on("spectateJoined",(data)=>{
   playerRole="spectator";
   document.getElementById("lobby").style.display="none";
   document.getElementById("waitingScreen").style.display="none";
-  document.getElementById("gameArea").style.display="block";
+  document.getElementById("gameArea").style.display="contents";
   document.getElementById("roomInfoLabel").innerText="観戦中: "+data.roomId;
   document.getElementById("spectateBanner").style.display="block";
   document.getElementById("endTurnBtn").style.display="none";
@@ -475,8 +483,74 @@ function showResult(isWinner){
   document.getElementById("resultOverlay").style.display="flex";
   if(isWinner){BGM_WIN.currentTime=0;BGM_WIN.play().catch(()=>{});}
   else{BGM_LOSE.currentTime=0;BGM_LOSE.play().catch(()=>{});}
+  // 3秒後に再戦ダイアログ表示
+  setTimeout(()=>showAfterGameDialog(),3000);
 }
-function closeResult(){document.getElementById("resultOverlay").style.display="none";BGM_WIN.pause();BGM_WIN.currentTime=0;BGM_LOSE.pause();BGM_LOSE.currentTime=0;}
+function closeResult(){
+  document.getElementById("resultOverlay").style.display="none";
+  BGM_WIN.pause();BGM_WIN.currentTime=0;BGM_LOSE.pause();BGM_LOSE.currentTime=0;
+}
+function showAfterGameDialog(){
+  const old=document.getElementById("afterGameDialog");if(old)old.remove();
+  const d=document.createElement("div");d.id="afterGameDialog";
+  d.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e2e1e;border:2px solid #3a6a3a;border-radius:12px;padding:24px;z-index:3000;text-align:center;min-width:300px;max-width:90vw;box-shadow:0 0 30px rgba(0,0,0,0.8);";
+  // デッキ選択肢を生成
+  const allDecks=JSON.parse(localStorage.getItem("decks_p1")||"[]");
+  let deckOpts="<option value='-1'>デッキ選択（現在のまま）</option>";
+  allDecks.forEach((d2,i)=>{if(!d2)return;deckOpts+=`<option value="${i}">[${i+1}] ${d2.name||"名称未設定"}</option>`;});
+  d.innerHTML=`
+    <div style="color:#ffe066;font-size:15px;font-weight:bold;margin-bottom:16px;letter-spacing:1px;">対戦終了</div>
+    <div style="margin-bottom:14px;">
+      <div style="color:#aaddaa;font-size:11px;margin-bottom:6px;letter-spacing:1px;">デッキ変更（任意）</div>
+      <select id="rematchDeckSelect" style="width:100%;background:#0e1a0e;color:#aaddaa;border:1px solid #3a6a3a;border-radius:6px;padding:6px 8px;font-size:12px;">${deckOpts}</select>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onclick="replayRoom()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🔄 このルームで再戦</button>
+      <button onclick="location.reload()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aaff;border:1px solid #2a4a8a;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🚪 別のルームへ</button>
+      <button onclick="location.href='index.html'" style="background:rgba(0,0,0,0.4);color:#888;border:1px solid #444;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">← フリー対戦へ戻る</button>
+    </div>`;
+  document.body.appendChild(d);
+}
+
+function replayRoom(){
+  const sel=document.getElementById("rematchDeckSelect");
+  const idx=sel?parseInt(sel.value,10):-1;
+  let deck=null;
+  if(idx>=0){
+    const all=JSON.parse(localStorage.getItem("decks_p1")||"[]");
+    deck=(all[idx]&&all[idx].cards)||null;
+  }
+  const old=document.getElementById("afterGameDialog");if(old)old.remove();
+  closeResult();
+  resultShown=false;
+  // デッキ変更あり→新デッキで再戦、なし→サーバーのcustomDeckをそのまま使用
+  if(deck){
+    applyAttrColor(detectDeckAttr(deck));
+    socket.emit("roomAction",{type:"reset",deck});
+  }else{
+    // デッキ未変更：サーバー側customDeckをそのまま使うため、deckを送らない
+    socket.emit("roomAction",{type:"reset"});
+  }
+}
+
+// 再戦待機・準備完了イベント
+socket.on("rematchWaiting",(data)=>{
+  const old=document.getElementById("afterGameDialog");
+  if(old){
+    const btn=old.querySelector("button");
+    if(btn)btn.innerText="⏳ 相手の準備を待っています...";
+  }
+  const t=document.createElement("div");t.id="rematchWaitToast";
+  t.style.cssText="position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,80,0.9);color:#aaddff;padding:10px 22px;border-radius:8px;font-size:13px;z-index:4000;border:2px solid #6699ff;text-align:center;pointer-events:none;";
+  t.innerText="⏳ "+data.msg;document.body.appendChild(t);
+  setTimeout(()=>{const el=document.getElementById("rematchWaitToast");if(el)el.remove();},4000);
+});
+socket.on("rematchReady",(data)=>{
+  const t=document.createElement("div");t.id="rematchReadyToast";
+  t.style.cssText="position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,80,0,0.9);color:#aaffaa;padding:10px 22px;border-radius:8px;font-size:13px;z-index:4000;border:2px solid #33cc33;text-align:center;pointer-events:none;";
+  t.innerText="✅ "+data.msg;document.body.appendChild(t);
+  setTimeout(()=>{const el=document.getElementById("rematchReadyToast");if(el)el.remove();},4000);
+});
 
 // ===== 捨て場 =====
 function showMyGrave(){openGraveModal(myGraveData,"🪦 自分の捨て場");}
@@ -534,8 +608,10 @@ function renderFieldSpell(elementId,fsData){
       const atkCardEl=myCards[displayAtkIdx];const fsDiv=document.getElementById("enemyFieldSpell")?.querySelector(".card");
       if(atkCardEl&&fsDiv){const ar=atkCardEl.getBoundingClientRect(),tr=fsDiv.getBoundingClientRect();const dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7,dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;atkCardEl.style.transition="none";atkCardEl.style.transform="translate(0,0)";void atkCardEl.offsetWidth;atkCardEl.style.transition="transform 0.18s ease-out";atkCardEl.style.transform=`translate(${dx}px,${dy}px)`;setTimeout(()=>{atkCardEl.style.transition="transform 0.16s ease-in";atkCardEl.style.transform="translate(0,0)";setTimeout(()=>{atkCardEl.style.transition="";atkCardEl.style.transform="";},180);},200);}
       clearSelection();
-      playSE(SE.atk[getClientAttr(atkName)]||SE.atk.neutral);
-      setTimeout(()=>socket.emit("roomAction",{type:"attack",a:atkIdx,target:"fieldSpell"}),200);
+      setTimeout(()=>{
+        playSE(SE.atk[getClientAttr(atkName)]||SE.atk.neutral);
+        socket.emit("roomAction",{type:"attack",a:atkIdx,target:"fieldSpell"});
+      },200);
     };
   }
   el.appendChild(div);
@@ -600,7 +676,8 @@ socket.on("hitEffect",(data)=>{
 // ===== showEffect =====
 socket.on("showEffect",(data)=>{
   const old=document.getElementById("effectPopup");if(old)old.remove();
-  const popup=document.createElement("div");popup.id="effectPopup";popup.style.cssText="position:fixed;top:50%;left:50%;z-index:900;pointer-events:none;";
+  const popup=document.createElement("div");popup.id="effectPopup";
+  popup.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:900;pointer-events:none;";
   popup.innerHTML=`<img src="images/${data.cardName}.png" style="width:260px;border-radius:10px;box-shadow:0 0 24px #ffe066;">`;
   document.body.appendChild(popup);
   if(data.isSpell)playSE(SE.spell);else playSE(SE.effect);
@@ -689,15 +766,27 @@ socket.on("roomUpdate",(g)=>{
   }
   document.getElementById("winner").innerText=g.winner?(playerRole==="spectator"?"対戦終了":(g.winner===socket.id?"YOU WIN！":"YOU LOSE")):"";
   if(g.winner&&!resultShown&&playerRole!=="spectator")setTimeout(()=>showResult(g.winner===socket.id),300);
-  if(!g.winner)resultShown=false;
+  if(!g.winner){
+    resultShown=false;
+    // 再戦でゲームが始まったらダイアログを閉じる
+    const old=document.getElementById("afterGameDialog");if(old)old.remove();
+    closeResult();
+    // ログリセット
+    lastDisplayedLogs=[];
+  }
 
   // 待機画面→ゲーム画面切り替え（P1がroomUpdateを受け取った場合）
   if(document.getElementById("waitingScreen").style.display!=="none"){
     document.getElementById("waitingScreen").style.display="none";
-    document.getElementById("gameArea").style.display="block";
-    document.getElementById("roomInfoLabel").innerText="ルーム: "+g.roomId+" | 観戦ID: "+g.spectateId;
+    document.getElementById("gameArea").style.display="contents";
+    document.getElementById("roomInfoLabel").innerText="ルーム: "+g.roomId;
     document.getElementById("endTurnBtn").style.display="";
     document.getElementById("surrenderBtn").style.display="";
+  }
+  // 観戦IDバッジを常時表示（対戦者のみ）
+  if(g.spectateId&&playerRole!=="spectator"){
+    document.getElementById("spectateIdBadgeVal").innerText=g.spectateId;
+    document.getElementById("spectateIdBadge").style.display="block";
   }
 
   // 相手手札（裏向き）
@@ -730,8 +819,23 @@ socket.on("roomUpdate",(g)=>{
       img.onmouseleave=()=>{document.getElementById("preview").innerHTML="";};
       div.onclick=()=>{
         if(playerRole==="spectator")return;
-        if(selectTargetMode&&(selectTargetMode.type==="enemyUnit"||selectTargetMode.type==="anyUnit")){socket.emit("roomAction",{type:"select_target",targetIndex:i,targetSide:"enemy"});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
-        if(selectedUnitIndex!==null){if(confirm(`${selectedUnitName} で ${c.name} に攻撃？`)){const ai=selectedUnitIndex,ti=i;clearSelection();playAttackAnim(ai,ti,false);setTimeout(()=>socket.emit("roomAction",{type:"attack",a:ai,t:ti}),200);}else clearSelection();}
+        if(selectTargetMode&&(selectTargetMode.type==="enemyUnit"||selectTargetMode.type==="anyUnit")){
+          socket.emit("roomAction",{type:"select_target",targetIndex:i,targetSide:"enemy"});
+          selectTargetMode=null;
+          document.getElementById("turn").innerText=latestState?.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
+          return;
+        }
+        if(selectedUnitIndex!==null){
+          if(confirm(`${selectedUnitName} で ${c.name} に攻撃？`)){
+            const ai=selectedUnitIndex;const ti=i;const sn=selectedUnitName;
+            clearSelection();
+            playAttackAnim(ai,ti,false);
+            setTimeout(()=>{
+              playSE(SE.atk[getClientAttr(sn)]||SE.atk.neutral);
+              socket.emit("roomAction",{type:"attack",a:ai,t:ti});
+            },200);
+          }else clearSelection();
+        }
       };
       const stat=document.createElement("div");stat.className="stat";const ba=getBaseAtk(c.name);let ac="#ffe066";if(ba!==null){if(c.atk>ba)ac="#66aaff";else if(c.atk<ba)ac="#ff6666";}
       stat.innerHTML=`HP${c.hp} <span style="color:${ac}">AT${c.atk}</span>`;
@@ -749,7 +853,21 @@ socket.on("roomUpdate",(g)=>{
   const epz=document.getElementById("enemyPlayerZone");
   epz.onclick=()=>{
     if(playerRole==="spectator")return;
-    if(selectedUnitIndex!==null){if(confirm(`${selectedUnitName} でプレイヤーに直接攻撃？`)){const ai=selectedUnitIndex;clearSelection();playAttackAnim(ai,null,true);setTimeout(()=>socket.emit("roomAction",{type:"attack",a:ai}),200);}else clearSelection();}
+    if(selectedUnitIndex!==null){
+      if(confirm(`${selectedUnitName} でプレイヤーに直接攻撃？`)){
+        const ai=selectedUnitIndex;const sn=selectedUnitName;
+        clearSelection();
+        playAttackAnim(ai,null,true);
+        setTimeout(()=>{
+          playSE(SE.atk[getClientAttr(sn)]||SE.atk.neutral);
+          document.body.classList.remove("shaking");
+          void document.body.offsetWidth;
+          document.body.classList.add("shaking");
+          setTimeout(()=>document.body.classList.remove("shaking"),460);
+          socket.emit("roomAction",{type:"attack",a:ai});
+        },200);
+      }else clearSelection();
+    }
   };
 
   // 自分フィールド
@@ -766,9 +884,19 @@ socket.on("roomUpdate",(g)=>{
       img.draggable=true;
       div.onclick=()=>{
         if(playerRole==="spectator")return;
-        if(selectTargetMode&&(selectTargetMode.type==="myUnit"||selectTargetMode.type==="anyUnit")){socket.emit("roomAction",{type:"select_target",targetIndex:originalIdx,targetSide:"my"});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
-        if(selectedUnitIndex===originalIdx){if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)return;clearSelection();return;}
-        clearSelection();selectedUnitIndex=originalIdx;selectedUnitName=c.name;div.classList.add("selected");
+        if(selectTargetMode&&(selectTargetMode.type==="myUnit"||selectTargetMode.type==="anyUnit")){
+          socket.emit("roomAction",{type:"select_target",targetIndex:originalIdx,targetSide:"my"});
+          selectTargetMode=null;
+          document.getElementById("turn").innerText=latestState?.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";
+          return;
+        }
+        if(selectedUnitIndex===originalIdx){
+          if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)return;
+          clearSelection();return;
+        }
+        clearSelection();
+        selectedUnitIndex=originalIdx;selectedUnitName=c.name;
+        div.classList.add("selected");
       };
       const stat=document.createElement("div");stat.className="stat";const ba=getBaseAtk(c.name);let ac="#ffe066";if(ba!==null){if(c.atk>ba)ac="#66aaff";else if(c.atk<ba)ac="#ff6666";}
       stat.innerHTML=`HP${c.hp} <span style="color:${ac}">AT${c.atk}</span>`;
@@ -811,7 +939,33 @@ function playAttackAnim(attackerIdx,targetIdx,isDirect){
 
 // ===== 手札描画 =====
 function _renderHand(handCards,g){
-  if(playerRole==="spectator"){document.getElementById("handArea").innerHTML="";return;}
+  if(playerRole==="spectator"){
+    const hand=document.getElementById("handArea");
+    hand.innerHTML="";
+    hand.style.overflow="hidden"; // 枠をはみ出さない
+    const count=g.myHandCount||0;
+    if(count===0)return;
+    // 枠の実際の幅を取得（パディング除いた内側）
+    const handW=Math.max(1, hand.clientWidth - 32); // padding:8px 16px = 32px
+    // 枠に収まる最大カード幅を計算（最小28px）
+    const rawCardW=count<=1 ? 56 : Math.floor(handW/count);
+    const cardW=Math.max(28, Math.min(56, rawCardW));
+    // 重なり量：全カードが枠内に収まるように
+    const totalNatural=cardW*count;
+    const overlapPx=totalNatural>handW&&count>1 ? Math.ceil((totalNatural-handW)/(count-1)) : 0;
+    for(let i=0;i<count;i++){
+      const div=document.createElement("div");div.className="card";
+      const ml=i===0?0:-overlapPx;
+      // 回転なし・translateYなし（扇型不要、シンプルに並べる）
+      div.style.cssText=`display:inline-flex;flex-direction:column;align-items:center;flex-shrink:0;margin-left:${ml}px;`;
+      const img=document.createElement("img");img.src="images/card_back.png";
+      img.style.cssText=`width:${cardW}px;border-radius:4px;box-shadow:0 2px 5px #000;`;
+      div.appendChild(img);hand.appendChild(div);
+    }
+    return;
+  }
+  // 通常プレイヤーの場合はoveflowを戻す
+  document.getElementById("handArea").style.overflow="visible";
   const hand=document.getElementById("handArea");hand.innerHTML="";
   const hc=handCards.length;const maxAngle=Math.min(3*hc,24);const overlapPx=hc<=4?0:Math.min((hc-4)*12,44);
   handCards.forEach((card,hi)=>{

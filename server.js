@@ -3359,16 +3359,32 @@ io.on("connection",(socket)=>{
     for(const r of Object.values(rooms)){
       if(r.player1===socket.id||r.player2===socket.id){room=r;break;}
     }
+    // resetと surrenderはwinnerチェック前に処理
+    if(data.type==="reset"){
+      // deckが送られた場合のみ更新、なければ前回のcustomDeckをそのまま使用
+      if(data.deck&&data.deck.length>0) room.customDeck[socket.id]=data.deck;
+      if(!room.readyForRematch) room.readyForRematch={};
+      room.readyForRematch[socket.id]=true;
+      const bothReady=!!(room.player1&&room.player2&&
+        room.readyForRematch[room.player1]&&room.readyForRematch[room.player2]);
+      if(bothReady){
+        room.readyForRematch={};
+        roomResetGame(room);
+        roomSend(room);
+      }else{
+        const op2=roomGetOpponent(room,socket.id);
+        const ops=io.sockets.sockets.get(op2);
+        if(ops)ops.emit("rematchReady",{msg:"相手が再戦準備完了しました。あなたも「このルームで再戦」を押してください。"});
+        socket.emit("rematchWaiting",{msg:"相手の準備を待っています..."});
+      }
+      return;
+    }
     if(!room||room.winner) return;
+    const op=roomGetOpponent(room,socket.id);
+    if(data.type==="surrender"){room.winner=op;roomAddLog(room,socket.id,"降参しました");roomSend(room);return;}
     if(socket.id!==room.turn){
       if(data.type==="select_target"&&room.pendingTarget&&room.pendingTarget.player===socket.id){}
       else return;
-    }
-    const op=roomGetOpponent(room,socket.id);
-    if(data.type==="surrender"){room.winner=op;roomAddLog(room,socket.id,"降参しました");roomSend(room);return;}
-    if(data.type==="reset"){
-      if(room.player1&&room.player2){roomResetGame(room);roomSend(room);}
-      return;
     }
     if(data.type==="discard_hand"){
       if((room.pendingDiscard[socket.id]||0)<=0)return;

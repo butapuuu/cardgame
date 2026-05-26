@@ -275,6 +275,7 @@ img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; poi
 
   <div id="spMat">
     <div id="spSpectateBanner">👁 観戦モード（手札は非公開）</div>
+    <div id="spSpectateIdBadge" style="display:none;position:fixed;bottom:6px;right:6px;background:rgba(0,0,0,0.75);border:1px solid rgba(255,200,0,0.4);border-radius:5px;padding:3px 8px;font-size:10px;color:#ffe066;z-index:200;pointer-events:none;">👁 観戦ID: <span id="spSpectateIdBadgeVal">----</span></div>
 
     <div class="sp-info-bar" id="spEnemyInfoBar">
       <div class="sp-deck-grave">
@@ -462,6 +463,8 @@ socket.on("roomJoined",(data)=>{
   document.getElementById("spWaiting").style.display="none";
   document.getElementById("spGameRoot").style.display="flex";
   document.getElementById("spRoomInfoLabel").innerText="RM:"+data.roomId;
+  document.getElementById("spSpectateIdBadgeVal").innerText=data.spectateId;
+  document.getElementById("spSpectateIdBadge").style.display="block";
   document.getElementById("spSpectateBanner").style.display="none";
   document.getElementById("spEndTurnBtn").style.display="";
   document.getElementById("spSurrenderBtn").style.display="";
@@ -490,10 +493,19 @@ function spEndTurn(){if(spPlayerRole==="spectator")return;spClearSelection();soc
 function spSurrender(){if(spPlayerRole==="spectator")return;spConfirm("本当に降参しますか？").then(ok=>{if(ok)socket.emit("roomAction",{type:"surrender"});});}
 function spDirectAttack(){
   if(spPlayerRole==="spectator"||spSelectedUnitIndex===null)return;
-  const atkIdx=spSelectedUnitIndex;
-  spConfirm(spSelectedUnitName+" でプレイヤーに直接攻撃？").then(ok=>{
-    if(!ok)return;spClearSelection();spPlayAttackAnim(atkIdx,null,true);
-    setTimeout(()=>socket.emit("roomAction",{type:"attack",a:atkIdx}),200);
+  const atkIdx=spSelectedUnitIndex;const atkN=spSelectedUnitName;
+  spConfirm(atkN+" でプレイヤーに直接攻撃？").then(ok=>{
+    if(!ok)return;
+    spClearSelection();
+    spPlayAttackAnim(atkIdx,null,true);
+    setTimeout(()=>{
+      spPlaySE(SP_SE.atk[spGetAttr(atkN)]||SP_SE.atk.neutral);
+      document.getElementById("spGameRoot").classList.remove("sp-shaking");
+      void document.getElementById("spGameRoot").offsetWidth;
+      document.getElementById("spGameRoot").classList.add("sp-shaking");
+      setTimeout(()=>document.getElementById("spGameRoot").classList.remove("sp-shaking"),420);
+      socket.emit("roomAction",{type:"attack",a:atkIdx});
+    },200);
   });
 }
 
@@ -528,8 +540,67 @@ function spShowGrave(side){
 function spOpenLog(){document.getElementById("spLogModalContent").innerHTML=spAllLogs.length===0?"まだログがありません":spAllLogs.map(l=>`<div style="border-bottom:1px solid #333;padding:2px 0">${l}</div>`).join("");document.getElementById("spLogModal").classList.add("open");}
 
 // ===== 結果 =====
-function spShowResult(isWinner){if(spResultShown)return;spResultShown=true;spStopBGM();document.getElementById("spResultImg").src=isWinner?"images/YouWin.png":"images/YouLose.png";document.getElementById("spResultOverlay").style.display="flex";if(isWinner){BGM_WIN_SP.currentTime=0;BGM_WIN_SP.play().catch(()=>{});}else{BGM_LOSE_SP.currentTime=0;BGM_LOSE_SP.play().catch(()=>{});}}
-function spCloseResult(){document.getElementById("spResultOverlay").style.display="none";BGM_WIN_SP.pause();BGM_WIN_SP.currentTime=0;BGM_LOSE_SP.pause();BGM_LOSE_SP.currentTime=0;}
+function spShowResult(isWinner){
+  if(spResultShown)return;spResultShown=true;spStopBGM();
+  document.getElementById("spResultImg").src=isWinner?"images/YouWin.png":"images/YouLose.png";
+  document.getElementById("spResultOverlay").style.display="flex";
+  if(isWinner){BGM_WIN_SP.currentTime=0;BGM_WIN_SP.play().catch(()=>{});}
+  else{BGM_LOSE_SP.currentTime=0;BGM_LOSE_SP.play().catch(()=>{});}
+  setTimeout(()=>spShowAfterGameDialog(),3000);
+}
+function spCloseResult(){
+  document.getElementById("spResultOverlay").style.display="none";
+  BGM_WIN_SP.pause();BGM_WIN_SP.currentTime=0;BGM_LOSE_SP.pause();BGM_LOSE_SP.currentTime=0;
+}
+function spShowAfterGameDialog(){
+  const old=document.getElementById("spAfterGameDialog");if(old)old.remove();
+  const d=document.createElement("div");d.id="spAfterGameDialog";
+  d.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e2e1e;border:2px solid #3a6a3a;border-radius:12px;padding:20px;z-index:3000;text-align:center;width:88%;max-width:340px;box-shadow:0 0 30px rgba(0,0,0,0.8);";
+  const allDecks=JSON.parse(localStorage.getItem("decks_p1")||"[]");
+  let deckOpts="<option value='-1'>デッキ選択（現在のまま）</option>";
+  allDecks.forEach((d2,i)=>{if(!d2)return;deckOpts+=`<option value="${i}">[${i+1}] ${d2.name||"名称未設定"}</option>`;});
+  d.innerHTML=`
+    <div style="color:#ffe066;font-size:14px;font-weight:bold;margin-bottom:12px;letter-spacing:1px;">対戦終了</div>
+    <div style="margin-bottom:12px;">
+      <div style="color:#aaddaa;font-size:11px;margin-bottom:5px;">デッキ変更（任意）</div>
+      <select id="spRematchDeckSelect" style="width:100%;background:#0e1a0e;color:#aaddaa;border:1px solid #3a6a3a;border-radius:6px;padding:7px;font-size:12px;">${deckOpts}</select>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;">
+      <button onclick="spReplayRoom()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">🔄 このルームで再戦</button>
+      <button onclick="location.reload()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aaff;border:1px solid #2a4a8a;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">🚪 別のルームへ</button>
+      <button onclick="location.href='index_sp.html'" style="background:rgba(0,0,0,0.4);color:#888;border:1px solid #444;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">← フリー対戦へ</button>
+    </div>`;
+  document.body.appendChild(d);
+}
+
+function spReplayRoom(){
+  const sel=document.getElementById("spRematchDeckSelect");
+  const idx=sel?parseInt(sel.value,10):-1;
+  let deck=null;
+  if(idx>=0){const all=JSON.parse(localStorage.getItem("decks_p1")||"[]");deck=(all[idx]&&all[idx].cards)||null;}
+  const old=document.getElementById("spAfterGameDialog");if(old)old.remove();
+  spCloseResult();
+  spResultShown=false;
+  if(deck){
+    spApplyAttrColor(spDetectDeckAttr(deck));
+    socket.emit("roomAction",{type:"reset",deck});
+  }else{
+    socket.emit("roomAction",{type:"reset"});
+  }
+}
+
+socket.on("rematchWaiting",(data)=>{
+  const t=document.createElement("div");t.id="spRematchWaitToast";
+  t.style.cssText="position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,80,0.9);color:#aaddff;padding:10px 18px;border-radius:8px;font-size:12px;z-index:4000;border:2px solid #6699ff;text-align:center;pointer-events:none;max-width:90vw;";
+  t.innerText="⏳ "+data.msg;document.body.appendChild(t);
+  setTimeout(()=>{const el=document.getElementById("spRematchWaitToast");if(el)el.remove();},4000);
+});
+socket.on("rematchReady",(data)=>{
+  const t=document.createElement("div");t.id="spRematchReadyToast";
+  t.style.cssText="position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(0,80,0,0.9);color:#aaffaa;padding:10px 18px;border-radius:8px;font-size:12px;z-index:4000;border:2px solid #33cc33;text-align:center;pointer-events:none;max-width:90vw;";
+  t.innerText="✅ "+data.msg;document.body.appendChild(t);
+  setTimeout(()=>{const el=document.getElementById("spRematchReadyToast");if(el)el.remove();},4000);
+});
 
 // ===== 捨て場パイル描画 =====
 function spRenderGravePile(pileId,emptyId,graveData){
@@ -565,8 +636,11 @@ function spRenderFieldSpell(elementId,fsData){
         const myBoardLen=spLatestState?.myBoard?.length||0;const dai=myBoardLen>0?myBoardLen-1-atkIdx:atkIdx;
         const atkEl=myCards[dai];const fsDiv=document.getElementById("spEnemyFieldSpell")?.querySelector(".sp-card");
         if(atkEl&&fsDiv){const ar=atkEl.getBoundingClientRect(),tr=fsDiv.getBoundingClientRect();const dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7,dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;atkEl.style.transition="none";atkEl.style.transform="translate(0,0)";void atkEl.offsetWidth;atkEl.style.transition="transform 0.18s ease-out";atkEl.style.transform=`translate(${dx}px,${dy}px)`;setTimeout(()=>{atkEl.style.transition="transform 0.16s ease-in";atkEl.style.transform="translate(0,0)";setTimeout(()=>{atkEl.style.transition="";atkEl.style.transform="";},180);},200);}
-        spClearSelection();spPlaySE(SP_SE.atk[spGetAttr(atkName)]||SP_SE.atk.neutral);
-        setTimeout(()=>socket.emit("roomAction",{type:"attack",a:atkIdx,target:"fieldSpell"}),200);
+        spClearSelection();
+        setTimeout(()=>{
+          spPlaySE(SP_SE.atk[spGetAttr(atkName)]||SP_SE.atk.neutral);
+          socket.emit("roomAction",{type:"attack",a:atkIdx,target:"fieldSpell"});
+        },200);
       });
     };
   }
@@ -619,7 +693,7 @@ socket.on("hitEffect",(data)=>{
 });
 
 // ===== showEffect =====
-socket.on("showEffect",(data)=>{const old=document.getElementById("spEffectPopup");if(old)old.remove();const popup=document.createElement("div");popup.id="spEffectPopup";popup.style.cssText="position:fixed;top:50%;left:50%;z-index:900;pointer-events:none;";popup.innerHTML=`<img src="images/${data.cardName}.png" style="width:180px;border-radius:8px;box-shadow:0 0 20px #ffe066;">`;document.body.appendChild(popup);if(data.isSpell)spPlaySE(SP_SE.spell);else spPlaySE(SP_SE.effect);setTimeout(()=>{const e=document.getElementById("spEffectPopup");if(e)e.remove();},1100);});
+socket.on("showEffect",(data)=>{const old=document.getElementById("spEffectPopup");if(old)old.remove();const popup=document.createElement("div");popup.id="spEffectPopup";popup.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:900;pointer-events:none;";popup.innerHTML=`<img src="images/${data.cardName}.png" style="width:180px;border-radius:8px;box-shadow:0 0 20px #ffe066;">`;document.body.appendChild(popup);if(data.isSpell)spPlaySE(SP_SE.spell);else spPlaySE(SP_SE.effect);setTimeout(()=>{const e=document.getElementById("spEffectPopup");if(e)e.remove();},1100);});
 
 // ===== attackRollback =====
 socket.on("attackRollback",(data)=>{spPendingAttackerIndex=data.attackerIndex;});
@@ -690,13 +764,22 @@ socket.on("roomUpdate",(g)=>{
   if(!spSelectTargetMode){if(spPlayerRole==="spectator")document.getElementById("spTurnLabel").innerText=g.turn?"対戦中":"待機中";else document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";}
   document.getElementById("spWinner").innerText=g.winner?(spPlayerRole==="spectator"?"対戦終了":(g.winner===socket.id?"YOU WIN！":"YOU LOSE")):"";
   if(g.winner&&!spResultShown&&spPlayerRole!=="spectator")setTimeout(()=>spShowResult(g.winner===socket.id),300);
-  if(!g.winner)spResultShown=false;
+  if(!g.winner){
+    spResultShown=false;
+    const old=document.getElementById("spAfterGameDialog");if(old)old.remove();
+    spCloseResult();
+    _spLastDisplayedLogs=[];
+  }
 
   if(document.getElementById("spWaiting").style.display!=="none"){
     document.getElementById("spWaiting").style.display="none";
     document.getElementById("spGameRoot").style.display="flex";
     document.getElementById("spRoomInfoLabel").innerText="RM:"+g.roomId;
     document.getElementById("spEndTurnBtn").style.display="";document.getElementById("spSurrenderBtn").style.display="";
+  }
+  if(g.spectateId&&spPlayerRole!=="spectator"){
+    document.getElementById("spSpectateIdBadgeVal").innerText=g.spectateId;
+    document.getElementById("spSpectateIdBadge").style.display="block";
   }
 
   // 相手手札（裏向き）
@@ -732,8 +815,16 @@ socket.on("roomUpdate",(g)=>{
         if(spPlayerRole==="spectator")return;
         if(spSelectTargetMode&&(spSelectTargetMode.type==="enemyUnit"||spSelectTargetMode.type==="anyUnit")){socket.emit("roomAction",{type:"select_target",targetIndex:i,targetSide:"enemy"});spSelectTargetMode=null;document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";return;}
         if(spSelectedUnitIndex!==null){
-          const atkIdx=spSelectedUnitIndex,tIdx=i;
-          spConfirm(spSelectedUnitName+" で "+c.name+" に攻撃？").then(ok=>{if(ok){spClearSelection();spPlayAttackAnim(atkIdx,tIdx,false);setTimeout(()=>socket.emit("roomAction",{type:"attack",a:atkIdx,t:tIdx}),200);}else spClearSelection();});
+          const atkIdx=spSelectedUnitIndex,tIdx=i,atkN=spSelectedUnitName;
+          spConfirm(atkN+" で "+c.name+" に攻撃？").then(ok=>{
+            if(!ok){spClearSelection();return;}
+            spClearSelection();
+            spPlayAttackAnim(atkIdx,tIdx,false);
+            setTimeout(()=>{
+              spPlaySE(SP_SE.atk[spGetAttr(atkN)]||SP_SE.atk.neutral);
+              socket.emit("roomAction",{type:"attack",a:atkIdx,t:tIdx});
+            },200);
+          });
         }else{document.getElementById("spPreviewImg").src="images/"+c.name+".png";document.getElementById("spPreviewModal").classList.add("open");}
       };
       const stat=document.createElement("div");stat.className="sp-stat";const ba=spGetBaseAtk(c.name);let ac="#ffe066";if(ba!==null){if(c.atk>ba)ac="#66aaff";else if(c.atk<ba)ac="#ff6666";}
@@ -791,7 +882,29 @@ socket.on("roomUpdate",(g)=>{
 
 // ===== 手札描画 =====
 function _spRenderHand(handCards,g){
-  if(spPlayerRole==="spectator"){document.getElementById("spHandArea").innerHTML="";return;}
+  if(spPlayerRole==="spectator"){
+    const hand=document.getElementById("spHandArea");
+    hand.innerHTML="";
+    hand.style.overflow="hidden";
+    const count=g.myHandCount||0;
+    if(count===0)return;
+    const handW=Math.max(1,hand.clientWidth-12);
+    const hAH=hand.offsetHeight||window.innerHeight*0.18;
+    const bCH=Math.floor(hAH*0.82);const bCW=Math.floor(bCH/1.4);
+    const rawCardW=count<=1?bCW:Math.min(bCW,Math.floor(handW/count));
+    const cardW=Math.max(24,rawCardW);
+    const totalNatural=cardW*count;
+    const overlapPx=totalNatural>handW&&count>1?Math.ceil((totalNatural-handW)/(count-1)):0;
+    for(let i=0;i<count;i++){
+      const div=document.createElement("div");div.className="sp-card";
+      const ml=i===0?0:-overlapPx;
+      div.style.cssText=`display:inline-flex;flex-direction:column;align-items:center;flex-shrink:0;margin-left:${ml}px;`;
+      const img=document.createElement("img");img.src="images/card_back.png";
+      img.style.cssText=`width:${cardW}px;border-radius:3px;box-shadow:0 1px 4px #000;`;
+      div.appendChild(img);hand.appendChild(div);
+    }
+    return;
+  }
   const hand=document.getElementById("spHandArea");hand.innerHTML="";
   const hc=handCards.length;const maxAngle=Math.min(3*hc,22);
   const hAH=document.getElementById("spHandArea")?.offsetHeight||window.innerHeight*0.18;
