@@ -3257,8 +3257,16 @@ function roomHandleAttack(room, socket, data){
       roomAddLog(room,p,`「${atk.name}」が「${def.name}」に全体攻撃（${rd}ダメージ）`);
     });
     const aa=roomGetAttr(atk.name)||"neutral";
-    roomSendAll(room,"hitEffect",{targetIdx:0,attr:aa});
-    td.reverse().forEach(i=>{const d=room.board[op].splice(i,1)[0];if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を撃破`);roomTriggerDestroyEffect(room,d,op);});
+    // 全体攻撃：相手の全ユニットに被弾エフェクト（破壊前の枚数分）
+    const hitCountAll=room.board[op].length;
+    for(let _hi=0;_hi<hitCountAll;_hi++){
+      const ops_=io.sockets.sockets.get(op);
+      if(ops_) ops_.emit("hitEffect",{targetIdx:_hi,attr:aa,isEnemy:false});
+      const atk_s=io.sockets.sockets.get(p);
+      if(atk_s) atk_s.emit("hitEffect",{targetIdx:_hi,attr:aa,isEnemy:true});
+    }
+    td.reverse().forEach(i=>{const d=room.board[op].splice(i,1)[0];
+if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を撃破`);roomTriggerDestroyEffect(room,d,op);});
     atk.hp-=tc;if(tc>0)roomAddLog(room,p,`「${atk.name}」が反撃${tc}ダメージ`);
     if(atk.hp<=0){const ai=room.board[p].indexOf(atk);if(ai!==-1){room.board[p].splice(ai,1);if(!atk.isToken)room.graves[p].push(atk);roomAddLog(room,p,`→「${atk.name}」が倒れた`);roomTriggerDestroyEffect(room,atk,p);}}
     roomNotifyPendingTarget(room);roomSend(room);return;

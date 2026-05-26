@@ -434,7 +434,7 @@ function spCreateRoom(){
   socket.emit("createRoom",{roomId,deck});
 }
 function spJoinRoom(){
-  const roomId=document.getElementById("spJoinRoomIdInput").value.trim();
+  const roomId=document.getElementById("spRoomIdInput").value.trim();
   if(!roomId){setSpLobbyError("ルームIDを入力してください");return;}
   const deck=spGetSelectedDeck();
   if(!deck||!deck.length){setSpLobbyError("デッキを選択してください");return;}

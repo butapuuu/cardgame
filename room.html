@@ -408,7 +408,7 @@ function createRoom(){
 }
 
 function joinRoom(){
-  const roomId=document.getElementById("joinRoomIdInput").value.trim();
+  const roomId=document.getElementById("roomIdInput").value.trim();
   if(!roomId){setLobbyError("ルームIDを入力してください");return;}
   const deck=getSelectedDeck();
   if(!deck||!deck.length){setLobbyError("デッキを選択してください");return;}
