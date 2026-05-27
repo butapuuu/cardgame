@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<link rel="manifest" href="/manifest_top.json">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ELEMON">
+<meta name="theme-color" content="#080c08">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ELEMON</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+:root{ --gold:#c8a96e; --gold2:#ffe599; --dark:#080c08; --card-bg:rgba(10,25,10,0.9); }
+html,body{ width:100%; height:100%; overflow:hidden; background:var(--dark); color:#ddd; font-family:'Rajdhani',sans-serif; }
+#bg{ position:fixed; inset:0; z-index:0; background: radial-gradient(ellipse 140% 50% at 50% -10%, rgba(20,60,20,0.8) 0%, transparent 60%), radial-gradient(ellipse 100% 60% at 90% 100%, rgba(10,40,10,0.4) 0%, transparent 60%), #080c08; }
+#bg::before{ content:""; position:absolute; inset:0; background-image: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(40,100,40,0.05) 40px), repeating-linear-gradient(60deg, transparent, transparent 39px, rgba(40,100,40,0.05) 40px); animation:gridShift 30s linear infinite; }
+@keyframes gridShift{ 0%{transform:translate(0,0);} 100%{transform:translate(40px,40px);} }
+.particle{ position:fixed; border-radius:50%; pointer-events:none; z-index:1; background:radial-gradient(circle, rgba(100,220,80,0.5), transparent 70%); animation:floatUp linear infinite; }
+@keyframes floatUp{ 0%{transform:translateY(110vh) scale(0);opacity:0;} 10%{opacity:0.8;} 90%{opacity:0.2;} 100%{transform:translateY(-10vh) scale(1);opacity:0;} }
+
+/* 画面にぴったり収める */
+#wrap{ position:relative; z-index:10; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 14px; gap:0; }
+
+#hero{ text-align:center; padding-bottom:10px; flex-shrink:0; }
+.hero-emblem{ width:52px; height:52px; margin:0 auto 6px; animation:emblemFloat 4s ease-in-out infinite; }
+@keyframes emblemFloat{ 0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-6px) rotate(2deg);} }
+.hero-emblem svg{ width:100%; height:100%; filter:drop-shadow(0 0 12px rgba(100,220,80,0.6)); }
+.hero-subtitle{ font-size:8px; letter-spacing:5px; color:var(--gold); margin-bottom:4px; text-transform:uppercase; animation:fadeIn 1s ease both; }
+@keyframes fadeIn{ from{opacity:0;transform:translateY(-8px);} to{opacity:1;transform:translateY(0);} }
+.hero-title{ font-family:'Cinzel Decorative',serif; font-size:clamp(30px,10vw,44px); font-weight:900; letter-spacing:4px; line-height:1; background:linear-gradient(135deg, #4aff4a 0%, var(--gold2) 40%, #88ff44 70%, var(--gold) 100%); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; filter:drop-shadow(0 0 24px rgba(80,220,80,0.4)); animation:fadeIn 1s 0.2s ease both; margin-bottom:4px; }
+.hero-tagline{ font-size:10px; letter-spacing:5px; color:rgba(200,220,180,0.55); animation:fadeIn 1s 0.4s ease both; }
+
+.divider{ width:100%; height:1px; background:linear-gradient(90deg,transparent,rgba(60,140,60,0.4),rgba(200,180,80,0.3),rgba(60,140,60,0.4),transparent); margin:10px 0; flex-shrink:0; }
+
+#navGrid{ display:flex; flex-direction:column; gap:8px; width:100%; flex-shrink:0; animation:fadeIn 1s 0.5s ease both; }
+.nav-row{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+.nav-card{ position:relative; background:var(--card-bg); border:1px solid rgba(60,140,60,0.3); border-radius:12px; padding:14px 10px 12px; cursor:pointer; text-decoration:none; color:#ddd; display:flex; flex-direction:column; align-items:center; text-align:center; gap:5px; overflow:hidden; transition:transform 0.2s ease; backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+.nav-card::before{ content:""; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(80,200,80,0.5),transparent); }
+.nav-card:active{ transform:scale(0.97); }
+.nav-card.room{ border-color:rgba(80,180,255,0.35); }
+.nav-card.room::before{ background:linear-gradient(90deg,transparent,rgba(80,180,255,0.5),transparent); }
+.nav-card.deck{ border-color:rgba(200,180,80,0.35); }
+.nav-card.deck::before{ background:linear-gradient(90deg,transparent,rgba(200,180,80,0.5),transparent); }
+.nav-card.coming{ opacity:0.5; cursor:default; }
+.card-icon{ font-size:26px; line-height:1; }
+.card-title{ font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+.nav-card.room .card-title{ color:#88ccff; }
+.nav-card.deck .card-title{ color:var(--gold2); }
+.nav-card:not(.room):not(.deck) .card-title{ color:#88dd88; }
+.coming-badge{ position:absolute; top:6px; right:6px; background:rgba(0,0,0,0.5); border:1px solid rgba(100,100,100,0.4); border-radius:3px; padding:1px 5px; font-size:7px; letter-spacing:1px; color:#777; text-transform:uppercase; }
+
+#footer{ margin-top:10px; text-align:center; font-size:9px; letter-spacing:2px; color:rgba(80,120,80,0.35); flex-shrink:0; }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="wrap">
+  <section id="hero">
+    <div class="hero-emblem">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" fill="none" stroke="rgba(80,200,80,0.5)" stroke-width="1.5"/>
+        <polygon points="50,28 72,39.5 72,62.5 50,74 28,62.5 28,39.5" fill="rgba(20,60,20,0.8)" stroke="rgba(200,180,80,0.7)" stroke-width="1.5"/>
+        <path d="M50 35 L58 50 L50 65 L42 50 Z" fill="rgba(80,220,80,0.15)" stroke="rgba(100,220,80,0.8)" stroke-width="1.2"/>
+        <circle cx="50" cy="50" r="6" fill="rgba(100,220,80,0.3)" stroke="rgba(150,255,100,0.9)" stroke-width="1.5"/>
+        <circle cx="50" cy="50" r="2" fill="rgba(200,255,150,0.9)"/>
+        <line x1="50" y1="5" x2="50" y2="28" stroke="rgba(200,180,80,0.4)" stroke-width="1"/>
+        <line x1="95" y1="27.5" x2="72" y2="39.5" stroke="rgba(200,180,80,0.4)" stroke-width="1"/>
+        <line x1="95" y1="72.5" x2="72" y2="62.5" stroke="rgba(200,180,80,0.4)" stroke-width="1"/>
+        <line x1="50" y1="95" x2="50" y2="74" stroke="rgba(200,180,80,0.4)" stroke-width="1"/>
+        <line x1="5" y1="72.5" x2="28" y2="62.5" stroke="rgba(200,180,80,0.4)" stroke-width="1"/>
+        <line x1="5" y1="27.5" x2="28" y2="39.5" stroke="rgba(200,180,80,0.4)" stroke-width="1"/>
+      </svg>
+    </div>
+    <div class="hero-subtitle">Element Summons</div>
+    <h1 class="hero-title">ELEMON</h1>
+    <p class="hero-tagline">— エレモン —</p>
+  </section>
+  <div class="divider"></div>
+  <nav id="navGrid">
+    <div class="nav-row">
+      <a class="nav-card room" href="room_sp.html"><div class="card-icon">⚔</div><div class="card-title">ルーム対戦</div></a>
+      <div class="nav-card coming"><div class="coming-badge">Coming Soon</div><div class="card-icon">🌐</div><div class="card-title">ランダム対戦</div></div>
+    </div>
+    <div class="nav-row">
+      <div class="nav-card coming"><div class="coming-badge">Coming Soon</div><div class="card-icon">🤖</div><div class="card-title">vs CPU</div></div>
+      <a class="nav-card deck" href="deck1_sp.html"><div class="card-icon">🃏</div><div class="card-title">デッキ構築</div></a>
+    </div>
+    <div class="nav-row">
+      <div class="nav-card coming"><div class="coming-badge">Coming Soon</div><div class="card-icon">📖</div><div class="card-title">ルール</div></div>
+      <div class="nav-card coming"><div class="coming-badge">Coming Soon</div><div class="card-icon">🎮</div><div class="card-title">操作方法</div></div>
+    </div>
+  </nav>
+  <div class="divider"></div>
+  <footer id="footer">ELEMON &nbsp;|&nbsp; © 2025</footer>
+</div>
+<script>
+function createParticles(){
+  for(let i=0;i<10;i++){
+    const p=document.createElement("div");p.className="particle";
+    const size=Math.random()*3+1.5;
+    p.style.cssText=`width:${size}px;height:${size}px;left:${Math.random()*100}vw;animation-duration:${Math.random()*18+12}s;animation-delay:${Math.random()*18}s;opacity:${Math.random()*0.35+0.1};`;
+    document.body.appendChild(p);
+  }
+}
+createParticles();
+</script>
+</body>
+</html>
