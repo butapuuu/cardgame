@@ -3155,16 +3155,17 @@
     ]
   },
   "2026-05-27": {
-    "total": 21,
+    "total": 23,
     "hours": {
       "0": 13,
       "1": 5,
+      "7": 2,
       "23": 3
     },
     "pages": {
-      "index.html": 1,
+      "index.html": 2,
       "deck1.html": 7,
-      "room.html": 13
+      "room.html": 14
     },
     "visitors": [
       {
@@ -3309,6 +3310,20 @@
       },
       {
         "time": "2026-05-27 16:07:53",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-27 22:00:38",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-27 22:01:08",
         "page": "room.html",
         "device": "PC",
         "browser": "Chrome",
