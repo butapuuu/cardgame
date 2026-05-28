@@ -263,6 +263,7 @@ body{
         <span id="roomInfoLabel" style="color:#ffe066;font-size:12px;font-weight:bold;"></span>
         <span id="turn"></span>
         <span id="winner"></span>
+        <a href="top.html" style="background:linear-gradient(135deg,#0a1a0a,#1a2a1a);color:rgba(180,220,100,0.7);border:1px solid rgba(60,140,60,0.35);border-radius:6px;padding:5px 10px;font-size:11px;font-weight:bold;letter-spacing:2px;text-decoration:none;white-space:nowrap;text-transform:uppercase;">◈ TOP</a>
         <button id="bgmToggleBtn" onclick="toggleBGM()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">🎵 BGM</button>
         <button id="seToggleBtn" onclick="toggleSE()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">🔊 SE</button>
       </div>
@@ -669,7 +670,92 @@ socket.on("hitEffect",(data)=>{
   if(data.isEnemy){hitEffectActiveEnemy=true;clearTimeout(hitEffectEnemyTimer);hitEffectEnemyTimer=setTimeout(()=>{hitEffectActiveEnemy=false;},520);}
   else{hitEffectActiveMy=true;clearTimeout(hitEffectMyTimer);hitEffectMyTimer=setTimeout(()=>{hitEffectActiveMy=false;},520);}
   const attr=data.attr||"fire";
+
+  // ★観戦者用
+  if(data.hasAttackAnim&&playerRole==="spectator"){
+    playSE(SE.atk[attr]||SE.atk.neutral);
+    // 攻撃者がP1なら下(myUnits)から上(enemyUnits)へ、P2なら上から下へ
+    const atkContainerId=data.attackerIsP1?"myUnits":"enemyUnits";
+    const defContainerId=data.attackerIsP1?"enemyUnits":"myUnits";
+    const atkC=document.getElementById(atkContainerId);
+    const defC=document.getElementById(defContainerId);
+    if(!atkC||!defC)return;
+    const atkCards=Array.from(atkC.querySelectorAll(".card"));
+    const defCards=Array.from(defC.querySelectorAll(".card"));
+    const atkCard=atkCards[data.attackerIdx];
+    if(!atkCard)return;
+    if(data.isDirect){
+      const atkRect=atkCard.getBoundingClientRect();
+      const dy=data.attackerIsP1?-180:180;
+      atkCard.style.transition="none";atkCard.style.transform="translate(0,0)";void atkCard.offsetWidth;
+      atkCard.style.transition="transform 0.18s ease-out";atkCard.style.transform=`translate(0,${dy}px)`;
+      setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);
+      document.body.classList.remove("shaking");void document.body.offsetWidth;document.body.classList.add("shaking");setTimeout(()=>document.body.classList.remove("shaking"),460);
+    }else if(data.isFieldSpell){
+      const fsId=data.attackerIsP1?"enemyFieldSpell":"myFieldSpell";
+      const fsCard=document.getElementById(fsId)?.querySelector(".card");
+      if(fsCard){const ar=atkCard.getBoundingClientRect();const tr=fsCard.getBoundingClientRect();const dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7;const dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;atkCard.style.transition="none";atkCard.style.transform="translate(0,0)";void atkCard.offsetWidth;atkCard.style.transition="transform 0.18s ease-out";atkCard.style.transform=`translate(${dx}px,${dy}px)`;setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);setTimeout(()=>{const fc=document.getElementById(fsId)?.querySelector(".card");if(!fc)return;const r=fc.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);},180);}
+    }else{
+      const defCard=defCards[data.targetIdx];
+      if(defCard){const ar=atkCard.getBoundingClientRect();const tr=defCard.getBoundingClientRect();const dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7;const dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;atkCard.style.transition="none";atkCard.style.transform="translate(0,0)";void atkCard.offsetWidth;atkCard.style.transition="transform 0.18s ease-out";atkCard.style.transform=`translate(${dx}px,${dy}px)`;setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);setTimeout(()=>{const dc=document.getElementById(defContainerId)?.querySelectorAll(".card")[data.targetIdx];if(!dc)return;const r=dc.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);},200);}
+    }
+    return;
+  }
+
+  // ★相手から攻撃された時（hasAttackAnim：攻撃アニメ・SE・画面揺れを処理）
+  if(data.hasAttackAnim&&!data.isEnemy){
+    playSE(SE.atk[attr]||SE.atk.neutral);
+    const enContainer=document.getElementById("enemyUnits");
+    const enCards=enContainer?Array.from(enContainer.querySelectorAll(".card")):[];
+    const savedAtkRect=enCards[data.attackerIdx]?enCards[data.attackerIdx].getBoundingClientRect():null;
+    setTimeout(()=>{
+      const enC2=document.getElementById("enemyUnits");if(!enC2)return;
+      const enCards2=Array.from(enC2.querySelectorAll(".card"));
+      let atkCard=enCards2[data.attackerIdx];
+      const useRect=atkCard?atkCard.getBoundingClientRect():savedAtkRect;
+      if(!useRect)return;
+      let dx=0,dy=0;
+      if(data.isDirect){
+        dx=0;dy=180;
+        document.body.classList.remove("shaking");void document.body.offsetWidth;document.body.classList.add("shaking");setTimeout(()=>document.body.classList.remove("shaking"),460);
+      }else if(data.isFieldSpell){
+        const fsCard=document.getElementById("myFieldSpell")?.querySelector(".card");
+        if(fsCard){const tr=fsCard.getBoundingClientRect();dx=((tr.left+tr.width/2)-(useRect.left+useRect.width/2))*0.7;dy=((tr.top+tr.height/2)-(useRect.top+useRect.height/2))*0.7;}
+        setTimeout(()=>{const fc=document.getElementById("myFieldSpell")?.querySelector(".card");if(!fc)return;const r=fc.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);},180);
+      }else{
+        const myC=document.getElementById("myUnits");if(!myC)return;
+        const myCards=Array.from(myC.querySelectorAll(".card"));const ml=myCards.length;
+        const di=ml>0?ml-1-data.targetIdx:data.targetIdx;
+        const tgt=myCards[di];if(tgt){const tr=tgt.getBoundingClientRect();dx=((tr.left+tr.width/2)-(useRect.left+useRect.width/2))*0.7;dy=((tr.top+tr.height/2)-(useRect.top+useRect.height/2))*0.7;}
+      }
+      if(atkCard){
+        atkCard.style.transition="none";atkCard.style.transform="translate(0,0)";void atkCard.offsetWidth;
+        atkCard.style.transition="transform 0.18s ease-out";atkCard.style.transform=`translate(${dx}px,${dy}px)`;
+        setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);
+      }else if(savedAtkRect){
+        const ghost=document.createElement("img");ghost.src="images/card_back.png";
+        ghost.style.cssText=`position:fixed;left:${savedAtkRect.left}px;top:${savedAtkRect.top}px;width:${savedAtkRect.width}px;border-radius:5px;pointer-events:none;z-index:500;transition:none;`;
+        document.body.appendChild(ghost);void ghost.offsetWidth;
+        ghost.style.transition="transform 0.18s ease-out";ghost.style.transform=`translate(${dx}px,${dy}px)`;
+        setTimeout(()=>{ghost.style.transition="transform 0.16s ease-in";ghost.style.transform="translate(0,0)";setTimeout(()=>ghost.remove(),180);},200);
+      }
+      if(data.isDirect||data.isFieldSpell)return;
+      const myC2=document.getElementById("myUnits");if(!myC2)return;
+      const myCards2=Array.from(myC2.querySelectorAll(".card"));const ml2=myCards2.length;
+      const di2=ml2>0?ml2-1-data.targetIdx:data.targetIdx;
+      const hitCard=myCards2[di2];if(!hitCard)return;
+      const r2=hitCard.getBoundingClientRect();
+      const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+      fx.style.cssText=`position:fixed;left:${r2.left+r2.width/2}px;top:${r2.top+r2.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;
+      document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);
+    },50);
+    return;
+  }
+
+  // ★自分が攻撃した時の被弾エフェクト（isEnemy:true）
   if(data.isEnemy){if(data.targetIdx===-1)return;const ec=Array.from(document.getElementById("enemyUnits")?.querySelectorAll(".card")||[]);const c=ec[data.targetIdx];if(!c)return;const r=c.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;}
+
+  // ★フォールバック（hasAttackAnimなし）
   if(data.targetIdx===-1)return;const mc=Array.from(document.getElementById("myUnits")?.querySelectorAll(".card")||[]);const ml=mc.length;const di=ml>0?ml-1-data.targetIdx:data.targetIdx;const c2=mc[di];if(!c2)return;const r=c2.getBoundingClientRect();const fx2=document.createElement("img");fx2.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx2.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx2);setTimeout(()=>fx2.remove(),500);
 });
 
@@ -767,13 +853,13 @@ socket.on("roomUpdate",(g)=>{
   document.getElementById("winner").innerText=g.winner?(playerRole==="spectator"?"対戦終了":(g.winner===socket.id?"YOU WIN！":"YOU LOSE")):"";
   if(g.winner&&!resultShown&&playerRole!=="spectator")setTimeout(()=>showResult(g.winner===socket.id),300);
   if(!g.winner){
-    resultShown=false;
-    // 再戦でゲームが始まったらダイアログを閉じる
-    const old=document.getElementById("afterGameDialog");if(old)old.remove();
-    closeResult();
-    // ログリセット
-    lastDisplayedLogs=[];
-  }
+      resultShown=false;
+      const old=document.getElementById("afterGameDialog");if(old)old.remove();
+      closeResult();
+      lastDisplayedLogs=[];
+      prevAllLogsLen=0;
+      allLogsData=[];
+    }
 
   // 待機画面→ゲーム画面切り替え（P1がroomUpdateを受け取った場合）
   if(document.getElementById("waitingScreen").style.display!=="none"){

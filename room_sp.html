@@ -267,6 +267,7 @@ img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; poi
   <div id="spHeader">
     <div style="display:flex;align-items:center;gap:4px;width:100%;flex-wrap:nowrap;">
       <span id="spRoomInfoLabel" style="color:#ffe066;font-size:9px;font-weight:bold;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+      <a href="top_sp.html" style="background:linear-gradient(135deg,#0a1a0a,#1a2a1a);color:rgba(180,220,100,0.7);border:1px solid rgba(60,140,60,0.35);border-radius:4px;padding:2px 7px;font-size:10px;font-weight:bold;letter-spacing:1px;text-decoration:none;white-space:nowrap;">◈ TOP</a>
       <button id="spBgmBtn" onclick="spToggleBGM()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:bold;cursor:pointer;">🎵</button>
       <button id="spSeBtn" onclick="spToggleSE()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:bold;cursor:pointer;">🔊</button>
       <button onclick="spOpenLog()" style="background:rgba(0,0,0,0.5);color:#aaa;border:1px solid #444;border-radius:4px;padding:3px 8px;font-size:10px;cursor:pointer;">LOG</button>
@@ -690,7 +691,121 @@ socket.on("hitEffect",(data)=>{
   if(data.isEnemy){spHitActiveEnemy=true;clearTimeout(spHitEnemyTimer);spHitEnemyTimer=setTimeout(()=>{spHitActiveEnemy=false;},520);}
   else{spHitActiveMy=true;clearTimeout(spHitMyTimer);spHitMyTimer=setTimeout(()=>{spHitActiveMy=false;},520);}
   const attr=data.attr||"fire";
+
+  // ★観戦者用
+  if(data.hasAttackAnim&&spPlayerRole==="spectator"){
+    spPlaySE(SP_SE.atk[attr]||SP_SE.atk.neutral);
+    const atkContainerId=data.attackerIsP1?"spMyUnits":"spEnemyUnits";
+    const defContainerId=data.attackerIsP1?"spEnemyUnits":"spMyUnits";
+    const atkC=document.getElementById(atkContainerId);
+    const defC=document.getElementById(defContainerId);
+    if(!atkC||!defC)return;
+    const atkCards=Array.from(atkC.querySelectorAll(".sp-card"));
+    const defCards=Array.from(defC.querySelectorAll(".sp-card"));
+    const atkCard=atkCards[data.attackerIdx];
+    if(!atkCard)return;
+    if(data.isDirect){
+      const dy=data.attackerIsP1?-150:150;
+      atkCard.style.transition="none";atkCard.style.transform="translate(0,0)";void atkCard.offsetWidth;
+      atkCard.style.transition="transform 0.18s ease-out";atkCard.style.transform=`translate(0,${dy}px)`;
+      setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);
+      document.getElementById("spGameRoot").classList.remove("sp-shaking");
+      void document.getElementById("spGameRoot").offsetWidth;
+      document.getElementById("spGameRoot").classList.add("sp-shaking");
+      setTimeout(()=>document.getElementById("spGameRoot").classList.remove("sp-shaking"),420);
+    }else if(data.isFieldSpell){
+      const fsId=data.attackerIsP1?"spEnemyFieldSpell":"spMyFieldSpell";
+      const fsCard=document.getElementById(fsId)?.querySelector(".sp-card");
+      if(fsCard){
+        const ar=atkCard.getBoundingClientRect();const tr=fsCard.getBoundingClientRect();
+        const dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7;
+        const dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;
+        atkCard.style.transition="none";atkCard.style.transform="translate(0,0)";void atkCard.offsetWidth;
+        atkCard.style.transition="transform 0.18s ease-out";atkCard.style.transform=`translate(${dx}px,${dy}px)`;
+        setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);
+        setTimeout(()=>{
+          const fc=document.getElementById(fsId)?.querySelector(".sp-card");if(!fc)return;
+          const r=fc.getBoundingClientRect();
+          const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+          fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;
+          document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);
+        },180);
+      }
+    }else{
+      const defCard=defCards[data.targetIdx];
+      if(defCard){
+        const ar=atkCard.getBoundingClientRect();const tr=defCard.getBoundingClientRect();
+        const dx=((tr.left+tr.width/2)-(ar.left+ar.width/2))*0.7;
+        const dy=((tr.top+tr.height/2)-(ar.top+ar.height/2))*0.7;
+        atkCard.style.transition="none";atkCard.style.transform="translate(0,0)";void atkCard.offsetWidth;
+        atkCard.style.transition="transform 0.18s ease-out";atkCard.style.transform=`translate(${dx}px,${dy}px)`;
+        setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);
+        setTimeout(()=>{
+          const dc=document.getElementById(defContainerId)?.querySelectorAll(".sp-card")[data.targetIdx];if(!dc)return;
+          const r=dc.getBoundingClientRect();
+          const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+          fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;
+          document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);
+        },200);
+      }
+    }
+    return;
+  }
+
+  // ★相手から攻撃された時
+  if(data.hasAttackAnim&&!data.isEnemy){
+    spPlaySE(SP_SE.atk[attr]||SP_SE.atk.neutral);
+    const enC=document.getElementById("spEnemyUnits");
+    const enCards=enC?Array.from(enC.querySelectorAll(".sp-card")):[];
+    const savedRect=enCards[data.attackerIdx]?enCards[data.attackerIdx].getBoundingClientRect():null;
+    setTimeout(()=>{
+      const enC2=document.getElementById("spEnemyUnits");if(!enC2)return;
+      const enCards2=Array.from(enC2.querySelectorAll(".sp-card"));
+      let atkCard=enCards2[data.attackerIdx];
+      const useRect=atkCard?atkCard.getBoundingClientRect():savedRect;
+      if(!useRect)return;
+      let dx=0,dy=0;
+      if(data.isDirect){
+        dx=0;dy=150;
+        document.getElementById("spGameRoot").classList.remove("sp-shaking");void document.getElementById("spGameRoot").offsetWidth;document.getElementById("spGameRoot").classList.add("sp-shaking");setTimeout(()=>document.getElementById("spGameRoot").classList.remove("sp-shaking"),420);
+      }else if(data.isFieldSpell){
+        const fsCard=document.getElementById("spMyFieldSpell")?.querySelector(".sp-card");
+        if(fsCard){const tr=fsCard.getBoundingClientRect();dx=((tr.left+tr.width/2)-(useRect.left+useRect.width/2))*0.7;dy=((tr.top+tr.height/2)-(useRect.top+useRect.height/2))*0.7;}
+        setTimeout(()=>{const fc=document.getElementById("spMyFieldSpell")?.querySelector(".sp-card");if(!fc)return;const r=fc.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);},180);
+      }else{
+        const myC=document.getElementById("spMyUnits");if(!myC)return;
+        const myCards=Array.from(myC.querySelectorAll(".sp-card"));const ml=myCards.length;
+        const di=ml>0?ml-1-data.targetIdx:data.targetIdx;
+        const tgt=myCards[di];if(tgt){const tr=tgt.getBoundingClientRect();dx=((tr.left+tr.width/2)-(useRect.left+useRect.width/2))*0.7;dy=((tr.top+tr.height/2)-(useRect.top+useRect.height/2))*0.7;}
+      }
+      if(atkCard){
+        atkCard.style.transition="none";atkCard.style.transform="translate(0,0)";void atkCard.offsetWidth;
+        atkCard.style.transition="transform 0.18s ease-out";atkCard.style.transform=`translate(${dx}px,${dy}px)`;
+        setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);
+      }else if(savedRect){
+        const ghost=document.createElement("img");ghost.src="images/card_back.png";
+        ghost.style.cssText=`position:fixed;left:${savedRect.left}px;top:${savedRect.top}px;width:${savedRect.width}px;border-radius:4px;pointer-events:none;z-index:500;transition:none;`;
+        document.body.appendChild(ghost);void ghost.offsetWidth;
+        ghost.style.transition="transform 0.18s ease-out";ghost.style.transform=`translate(${dx}px,${dy}px)`;
+        setTimeout(()=>{ghost.style.transition="transform 0.16s ease-in";ghost.style.transform="translate(0,0)";setTimeout(()=>ghost.remove(),180);},200);
+      }
+      if(data.isDirect||data.isFieldSpell)return;
+      const myC2=document.getElementById("spMyUnits");if(!myC2)return;
+      const myCards2=Array.from(myC2.querySelectorAll(".sp-card"));const ml2=myCards2.length;
+      const di2=ml2>0?ml2-1-data.targetIdx:data.targetIdx;
+      const hitCard=myCards2[di2];if(!hitCard)return;
+      const r2=hitCard.getBoundingClientRect();
+      const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+      fx.style.cssText=`position:fixed;left:${r2.left+r2.width/2}px;top:${r2.top+r2.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;
+      document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);
+    },50);
+    return;
+  }
+
+  // ★自分が攻撃した時
   if(data.isEnemy){if(data.targetIdx===-1)return;const ec=Array.from(document.getElementById("spEnemyUnits")?.querySelectorAll(".sp-card")||[]);const card=ec[data.targetIdx];if(!card)return;const r=card.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;}
+
+  // フォールバック
   if(data.targetIdx===-1)return;const mc=Array.from(document.getElementById("spMyUnits")?.querySelectorAll(".sp-card")||[]);const ml=mc.length;const di=ml>0?ml-1-data.targetIdx:data.targetIdx;const card=mc[di];if(!card)return;const r=card.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);
 });
 
@@ -767,11 +882,13 @@ socket.on("roomUpdate",(g)=>{
   document.getElementById("spWinner").innerText=g.winner?(spPlayerRole==="spectator"?"対戦終了":(g.winner===socket.id?"YOU WIN！":"YOU LOSE")):"";
   if(g.winner&&!spResultShown&&spPlayerRole!=="spectator")setTimeout(()=>spShowResult(g.winner===socket.id),300);
   if(!g.winner){
-    spResultShown=false;
-    const old=document.getElementById("spAfterGameDialog");if(old)old.remove();
-    spCloseResult();
-    _spLastDisplayedLogs=[];
-  }
+      spResultShown=false;
+      const old=document.getElementById("spAfterGameDialog");if(old)old.remove();
+      spCloseResult();
+      _spLastDisplayedLogs=[];
+      spPrevAllLogsLen=0;
+      spAllLogs=[];
+    }
 
   if(document.getElementById("spWaiting").style.display!=="none"){
     document.getElementById("spWaiting").style.display="none";
@@ -932,6 +1049,16 @@ function _spRenderHand(handCards,g){
     div.appendChild(img);hand.appendChild(div);
   });
 }
+
+// バックグラウンド復帰時の再接続
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible"){
+    if(!socket.connected){
+      socket.connect();
+    }
+  }
+});
+
 </script>
 </body>
 </html>
