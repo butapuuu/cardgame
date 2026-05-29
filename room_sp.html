@@ -803,7 +803,17 @@ socket.on("hitEffect",(data)=>{
   }
 
   // ★自分が攻撃した時
-  if(data.isEnemy){if(data.targetIdx===-1)return;const ec=Array.from(document.getElementById("spEnemyUnits")?.querySelectorAll(".sp-card")||[]);const card=ec[data.targetIdx];if(!card)return;const r=card.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;}
+  if(data.isEnemy){
+    if(data.isFieldSpell){
+      const fsSlot=document.getElementById("spEnemyFieldSpell");
+      if(!fsSlot)return;
+      const r=fsSlot.getBoundingClientRect();
+      const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+      fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;
+      document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;
+    }
+    if(data.targetIdx===-1)return;const ec=Array.from(document.getElementById("spEnemyUnits")?.querySelectorAll(".sp-card")||[]);const card=ec[data.targetIdx];if(!card)return;const r=card.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;
+  }
 
   // フォールバック
   if(data.targetIdx===-1)return;const mc=Array.from(document.getElementById("spMyUnits")?.querySelectorAll(".sp-card")||[]);const ml=mc.length;const di=ml>0?ml-1-data.targetIdx:data.targetIdx;const card=mc[di];if(!card)return;const r=card.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);

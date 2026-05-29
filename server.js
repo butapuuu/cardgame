@@ -3280,6 +3280,12 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
     fs.durability-=ap;if(ap>0)roomSendDamagePop(room,op,ap,false,-2);
     roomAddLog(room,p,`「${atk.name}」がFS「${fs.name}」に${ap}ダメ（残耐久${Math.max(0,fs.durability)}）`);
     if(fs.durability<=0)roomDestroyFieldSpell(room,op);
+    (room.spectators||[]).forEach(sid=>{const ss=io.sockets.sockets.get(sid);if(ss)ss.emit("hitEffect",{targetIdx:-1,attr:roomGetAttr(atk.name)||"neutral",attackerIdx:data.a,hasAttackAnim:true,isFieldSpell:true,attackerIsP1:socket.id===room.player1});});
+    const atkAttrFS=roomGetAttr(atk.name)||"neutral";
+    const opSockFS=io.sockets.sockets.get(op);
+    if(opSockFS)opSockFS.emit("hitEffect",{targetIdx:-1,attr:atkAttrFS,attackerIdx:data.a,hasAttackAnim:true,isFieldSpell:true});
+    socket.emit("hitEffect",{targetIdx:-2,attr:atkAttrFS,isEnemy:true,isFieldSpell:true});
+    (room.spectators||[]).forEach(sid=>{const ss=io.sockets.sockets.get(sid);if(ss)ss.emit("hitEffect",{targetIdx:-1,attr:atkAttrFS,attackerIdx:data.a,hasAttackAnim:true,isFieldSpell:true,attackerIsP1:socket.id===room.player1});});
     if(atkCard&&atkCard.attackEffect){roomShowEffect(room,atk.name);if(atkCard.attackEffect==="L_DMG1"){roomDamageLife(room,op,1);roomAddLog(room,p,`攻撃時効果：相手ライフ-1`);}if(atkCard.attackEffect==="ATTACK_HEAL_DMG"){room.life[p]+=ap;roomAddLog(room,p,`攻撃時効果：自分ライフ+${ap}`);}if(atkCard.attackEffect==="ALL_UNIT_DMG1"){roomDamageAllUnits(room,op,1,p);roomAddLog(room,p,`攻撃時効果：相手全体1ダメ`);}}
     roomNotifyPendingTarget(room);roomSend(room);return;
   }
@@ -3309,6 +3315,7 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
     const aa2=roomGetAttr(atk.name)||"neutral";
     const ops=io.sockets.sockets.get(op);if(ops)ops.emit("hitEffect",{targetIdx:data.t,attr:aa2,attackerIdx:data.a,hasAttackAnim:true});
     socket.emit("hitEffect",{targetIdx:data.t,attr:aa2,isEnemy:true});
+    (room.spectators||[]).forEach(sid=>{const ss=io.sockets.sockets.get(sid);if(ss)ss.emit("hitEffect",{targetIdx:data.t,attr:aa2,attackerIdx:data.a,hasAttackAnim:true,attackerIsP1:socket.id===room.player1});});
     if(def.hp<=0){
       if(room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_FIRE_OVERFLOW"){const ov=ap-def.atk;if(ov>0){roomDamageLife(room,op,ov);roomAddLog(room,p,`灼熱地獄：${ov}ダメ`);}}
       room.board[op].splice(data.t,1);if(!def.isToken)room.graves[op].push(def);roomAddLog(room,p,`→「${def.name}」を撃破`);roomTriggerDestroyEffect(room,def,op);
@@ -3324,6 +3331,7 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
     roomDamageLife(room,op,ap);
     roomAddLog(room,p,`「${atk.name}」で直接攻撃（${ap}ダメ、相手ライフ${room.life[op]}）`);
     const ops2=io.sockets.sockets.get(op);if(ops2)ops2.emit("hitEffect",{targetIdx:-1,attr:roomGetAttr(atk.name)||"neutral",attackerIdx:data.a,hasAttackAnim:true,isDirect:true});
+    (room.spectators||[]).forEach(sid=>{const ss=io.sockets.sockets.get(sid);if(ss)ss.emit("hitEffect",{targetIdx:-1,attr:roomGetAttr(atk.name)||"neutral",attackerIdx:data.a,hasAttackAnim:true,isDirect:true,attackerIsP1:socket.id===room.player1});});
     if(atkCard&&atkCard.attackEffect&&!atk.rollbackAttack)roomShowEffect(room,atk.name);
     if(atkCard&&atkCard.attackEffect==="L_DMG1"){roomDamageLife(room,op,1);roomAddLog(room,p,`攻撃時効果：ライフ-1`);}
     if(atkCard&&atkCard.attackEffect==="HAN1"){if(room.hands[op].length>=2){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`攻撃時効果：相手手札「${d||"なし"}」破棄`);const sh=io.sockets.sockets.get(p);if(sh&&d)sh.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`攻撃時効果：ハンデス不発`);}}

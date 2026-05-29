@@ -753,7 +753,18 @@ socket.on("hitEffect",(data)=>{
   }
 
   // ★自分が攻撃した時の被弾エフェクト（isEnemy:true）
-  if(data.isEnemy){if(data.targetIdx===-1)return;const ec=Array.from(document.getElementById("enemyUnits")?.querySelectorAll(".card")||[]);const c=ec[data.targetIdx];if(!c)return;const r=c.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;}
+  if(data.isEnemy){
+    if(data.isFieldSpell){
+      // DOMが消えていても確実に表示するため、スロット要素自体の中心座標を使う
+      const fsSlot=document.getElementById("enemyFieldSpell");
+      if(!fsSlot)return;
+      const r=fsSlot.getBoundingClientRect();
+      const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+      fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;
+      document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;
+    }
+    if(data.targetIdx===-1)return;const ec=Array.from(document.getElementById("enemyUnits")?.querySelectorAll(".card")||[]);const c=ec[data.targetIdx];if(!c)return;const r=c.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);return;
+  }
 
   // ★フォールバック（hasAttackAnimなし）
   if(data.targetIdx===-1)return;const mc=Array.from(document.getElementById("myUnits")?.querySelectorAll(".card")||[]);const ml=mc.length;const di=ml>0?ml-1-data.targetIdx:data.targetIdx;const c2=mc[di];if(!c2)return;const r=c2.getBoundingClientRect();const fx2=document.createElement("img");fx2.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx2.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:100px;pointer-events:none;z-index:999;`;document.body.appendChild(fx2);setTimeout(()=>fx2.remove(),500);
