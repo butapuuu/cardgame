@@ -116,10 +116,6 @@ img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
     <div class="ctrl">
       <input type="text" id="dname" placeholder="デッキ名..." maxlength="20">
       <select id="dslot">
-        <option value="0">SLOT 1</option><option value="1">SLOT 2</option><option value="2">SLOT 3</option>
-        <option value="3">SLOT 4</option><option value="4">SLOT 5</option><option value="5">SLOT 6</option>
-        <option value="6">SLOT 7</option><option value="7">SLOT 8</option><option value="8">SLOT 9</option>
-        <option value="9">SLOT 10</option>
       </select>
       <button class="hb hbg" onclick="loadSlot()">📂</button>
       <button class="hb hbg" onclick="save()">💾</button>
@@ -299,6 +295,18 @@ function showToast(msg){const t=document.getElementById("toast");t.innerText=msg
 // 初期化
 try{const s=localStorage.getItem(LK);if(s)deck=JSON.parse(s);}catch(e){}
 renderDeck(); renderCards();
+// スロット選択肢をデッキ名付きで生成
+(function(){
+  const sel=document.getElementById("dslot");
+  const all=JSON.parse(localStorage.getItem(SK)||"[]");
+  sel.innerHTML="";
+  for(let i=0;i<10;i++){
+    const opt=document.createElement("option");
+    opt.value=i;
+    opt.text=all[i]&&all[i].name?"["+(i+1)+"] "+all[i].name:"SLOT "+(i+1);
+    sel.appendChild(opt);
+  }
+})();
 </script>
 </body>
 </html>

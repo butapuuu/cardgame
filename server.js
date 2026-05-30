@@ -375,9 +375,9 @@ function getAttr(cardName){
 }
 
 // ★ドロー処理
-function draw(p){
+function draw(p, isTurnStart){
   if(game.decks[p].length===0){
-    game.winner=getOpponent(p);
+    if(isTurnStart) game.winner=getOpponent(p);
     return;
   }
   game.hands[p].push(game.decks[p].shift());
@@ -1215,10 +1215,9 @@ function addLog(id, msg){
 }
 
 function startTurn(p){
-  // ターンバフは end_turn 時にリセット済みなので、ここでは初期化のみ
   game.turnBuffs[p]={atk:0};
 
-  draw(p);
+  draw(p,true);
   if(game.maxEnergy[p]===0){
     game.maxEnergy[p]=(p===game.firstPlayer)?1:2;
   }else{
@@ -2685,8 +2684,11 @@ function roomGetAttr(cardName){
   return cards[cardName]?.attr||"neutral";
 }
 
-function roomDraw(room, p){
-  if(room.decks[p].length===0){ room.winner=roomGetOpponent(room,p); return; }
+function roomDraw(room, p, isTurnStart){
+  if(room.decks[p].length===0){
+    if(isTurnStart) room.winner=roomGetOpponent(room,p);
+    return;
+  }
   room.hands[p].push(room.decks[p].shift());
 }
 function roomDrawN(room, p, n){ for(let i=0;i<n;i++) roomDraw(room,p); }
@@ -3053,7 +3055,7 @@ function roomProcessSpellEffect(room, cardName, p, socket){
 
 function roomStartTurn(room, p){
   room.turnBuffs[p]={atk:0};
-  roomDraw(room,p);
+  roomDraw(room,p,true);
   if(room.maxEnergy[p]===0){ room.maxEnergy[p]=(p===room.firstPlayer)?1:2; }
   else{ room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+2); }
   room.energy[p]=room.maxEnergy[p];
