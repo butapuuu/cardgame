@@ -3735,5 +3735,31 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-05-30": {
+    "total": 2,
+    "hours": {
+      "22": 2
+    },
+    "pages": {
+      "index.html": 1,
+      "room.html": 1
+    },
+    "visitors": [
+      {
+        "time": "2026-05-30 13:23:07",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-30 13:23:11",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }

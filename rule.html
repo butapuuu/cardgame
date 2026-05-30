@@ -13,11 +13,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --gold:#c8a96e;--gold2:#ffe599;--dark:#080c08;--green1:#0d1f0d;--green2:#1a3a1a;--green3:#2a5a2a;
+  --gold:#c8a96e;--gold2:#ffe599;--dark:#080c08;
   --card-bg:rgba(10,25,10,0.85);--border:rgba(60,140,60,0.3);
 }
 html,body{background:var(--dark);color:#ddd;font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
-
 #bg{position:fixed;inset:0;z-index:0;
   background:radial-gradient(ellipse 120% 60% at 50% 0%,rgba(20,60,20,0.7) 0%,transparent 70%),
   radial-gradient(ellipse 80% 80% at 80% 100%,rgba(10,40,10,0.5) 0%,transparent 60%),#080c08;}
@@ -26,82 +25,45 @@ html,body{background:var(--dark);color:#ddd;font-family:'Rajdhani',sans-serif;mi
   repeating-linear-gradient(60deg,transparent,transparent 59px,rgba(40,100,40,0.05) 60px);
   animation:gridShift 40s linear infinite;}
 @keyframes gridShift{0%{transform:translate(0,0);}100%{transform:translate(60px,60px);}}
-
 #wrap{position:relative;z-index:10;max-width:960px;margin:0 auto;padding:0 32px 80px;}
-
-/* ヘッダー */
-#pageHeader{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:24px 0 32px;border-bottom:1px solid rgba(60,140,60,0.25);margin-bottom:48px;
-}
-.header-logo{font-family:'Cinzel Decorative',serif;font-size:20px;letter-spacing:4px;
-  background:linear-gradient(135deg,#4aff4a,var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+#pageHeader{display:flex;align-items:center;justify-content:space-between;padding:24px 0 32px;border-bottom:1px solid rgba(60,140,60,0.25);margin-bottom:48px;}
+.header-logo{font-family:'Cinzel Decorative',serif;font-size:20px;letter-spacing:4px;background:linear-gradient(135deg,#4aff4a,var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .header-sub{font-size:12px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-top:2px;}
-.back-btn{
-  display:flex;align-items:center;gap:8px;
-  background:linear-gradient(135deg,#0a1a0a,#1a2a1a);
-  color:rgba(180,220,100,0.8);border:1px solid rgba(60,140,60,0.4);
-  border-radius:8px;padding:8px 18px;font-size:12px;font-weight:bold;
-  letter-spacing:2px;text-decoration:none;text-transform:uppercase;
-  transition:all 0.2s;
-}
+.back-btn{display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#0a1a0a,#1a2a1a);color:rgba(180,220,100,0.8);border:1px solid rgba(60,140,60,0.4);border-radius:8px;padding:8px 18px;font-size:12px;font-weight:bold;letter-spacing:2px;text-decoration:none;text-transform:uppercase;transition:all 0.2s;}
 .back-btn:hover{color:#aaffaa;border-color:rgba(80,180,80,0.7);}
-
-/* セクションタイトル */
-.section-title{
-  font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:6px;
-  color:var(--gold);text-transform:uppercase;margin-bottom:20px;
-  display:flex;align-items:center;gap:12px;
-}
+.section-title{font-family:'Rajdhani',sans-serif;font-size:13px;letter-spacing:6px;color:var(--gold);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
 .section-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,180,80,0.4),transparent);}
+h2.rule-h{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color:#eee;letter-spacing:2px;margin-bottom:8px;}
+.rule-block{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:20px;backdrop-filter:blur(8px);position:relative;overflow:hidden;}
+.rule-block::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(80,200,80,0.4),transparent);}
 
-/* 大見出し */
-h2.rule-h{
-  font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;
-  color:#eee;letter-spacing:2px;margin-bottom:8px;
-}
-
-/* ルールカード */
-.rule-block{
-  background:var(--card-bg);border:1px solid var(--border);
-  border-radius:16px;padding:32px;margin-bottom:20px;
-  backdrop-filter:blur(8px);position:relative;overflow:hidden;
-}
-.rule-block::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(80,200,80,0.4),transparent);}
-
-/* 概要ボックス */
+/* 概要 */
 .overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px;}
-.ov-card{
-  background:rgba(0,0,0,0.4);border:1px solid rgba(60,140,60,0.25);
-  border-radius:12px;padding:20px;text-align:center;
-}
+.ov-card{background:rgba(0,0,0,0.4);border:1px solid rgba(60,140,60,0.25);border-radius:12px;padding:20px;text-align:center;}
 .ov-num{font-size:36px;font-weight:700;color:#88ff88;font-family:'Rajdhani',sans-serif;line-height:1;}
 .ov-label{font-size:11px;color:rgba(180,220,180,0.6);letter-spacing:2px;margin-top:4px;text-transform:uppercase;}
 
 /* ターンフロー */
-.turn-flow{display:flex;align-items:center;gap:0;margin:20px 0;}
-.flow-step{
-  flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(60,140,60,0.25);
-  border-radius:10px;padding:14px 10px;text-align:center;position:relative;
-}
-.flow-step .flow-num{font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:4px;}
-.flow-step .flow-name{font-size:14px;font-weight:700;color:#eee;letter-spacing:1px;}
-.flow-step .flow-desc{font-size:11px;color:rgba(180,200,180,0.55);margin-top:4px;line-height:1.4;}
-.flow-arrow{width:28px;flex-shrink:0;text-align:center;color:rgba(80,180,80,0.5);font-size:18px;}
+.turn-flow{display:flex;align-items:stretch;gap:0;margin:20px 0;}
+.flow-step{flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(60,140,60,0.25);border-radius:10px;padding:16px 10px;text-align:center;position:relative;}
+.flow-step.highlight{border-color:rgba(80,200,80,0.5);background:rgba(20,60,20,0.5);}
+.flow-step .flow-num{font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:6px;}
+.flow-step .flow-name{font-size:14px;font-weight:700;color:#eee;letter-spacing:1px;margin-bottom:6px;}
+.flow-step .flow-desc{font-size:11px;color:rgba(180,200,180,0.55);line-height:1.5;}
+.flow-step .flow-sub{font-size:10px;color:rgba(140,200,140,0.5);margin-top:4px;line-height:1.4;}
+.flow-arrow{width:24px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:rgba(80,180,80,0.45);font-size:16px;}
+
+/* フリーアクション */
+.free-actions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;}
+.fa-badge{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:1px;background:rgba(0,0,0,0.35);border:1px solid rgba(60,140,60,0.3);color:#88dd88;}
 
 /* カードタイプ */
 .card-types{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px;}
-.ct-card{
-  border-radius:10px;padding:18px;
-  border:1px solid rgba(60,140,60,0.2);
-  background:rgba(0,0,0,0.35);
-}
+.ct-card{border-radius:10px;padding:18px;border:1px solid rgba(60,140,60,0.2);background:rgba(0,0,0,0.35);}
 .ct-card.unit{border-color:rgba(80,180,255,0.35);}
 .ct-card.spell{border-color:rgba(200,180,80,0.35);}
 .ct-card.field{border-color:rgba(80,200,80,0.35);}
-.ct-badge{display:inline-block;font-size:10px;letter-spacing:2px;font-weight:700;
-  padding:2px 10px;border-radius:4px;margin-bottom:8px;text-transform:uppercase;}
+.ct-badge{display:inline-block;font-size:10px;letter-spacing:2px;font-weight:700;padding:2px 10px;border-radius:4px;margin-bottom:8px;text-transform:uppercase;}
 .ct-card.unit .ct-badge{background:rgba(80,180,255,0.15);color:#88ccff;border:1px solid rgba(80,180,255,0.3);}
 .ct-card.spell .ct-badge{background:rgba(200,180,80,0.15);color:var(--gold2);border:1px solid rgba(200,180,80,0.3);}
 .ct-card.field .ct-badge{background:rgba(80,200,80,0.15);color:#88ff88;border:1px solid rgba(80,200,80,0.3);}
@@ -110,10 +72,7 @@ h2.rule-h{
 
 /* 属性グリッド */
 .attr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;}
-.attr-card{
-  border-radius:10px;padding:14px;text-align:center;
-  background:rgba(0,0,0,0.35);border:1px solid rgba(60,140,60,0.2);
-}
+.attr-card{border-radius:10px;padding:14px;text-align:center;background:rgba(0,0,0,0.35);border:1px solid rgba(60,140,60,0.2);}
 .attr-icon{font-size:28px;line-height:1;margin-bottom:6px;}
 .attr-name{font-size:13px;font-weight:700;letter-spacing:1px;}
 .attr-desc{font-size:10px;color:rgba(180,200,180,0.5);margin-top:3px;line-height:1.4;}
@@ -126,69 +85,49 @@ h2.rule-h{
 .attr-steel{border-color:rgba(180,180,220,0.35);}.attr-steel .attr-name{color:#ccccdd;}
 .attr-neutral{border-color:rgba(200,200,160,0.3);}.attr-neutral .attr-name{color:#ddddaa;}
 
-/* 攻撃ルール */
+/* ルールリスト */
 .rule-list{list-style:none;display:flex;flex-direction:column;gap:10px;margin-top:16px;}
-.rule-list li{
-  display:flex;align-items:flex-start;gap:12px;
-  background:rgba(0,0,0,0.3);border:1px solid rgba(60,140,60,0.2);
-  border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.6;color:rgba(200,220,200,0.8);
-}
-.rule-list li .ri{
-  flex-shrink:0;width:22px;height:22px;border-radius:50%;
-  background:rgba(60,160,60,0.25);border:1px solid rgba(80,200,80,0.4);
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;color:#88ff88;margin-top:1px;
-}
+.rule-list li{display:flex;align-items:flex-start;gap:12px;background:rgba(0,0,0,0.3);border:1px solid rgba(60,140,60,0.2);border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.6;color:rgba(200,220,200,0.8);}
+.rule-list li .ri{flex-shrink:0;width:22px;height:22px;border-radius:50%;background:rgba(60,160,60,0.25);border:1px solid rgba(80,200,80,0.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#88ff88;margin-top:1px;}
 .rule-list li strong{color:#eee;font-weight:700;}
 
-/* エネルギーバー */
+/* エネルギー */
 .energy-demo{display:flex;align-items:center;gap:8px;margin-top:16px;flex-wrap:wrap;}
-.e-pip{width:28px;height:28px;border-radius:6px;border:1px solid rgba(40,120,200,0.5);
-  background:rgba(20,80,180,0.3);display:flex;align-items:center;justify-content:center;}
+.e-pip{width:28px;height:28px;border-radius:6px;border:1px solid rgba(40,120,200,0.5);background:rgba(20,80,180,0.3);display:flex;align-items:center;justify-content:center;}
 .e-pip.active{background:rgba(80,160,255,0.35);border-color:rgba(100,180,255,0.7);}
 .e-label{font-size:12px;color:rgba(180,200,220,0.6);letter-spacing:1px;margin-left:8px;}
 
 /* デッキルール */
 .deck-rule-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
-.deck-rule-card{
-  background:rgba(0,0,0,0.35);border:1px solid rgba(60,140,60,0.2);
-  border-radius:10px;padding:18px;
-}
+.deck-rule-card{background:rgba(0,0,0,0.35);border:1px solid rgba(60,140,60,0.2);border-radius:10px;padding:18px;}
 .deck-rule-num{font-size:32px;font-weight:700;color:#88ff88;line-height:1;}
 .deck-rule-label{font-size:11px;color:rgba(180,200,180,0.55);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
 .deck-rule-note{font-size:12px;color:rgba(180,200,180,0.6);margin-top:8px;line-height:1.5;}
 
-/* 勝利条件 */
-.win-box{
-  background:linear-gradient(135deg,rgba(20,60,20,0.5),rgba(10,30,10,0.5));
-  border:1px solid rgba(80,200,80,0.35);border-radius:12px;padding:24px;
-  text-align:center;
-}
-.win-box .win-title{font-size:22px;font-weight:700;color:#88ff88;letter-spacing:3px;margin-bottom:10px;}
-.win-box .win-desc{font-size:14px;color:rgba(200,220,200,0.7);line-height:1.8;}
-.win-box .win-life{font-size:48px;font-weight:700;color:#ff6666;font-family:'Rajdhani',sans-serif;line-height:1;margin:8px 0;}
-
-/* フィールドスペルUI */
-.fs-demo{display:flex;gap:16px;margin-top:16px;align-items:center;}
-.fs-slot-demo{
-  width:80px;height:110px;border:1px solid rgba(255,215,0,0.45);
-  border-radius:8px;background:rgba(255,215,0,0.04);
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;color:rgba(255,215,0,0.4);letter-spacing:2px;font-weight:700;
-  flex-shrink:0;
-}
-.fs-desc{font-size:13px;color:rgba(180,200,180,0.65);line-height:1.7;}
-
-/* 特殊状態バッジ */
+/* 特殊状態 */
 .status-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
 .status-badge{padding:4px 12px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:1px;}
 .sb-barrier{background:rgba(40,200,220,0.15);color:#44ddff;border:1px solid rgba(40,200,220,0.3);}
 .sb-bind{background:rgba(40,200,40,0.15);color:#44dd44;border:1px solid rgba(40,200,40,0.3);}
 .sb-mc{background:rgba(180,80,255,0.15);color:#cc66ff;border:1px solid rgba(180,80,255,0.3);}
-.sb-denko{background:rgba(255,240,60,0.15);color:#ffee44;border:1px solid rgba(255,240,60,0.3);}
-.sb-desc{font-size:12px;color:rgba(180,200,180,0.55);margin-top:4px;line-height:1.5;}
 
-/* フッター */
+/* 勝利条件 */
+.win-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.win-box{background:linear-gradient(135deg,rgba(20,60,20,0.5),rgba(10,30,10,0.5));border:1px solid rgba(80,200,80,0.35);border-radius:12px;padding:24px;text-align:center;}
+.win-box.deck-win{border-color:rgba(80,180,255,0.35);background:linear-gradient(135deg,rgba(10,30,60,0.5),rgba(5,15,40,0.5));}
+.win-title{font-size:14px;font-weight:700;letter-spacing:2px;margin-bottom:10px;}
+.win-box .win-title{color:#88ff88;}
+.win-box.deck-win .win-title{color:#88ccff;}
+.win-life{font-size:44px;font-weight:700;color:#ff6666;font-family:'Rajdhani',sans-serif;line-height:1;margin:6px 0;}
+.win-deck{font-size:44px;font-weight:700;color:#88ccff;font-family:'Rajdhani',sans-serif;line-height:1;margin:6px 0;}
+.win-desc{font-size:12px;color:rgba(200,220,200,0.6);line-height:1.7;margin-top:8px;}
+.win-note{font-size:11px;color:rgba(160,180,160,0.5);margin-top:6px;line-height:1.5;}
+
+/* フィールドスペル */
+.fs-demo{display:flex;gap:16px;margin-top:16px;align-items:center;}
+.fs-slot-demo{width:80px;height:110px;border:1px solid rgba(255,215,0,0.45);border-radius:8px;background:rgba(255,215,0,0.04);display:flex;align-items:center;justify-content:center;font-size:10px;color:rgba(255,215,0,0.4);letter-spacing:2px;font-weight:700;flex-shrink:0;}
+.fs-desc{font-size:13px;color:rgba(180,200,180,0.65);line-height:1.7;}
+
 #footer{text-align:center;padding:40px 0 0;font-size:11px;letter-spacing:2px;color:rgba(80,120,80,0.4);}
 </style>
 </head>
@@ -233,28 +172,25 @@ h2.rule-h{
       <div class="flow-step">
         <div class="flow-num">02</div>
         <div class="flow-name">エネルギー補充</div>
-        <div class="flow-desc">最大エネルギーが+2され全回復</div>
+        <div class="flow-desc">最大値+2・全回復<br>（上限10）</div>
       </div>
       <div class="flow-arrow">▶</div>
-      <div class="flow-step">
+      <div class="flow-step highlight">
         <div class="flow-num">03</div>
-        <div class="flow-name">カードプレイ</div>
-        <div class="flow-desc">エネルギーを消費してカードを使用</div>
+        <div class="flow-name">メインフェイズ</div>
+        <div class="flow-desc">エネルギーの続く限り<br>好きな順番で自由に行動</div>
+        <div class="flow-sub">召喚・スペル発動・攻撃<br>を何度でも組み合わせ可</div>
       </div>
       <div class="flow-arrow">▶</div>
       <div class="flow-step">
         <div class="flow-num">04</div>
-        <div class="flow-name">攻撃</div>
-        <div class="flow-desc">ユニットで相手を攻撃</div>
-      </div>
-      <div class="flow-arrow">▶</div>
-      <div class="flow-step">
-        <div class="flow-num">05</div>
         <div class="flow-name">ターン終了</div>
-        <div class="flow-desc">手札7枚を超えたら捨てる</div>
+        <div class="flow-desc">手札8枚以上なら<br>7枚になるまで捨てる</div>
       </div>
     </div>
-    <p style="font-size:12px;color:rgba(180,200,180,0.5);margin-top:12px;">※先攻1ターン目は攻撃不可</p>
+    <p style="font-size:12px;color:rgba(160,200,160,0.5);margin-top:12px;padding:10px 14px;background:rgba(0,0,0,0.25);border-radius:6px;border-left:2px solid rgba(80,180,80,0.35);">
+      ※ 先攻1ターン目はメインフェイズ中の攻撃のみ不可。召喚・スペル発動は行える。
+    </p>
   </div>
 
   <!-- カードの種類 -->
@@ -265,7 +201,7 @@ h2.rule-h{
       <div class="ct-card unit">
         <span class="ct-badge">UNIT</span>
         <div class="ct-title">ユニットカード</div>
-        <div class="ct-desc">場に最大3体まで召喚できる。ATK（攻撃力）とHP（体力）を持つ。相手ユニットや相手プレイヤーを攻撃する。</div>
+        <div class="ct-desc">場に最大3体まで召喚できる。ATK（攻撃力）とHP（体力）を持ち、相手ユニットや相手プレイヤーを攻撃する。</div>
       </div>
       <div class="ct-card spell">
         <span class="ct-badge">SPELL</span>
@@ -288,33 +224,24 @@ h2.rule-h{
       カードを使うにはエネルギーが必要です。毎ターン最大エネルギーが2増加（上限10）し、ターン開始時に全回復します。
     </p>
     <div class="energy-demo">
-      <div class="e-pip active"><span style="font-size:9px;color:#88ccff;font-weight:bold;">E</span></div>
-      <div class="e-pip active"><span style="font-size:9px;color:#88ccff;font-weight:bold;">E</span></div>
-      <div class="e-pip active"><span style="font-size:9px;color:#88ccff;font-weight:bold;">E</span></div>
-      <div class="e-pip active"><span style="font-size:9px;color:#88ccff;font-weight:bold;">E</span></div>
-      <div class="e-pip"></div>
-      <div class="e-pip"></div>
-      <div class="e-pip"></div>
-      <div class="e-pip"></div>
-      <div class="e-pip"></div>
-      <div class="e-pip"></div>
+      <div class="e-pip active"></div><div class="e-pip active"></div><div class="e-pip active"></div><div class="e-pip active"></div>
+      <div class="e-pip"></div><div class="e-pip"></div><div class="e-pip"></div><div class="e-pip"></div><div class="e-pip"></div><div class="e-pip"></div>
       <span class="e-label">4 / 10 エネルギー</span>
     </div>
     <p style="font-size:12px;color:rgba(180,200,180,0.5);margin-top:12px;">
-      ※先攻1ターン目は最大エネルギー1からスタート。後攻1ターン目は最大エネルギー2からスタート。
+      ※ 先攻1ターン目は最大エネルギー1・後攻1ターン目は最大エネルギー2からスタート。
     </p>
   </div>
 
-  <!-- 攻撃ルール -->
+  <!-- 戦闘ルール -->
   <div class="rule-block">
     <div class="section-title">Battle Rules</div>
     <h2 class="rule-h">戦闘ルール</h2>
     <ul class="rule-list">
-      <li><div class="ri">1</div><div><strong>ユニット攻撃</strong>：相手の場にユニットがいる場合、いずれかのユニットを攻撃しなければならない。攻撃を受けたユニットは防御側のATKの半分（端数切り捨て）で反撃する。</div></li>
+      <li><div class="ri">1</div><div><strong>ユニット攻撃</strong>：相手の場にユニットがいる場合、いずれかのユニットを攻撃しなければならない。攻撃を受けたユニットはATKの半分（端数切り捨て）で反撃する。</div></li>
       <li><div class="ri">2</div><div><strong>直接攻撃</strong>：相手の場にユニットがいない場合、相手プレイヤーに直接攻撃できる。ATK分のダメージを与える。</div></li>
-      <li><div class="ri">3</div><div><strong>1ターン1攻撃</strong>：各ユニットは1ターンに1回のみ攻撃できる。ただし<span style="color:#ffee44;">電光石火</span>持ちは2回攻撃できる（2回目はATK半分）。</div></li>
+      <li><div class="ri">3</div><div><strong>1ターン1攻撃</strong>：各ユニットは1ターンに1回のみ攻撃できる。</div></li>
       <li><div class="ri">4</div><div><strong>フィールドスペル攻撃</strong>：相手のフィールドスペルにも攻撃できる。耐久値を0にすると破壊できる。</div></li>
-      <li><div class="ri">5</div><div><strong>全体攻撃</strong>：<span style="color:#88ff88;">全体攻撃</span>を持つユニットは相手の全ユニットを同時に攻撃する。</div></li>
     </ul>
   </div>
 
@@ -323,26 +250,10 @@ h2.rule-h{
     <div class="section-title">Deck Rules</div>
     <h2 class="rule-h">デッキ構築ルール</h2>
     <div class="deck-rule-grid">
-      <div class="deck-rule-card">
-        <div class="deck-rule-num">20</div>
-        <div class="deck-rule-label">デッキ枚数</div>
-        <div class="deck-rule-note">ちょうど20枚でないとデッキを保存できない。</div>
-      </div>
-      <div class="deck-rule-card">
-        <div class="deck-rule-num">×2</div>
-        <div class="deck-rule-label">同名カード上限</div>
-        <div class="deck-rule-note">同じカードは2枚まで入れられる。</div>
-      </div>
-      <div class="deck-rule-card">
-        <div class="deck-rule-num">1属性</div>
-        <div class="deck-rule-label">属性制限</div>
-        <div class="deck-rule-note">デッキに入れられる属性は1種類のみ（汎用カードを除く）。</div>
-      </div>
-      <div class="deck-rule-card">
-        <div class="deck-rule-num">制限</div>
-        <div class="deck-rule-label">制限カード</div>
-        <div class="deck-rule-note">一部のカードは1枚までしか入れられない制限カードに指定されている。</div>
-      </div>
+      <div class="deck-rule-card"><div class="deck-rule-num">20</div><div class="deck-rule-label">デッキ枚数</div><div class="deck-rule-note">ちょうど20枚でないとデッキを保存できない。</div></div>
+      <div class="deck-rule-card"><div class="deck-rule-num">×2</div><div class="deck-rule-label">同名カード上限</div><div class="deck-rule-note">同じカードは2枚まで入れられる。</div></div>
+      <div class="deck-rule-card"><div class="deck-rule-num">1属性</div><div class="deck-rule-label">属性制限</div><div class="deck-rule-note">デッキに入れられる属性は1種類のみ（汎用カードを除く）。</div></div>
+      <div class="deck-rule-card"><div class="deck-rule-num">制限</div><div class="deck-rule-label">制限カード</div><div class="deck-rule-note">一部のカードは1枚までしか入れられない制限カードに指定されている。</div></div>
     </div>
   </div>
 
@@ -352,46 +263,14 @@ h2.rule-h{
     <h2 class="rule-h">8つの属性</h2>
     <p style="font-size:13px;color:rgba(180,200,180,0.6);margin-bottom:4px;">各属性ごとに独自の戦術や特徴を持つ。属性の有利・不利はなく、デッキの戦略性で勝負する。</p>
     <div class="attr-grid">
-      <div class="attr-card attr-fire">
-        <div class="attr-icon">🔥</div>
-        <div class="attr-name">FIRE</div>
-        <div class="attr-desc">高火力・バーンダメージ系</div>
-      </div>
-      <div class="attr-card attr-water">
-        <div class="attr-icon">💧</div>
-        <div class="attr-name">WATER</div>
-        <div class="attr-desc">高耐久・回復・ドロー系</div>
-      </div>
-      <div class="attr-card attr-thunder">
-        <div class="attr-icon">⚡</div>
-        <div class="attr-name">THUNDER</div>
-        <div class="attr-desc">速攻・電光石火・ドロー系</div>
-      </div>
-      <div class="attr-card attr-forest">
-        <div class="attr-icon">🌿</div>
-        <div class="attr-name">FOREST</div>
-        <div class="attr-desc">展開・強化・トークン系</div>
-      </div>
-      <div class="attr-card attr-dark">
-        <div class="attr-icon">🌑</div>
-        <div class="attr-name">DARK</div>
-        <div class="attr-desc">ハンデス・妨害・コントロール系</div>
-      </div>
-      <div class="attr-card attr-poison">
-        <div class="attr-icon">☠</div>
-        <div class="attr-name">POISON</div>
-        <div class="attr-desc">自傷・高火力・博打系</div>
-      </div>
-      <div class="attr-card attr-steel">
-        <div class="attr-icon">⚙</div>
-        <div class="attr-name">STEEL</div>
-        <div class="attr-desc">トークン・融合・工場系</div>
-      </div>
-      <div class="attr-card attr-neutral">
-        <div class="attr-icon">◈</div>
-        <div class="attr-name">NEUTRAL</div>
-        <div class="attr-desc">汎用スペル・全属性に投入可能</div>
-      </div>
+      <div class="attr-card attr-fire"><div class="attr-icon">🔥</div><div class="attr-name">FIRE</div><div class="attr-desc">高火力・バーンダメージ系</div></div>
+      <div class="attr-card attr-water"><div class="attr-icon">💧</div><div class="attr-name">WATER</div><div class="attr-desc">高耐久・回復・ドロー系</div></div>
+      <div class="attr-card attr-thunder"><div class="attr-icon">⚡</div><div class="attr-name">THUNDER</div><div class="attr-desc">速攻・電光石火・ドロー系</div></div>
+      <div class="attr-card attr-forest"><div class="attr-icon">🌿</div><div class="attr-name">FOREST</div><div class="attr-desc">展開・強化・トークン系</div></div>
+      <div class="attr-card attr-dark"><div class="attr-icon">🌑</div><div class="attr-name">DARK</div><div class="attr-desc">ハンデス・妨害・コントロール系</div></div>
+      <div class="attr-card attr-poison"><div class="attr-icon">☠</div><div class="attr-name">POISON</div><div class="attr-desc">自傷・高火力・博打系</div></div>
+      <div class="attr-card attr-steel"><div class="attr-icon">⚙</div><div class="attr-name">STEEL</div><div class="attr-desc">トークン・融合・工場系</div></div>
+      <div class="attr-card attr-neutral"><div class="attr-icon">◈</div><div class="attr-name">NEUTRAL</div><div class="attr-desc">汎用スペル・全属性に投入可能</div></div>
     </div>
   </div>
 
@@ -418,13 +297,11 @@ h2.rule-h{
       <span class="status-badge sb-barrier">【結晶】</span>
       <span class="status-badge sb-bind">【拘束】</span>
       <span class="status-badge sb-mc">【洗脳】</span>
-      <span class="status-badge sb-denko">⚡ 電光石火</span>
     </div>
     <ul class="rule-list" style="margin-top:12px;">
       <li><div class="ri" style="background:rgba(40,200,220,0.15);border-color:rgba(40,200,220,0.4);color:#44ddff;">結</div><div><strong style="color:#44ddff;">結晶（バリア）</strong>：そのターン中、攻撃を受けてもダメージが0になる。ターン終了時に解除。</div></li>
       <li><div class="ri" style="background:rgba(40,200,40,0.15);border-color:rgba(40,200,40,0.4);color:#44dd44;">拘</div><div><strong style="color:#44dd44;">拘束</strong>：行動不能状態。攻撃・効果の発動ができない。次の自分のターン終了時に解除。</div></li>
       <li><div class="ri" style="background:rgba(180,80,255,0.15);border-color:rgba(180,80,255,0.4);color:#cc66ff;">洗</div><div><strong style="color:#cc66ff;">洗脳</strong>：マインドコントロールによる行動不能。ターンが来ても攻撃・効果が使えない。</div></li>
-      <li><div class="ri" style="background:rgba(255,240,60,0.15);border-color:rgba(255,240,60,0.4);color:#ffee44;">電</div><div><strong style="color:#ffee44;">電光石火</strong>：1ターンに2回攻撃できる。2回目の攻撃はATKが半分（端数切り捨て）になる。</div></li>
     </ul>
   </div>
 
@@ -432,15 +309,22 @@ h2.rule-h{
   <div class="rule-block">
     <div class="section-title">Victory Condition</div>
     <h2 class="rule-h">勝利条件</h2>
-    <div class="win-box">
-      <div class="win-title">相手のライフを0にする</div>
-      <div class="win-life">LIFE 0</div>
-      <div class="win-desc">
-        相手プレイヤーのライフが0以下になったとき勝利。<br>
-        デッキが0枚の状態でドローしようとした場合も敗北。<br>
-        降参ボタンで任意に投了することもできる。
+    <div class="win-grid">
+      <div class="win-box">
+        <div class="win-title">相手のライフを0にする</div>
+        <div class="win-life">LIFE 0</div>
+        <div class="win-desc">ダメージで相手ライフが0以下になった瞬間、勝利。</div>
+      </div>
+      <div class="win-box deck-win">
+        <div class="win-title" style="color:#88ccff;">相手のデッキが尽きる</div>
+        <div class="win-deck">DECK 0</div>
+        <div class="win-desc" style="color:rgba(180,210,230,0.6);">相手がターン開始時にドローできなければ勝利。</div>
+        <div class="win-note" style="color:rgba(140,170,190,0.5);">※ターン中のドロー効果でデッキが0になっても即敗北にはならない</div>
       </div>
     </div>
+    <p style="font-size:12px;color:rgba(180,200,180,0.5);margin-top:12px;padding:10px 14px;background:rgba(0,0,0,0.25);border-radius:6px;">
+      いずれかの条件を満たした時点で即勝利。降参ボタンで任意に投了することもできる。
+    </p>
   </div>
 
   <footer id="footer">ELEMON RULE GUIDE &nbsp;|&nbsp; © 2026</footer>
