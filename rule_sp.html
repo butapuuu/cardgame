@@ -220,13 +220,13 @@ h2.rule-h{font-size:20px;font-weight:700;color:#eee;letter-spacing:1px;margin-bo
     <div class="section-title">Attributes</div>
     <h2 class="rule-h">8つの属性</h2>
     <div class="attr-grid">
-      <div class="attr-card attr-fire"><div class="attr-icon">🔥</div><div class="attr-name">FIRE</div><div class="attr-desc">高火力バーン</div></div>
-      <div class="attr-card attr-water"><div class="attr-icon">💧</div><div class="attr-name">WATER</div><div class="attr-desc">耐久・回復</div></div>
-      <div class="attr-card attr-thunder"><div class="attr-icon">⚡</div><div class="attr-name">THUNDER</div><div class="attr-desc">速攻・ドロー</div></div>
+      <div class="attr-card attr-fire"><div class="attr-icon">🔥</div><div class="attr-name">FIRE</div><div class="attr-desc">バーン・アグロ</div></div>
+      <div class="attr-card attr-water"><div class="attr-icon">💧</div><div class="attr-name">WATER</div><div class="attr-desc">耐久・エネ加速</div></div>
+      <div class="attr-card attr-thunder"><div class="attr-icon">⚡</div><div class="attr-name">THUNDER</div><div class="attr-desc">2回攻撃・ドロー</div></div>
       <div class="attr-card attr-forest"><div class="attr-icon">🌿</div><div class="attr-name">FOREST</div><div class="attr-desc">展開・強化</div></div>
-      <div class="attr-card attr-dark"><div class="attr-icon">🌑</div><div class="attr-name">DARK</div><div class="attr-desc">妨害・コントロール</div></div>
-      <div class="attr-card attr-poison"><div class="attr-icon">☠</div><div class="attr-name">POISON</div><div class="attr-desc">自傷・博打</div></div>
-      <div class="attr-card attr-steel"><div class="attr-icon">⚙</div><div class="attr-name">STEEL</div><div class="attr-desc">トークン・融合</div></div>
+      <div class="attr-card attr-dark"><div class="attr-icon">🌑</div><div class="attr-name">DARK</div><div class="attr-desc">ハンデス・妨害</div></div>
+      <div class="attr-card attr-poison"><div class="attr-icon">☠</div><div class="attr-name">POISON</div><div class="attr-desc">自傷・高火力</div></div>
+      <div class="attr-card attr-steel"><div class="attr-icon">⚙</div><div class="attr-name">STEEL</div><div class="attr-desc">トークン・自壊</div></div>
       <div class="attr-card attr-neutral"><div class="attr-icon">◈</div><div class="attr-name">NEUTRAL</div><div class="attr-desc">全属性対応</div></div>
     </div>
   </div>
@@ -242,8 +242,8 @@ h2.rule-h{font-size:20px;font-weight:700;color:#eee;letter-spacing:1px;margin-bo
     </div>
     <ul class="rule-list" style="margin-top:10px;">
       <li><div class="ri" style="background:rgba(40,200,220,0.15);border-color:rgba(40,200,220,0.4);color:#44ddff;">結</div><div><strong style="color:#44ddff;">結晶</strong>：そのターン中、攻撃を受けてもダメージ0。ターン終了時に解除。</div></li>
-      <li><div class="ri" style="background:rgba(40,200,40,0.15);border-color:rgba(40,200,40,0.4);color:#44dd44;">拘</div><div><strong style="color:#44dd44;">拘束</strong>：行動不能。次の自分のターン終了時に解除。</div></li>
-      <li><div class="ri" style="background:rgba(180,80,255,0.15);border-color:rgba(180,80,255,0.4);color:#cc66ff;">洗</div><div><strong style="color:#cc66ff;">洗脳</strong>：マインドコントロールによる行動不能。</div></li>
+      <li><div class="ri" style="background:rgba(40,200,40,0.15);border-color:rgba(40,200,40,0.4);color:#44dd44;">拘</div><div><strong style="color:#44dd44;">拘束</strong>：そのターン中、攻撃ができない。ターン終了時に解除。</div></li>
+      <li><div class="ri" style="background:rgba(180,80,255,0.15);border-color:rgba(180,80,255,0.4);color:#cc66ff;">洗</div><div><strong style="color:#cc66ff;">洗脳</strong>：永続的に攻撃ができない。</div></li>
     </ul>
   </div>
 
@@ -253,19 +253,19 @@ h2.rule-h{font-size:20px;font-weight:700;color:#eee;letter-spacing:1px;margin-bo
     <h2 class="rule-h">勝利条件</h2>
     <div class="win-grid">
       <div class="win-box">
-        <div class="win-title">相手のライフを0にする</div>
+        <div class="win-title">相手ライフを0にする</div>
         <div class="win-life">LIFE 0</div>
         <div class="win-desc">ダメージで相手ライフが0以下になった瞬間、勝利。</div>
       </div>
       <div class="win-box deck-win">
-        <div class="win-title">相手のデッキが尽きる</div>
+        <div class="win-title">相手デッキが尽きる</div>
         <div class="win-deck">DECK 0</div>
         <div class="win-desc">相手がターン開始時にドローできなければ勝利。</div>
         <div class="win-note">※ターン中のドロー効果でデッキが0になっても即敗北にはならない</div>
       </div>
     </div>
     <p style="font-size:11px;color:rgba(180,200,180,0.5);margin-top:10px;padding:8px 12px;background:rgba(0,0,0,0.25);border-radius:6px;">
-      いずれかの条件を満たした時点で即勝利。降参ボタンで任意に投了することもできる。
+      いずれかの条件を満たした時点で即勝利。SURRENDERボタンで任意に降参することもできる。
     </p>
   </div>
 

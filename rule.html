@@ -211,7 +211,7 @@ h2.rule-h{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color
       <div class="ct-card field">
         <span class="ct-badge">FIELD SPELL</span>
         <div class="ct-title">フィールドスペル</div>
-        <div class="ct-desc">場に1枚だけ設置できる。耐久値があり攻撃されると減少する。継続的な効果を発揮する。</div>
+        <div class="ct-desc">それぞれの場に1枚ずつ設置できる。耐久値があり攻撃されると減少する。継続的な効果を発揮する。</div>
       </div>
     </div>
   </div>
@@ -261,15 +261,15 @@ h2.rule-h{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color
   <div class="rule-block">
     <div class="section-title">Attributes</div>
     <h2 class="rule-h">8つの属性</h2>
-    <p style="font-size:13px;color:rgba(180,200,180,0.6);margin-bottom:4px;">各属性ごとに独自の戦術や特徴を持つ。属性の有利・不利はなく、デッキの戦略性で勝負する。</p>
+    <p style="font-size:13px;color:rgba(180,200,180,0.6);margin-bottom:4px;">各属性ごとに独自の戦術や特徴を持つ。</p>
     <div class="attr-grid">
-      <div class="attr-card attr-fire"><div class="attr-icon">🔥</div><div class="attr-name">FIRE</div><div class="attr-desc">高火力・バーンダメージ系</div></div>
-      <div class="attr-card attr-water"><div class="attr-icon">💧</div><div class="attr-name">WATER</div><div class="attr-desc">高耐久・回復・ドロー系</div></div>
-      <div class="attr-card attr-thunder"><div class="attr-icon">⚡</div><div class="attr-name">THUNDER</div><div class="attr-desc">速攻・電光石火・ドロー系</div></div>
-      <div class="attr-card attr-forest"><div class="attr-icon">🌿</div><div class="attr-name">FOREST</div><div class="attr-desc">展開・強化・トークン系</div></div>
-      <div class="attr-card attr-dark"><div class="attr-icon">🌑</div><div class="attr-name">DARK</div><div class="attr-desc">ハンデス・妨害・コントロール系</div></div>
-      <div class="attr-card attr-poison"><div class="attr-icon">☠</div><div class="attr-name">POISON</div><div class="attr-desc">自傷・高火力・博打系</div></div>
-      <div class="attr-card attr-steel"><div class="attr-icon">⚙</div><div class="attr-name">STEEL</div><div class="attr-desc">トークン・融合・工場系</div></div>
+      <div class="attr-card attr-fire"><div class="attr-icon">🔥</div><div class="attr-name">FIRE</div><div class="attr-desc">バーン・アグロ</div></div>
+      <div class="attr-card attr-water"><div class="attr-icon">💧</div><div class="attr-name">WATER</div><div class="attr-desc">高耐久・エネ加速</div></div>
+      <div class="attr-card attr-thunder"><div class="attr-icon">⚡</div><div class="attr-name">THUNDER</div><div class="attr-desc">2回攻撃・ドロー</div></div>
+      <div class="attr-card attr-forest"><div class="attr-icon">🌿</div><div class="attr-name">FOREST</div><div class="attr-desc">展開・強化</div></div>
+      <div class="attr-card attr-dark"><div class="attr-icon">🌑</div><div class="attr-name">DARK</div><div class="attr-desc">ハンデス・妨害</div></div>
+      <div class="attr-card attr-poison"><div class="attr-icon">☠</div><div class="attr-name">POISON</div><div class="attr-desc">自傷・高火力</div></div>
+      <div class="attr-card attr-steel"><div class="attr-icon">⚙</div><div class="attr-name">STEEL</div><div class="attr-desc">トークン・自壊</div></div>
       <div class="attr-card attr-neutral"><div class="attr-icon">◈</div><div class="attr-name">NEUTRAL</div><div class="attr-desc">汎用スペル・全属性に投入可能</div></div>
     </div>
   </div>
@@ -284,7 +284,6 @@ h2.rule-h{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color
         場の専用スロットに1枚だけ設置できる特殊なスペル。<br>
         耐久値が設定されており、攻撃を受けると耐久値が減少し0になると破壊される。<br>
         設置中はさまざまな継続効果を発揮する（例：毎ターンエネルギー+1、全ユニット強化など）。<br>
-        崩壊スペルによって強制破壊されることもある。
       </div>
     </div>
   </div>
@@ -300,8 +299,8 @@ h2.rule-h{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color
     </div>
     <ul class="rule-list" style="margin-top:12px;">
       <li><div class="ri" style="background:rgba(40,200,220,0.15);border-color:rgba(40,200,220,0.4);color:#44ddff;">結</div><div><strong style="color:#44ddff;">結晶（バリア）</strong>：そのターン中、攻撃を受けてもダメージが0になる。ターン終了時に解除。</div></li>
-      <li><div class="ri" style="background:rgba(40,200,40,0.15);border-color:rgba(40,200,40,0.4);color:#44dd44;">拘</div><div><strong style="color:#44dd44;">拘束</strong>：行動不能状態。攻撃・効果の発動ができない。次の自分のターン終了時に解除。</div></li>
-      <li><div class="ri" style="background:rgba(180,80,255,0.15);border-color:rgba(180,80,255,0.4);color:#cc66ff;">洗</div><div><strong style="color:#cc66ff;">洗脳</strong>：マインドコントロールによる行動不能。ターンが来ても攻撃・効果が使えない。</div></li>
+      <li><div class="ri" style="background:rgba(40,200,40,0.15);border-color:rgba(40,200,40,0.4);color:#44dd44;">拘</div><div><strong style="color:#44dd44;">拘束</strong>：そのターン中、行動不能状態。攻撃ができない。ターン終了時に解除。</div></li>
+      <li><div class="ri" style="background:rgba(180,80,255,0.15);border-color:rgba(180,80,255,0.4);color:#cc66ff;">洗</div><div><strong style="color:#cc66ff;">洗脳</strong>：永続的に攻撃ができない。</div></li>
     </ul>
   </div>
 
@@ -323,7 +322,7 @@ h2.rule-h{font-family:'Rajdhani',sans-serif;font-size:28px;font-weight:700;color
       </div>
     </div>
     <p style="font-size:12px;color:rgba(180,200,180,0.5);margin-top:12px;padding:10px 14px;background:rgba(0,0,0,0.25);border-radius:6px;">
-      いずれかの条件を満たした時点で即勝利。降参ボタンで任意に投了することもできる。
+      いずれかの条件を満たした時点で即勝利。SURRENDERボタンで任意に降参することもできる。
     </p>
   </div>
 
