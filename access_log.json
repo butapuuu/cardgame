@@ -3737,12 +3737,13 @@
     ]
   },
   "2026-05-30": {
-    "total": 2,
+    "total": 3,
     "hours": {
-      "22": 2
+      "22": 2,
+      "23": 1
     },
     "pages": {
-      "index.html": 1,
+      "index.html": 2,
       "room.html": 1
     },
     "visitors": [
@@ -3756,6 +3757,13 @@
       {
         "time": "2026-05-30 13:23:11",
         "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-05-30 14:10:22",
+        "page": "index.html",
         "device": "PC",
         "browser": "Chrome",
         "ip": "::1"

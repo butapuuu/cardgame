@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>操作説明 - ELEMON</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--gold:#c8a96e;--gold2:#ffe599;--dark:#080c08;--card-bg:rgba(10,25,10,0.88);--border:rgba(60,140,60,0.3);}
+html,body{background:var(--dark);color:#ddd;font-family:'Rajdhani',sans-serif;min-height:100vh;overflow-x:hidden;}
+#bg{position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 140% 50% at 50% 0%,rgba(20,60,20,0.7) 0%,transparent 60%),#080c08;}
+#bg::before{content:"";position:absolute;inset:0;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(40,100,40,0.05) 40px),
+  repeating-linear-gradient(60deg,transparent,transparent 39px,rgba(40,100,40,0.05) 40px);
+  animation:gridShift 30s linear infinite;}
+@keyframes gridShift{0%{transform:translate(0,0);}100%{transform:translate(40px,40px);}}
+#wrap{position:relative;z-index:10;padding:0 14px 60px;}
+
+#pageHeader{display:flex;align-items:center;justify-content:space-between;padding:18px 0 20px;border-bottom:1px solid rgba(60,140,60,0.2);margin-bottom:24px;}
+.header-logo{font-family:'Cinzel Decorative',serif;font-size:16px;letter-spacing:3px;background:linear-gradient(135deg,#4aff4a,var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.header-sub{font-size:9px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-top:2px;}
+.back-btn{background:linear-gradient(135deg,#0a1a0a,#1a2a1a);color:rgba(180,220,100,0.8);border:1px solid rgba(60,140,60,0.4);border-radius:6px;padding:6px 12px;font-size:10px;font-weight:bold;letter-spacing:2px;text-decoration:none;text-transform:uppercase;white-space:nowrap;}
+
+.section-title{font-size:10px;letter-spacing:5px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(200,180,80,0.3),transparent);}
+h2.guide-h{font-size:20px;font-weight:700;color:#eee;letter-spacing:1px;margin-bottom:12px;}
+
+.guide-block{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;position:relative;overflow:hidden;}
+.guide-block::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(80,200,80,0.35),transparent);}
+
+/* ステップ */
+.step-list{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+.step-item{display:flex;gap:12px;background:rgba(0,0,0,0.4);border:1px solid rgba(60,140,60,0.2);border-radius:10px;padding:14px;}
+.step-num{font-size:9px;letter-spacing:2px;color:var(--gold);flex-shrink:0;min-width:52px;}
+.step-body h4{font-size:14px;font-weight:700;color:#eee;margin-bottom:4px;}
+.step-body p{font-size:12px;color:rgba(180,200,180,0.6);line-height:1.6;}
+
+/* プレイマット */
+.mat-diagram{background:rgba(0,0,0,0.5);border:1px solid rgba(60,140,60,0.2);border-radius:10px;padding:12px;margin:12px 0;}
+.mat-row{display:flex;align-items:center;gap:4px;margin-bottom:5px;}
+.mat-row:last-child{margin-bottom:0;}
+.mat-label{font-size:8px;letter-spacing:1px;color:rgba(180,160,80,0.55);min-width:52px;text-align:right;flex-shrink:0;}
+.mat-zone{flex:1;border-radius:5px;padding:5px 8px;font-size:9px;font-weight:bold;letter-spacing:1px;text-align:center;min-height:28px;display:flex;align-items:center;justify-content:center;}
+.mz-enemy{background:rgba(80,0,0,0.3);border:1px solid rgba(180,60,60,0.3);color:rgba(220,120,120,0.8);}
+.mz-field-enemy{background:rgba(80,0,0,0.2);border:1px solid rgba(180,60,60,0.4);color:rgba(220,120,120,0.9);}
+.mz-direct{background:rgba(80,0,0,0.15);border:1px solid rgba(180,60,60,0.25);color:rgba(220,100,100,0.65);font-size:8px;}
+.mz-field{background:rgba(0,80,0,0.2);border:1px solid rgba(60,160,60,0.35);color:rgba(120,220,120,0.85);}
+.mz-my{background:rgba(0,60,0,0.3);border:1px solid rgba(60,140,60,0.35);color:rgba(120,200,120,0.8);}
+.mz-hand{background:rgba(0,40,0,0.4);border:1px solid rgba(40,120,40,0.3);color:rgba(100,180,100,0.65);font-size:8px;}
+.mz-fs{background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.3);color:rgba(255,215,0,0.65);font-size:8px;min-width:36px;max-width:36px;margin:0 2px;}
+.mz-divider{height:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent);margin:3px 0;}
+
+/* フロー */
+.flow-list{display:flex;flex-direction:column;gap:4px;margin:10px 0;}
+.flow-item{display:flex;align-items:center;gap:6px;}
+.flow-chip{background:rgba(0,0,0,0.4);border:1px solid rgba(60,140,60,0.25);border-radius:6px;padding:6px 10px;font-size:11px;color:#ccc;flex:1;}
+.flow-chip.hl{border-color:rgba(80,200,80,0.45);color:#88ff88;background:rgba(20,60,20,0.4);}
+.flow-arr{color:rgba(80,180,80,0.4);font-size:12px;flex-shrink:0;}
+
+/* リスト */
+.guide-list{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.guide-list li{display:flex;align-items:flex-start;gap:10px;background:rgba(0,0,0,0.3);border:1px solid rgba(60,140,60,0.2);border-radius:8px;padding:12px;font-size:12px;line-height:1.6;color:rgba(200,220,200,0.8);}
+.guide-list li .gi{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:rgba(60,160,60,0.2);border:1px solid rgba(80,200,80,0.35);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#88ff88;margin-top:1px;}
+.guide-list li strong{color:#eee;}
+
+.notice{background:rgba(255,200,0,0.05);border:1px solid rgba(255,200,0,0.2);border-radius:7px;padding:10px 12px;font-size:11px;color:rgba(220,200,100,0.7);line-height:1.7;margin-top:10px;}
+.notice::before{content:"⚠ ";color:var(--gold2);}
+.tip{background:rgba(0,180,100,0.05);border:1px solid rgba(0,180,100,0.18);border-radius:7px;padding:10px 12px;font-size:11px;color:rgba(100,220,160,0.7);line-height:1.7;margin-top:8px;}
+.tip::before{content:"💡 ";}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.col-box{background:rgba(0,0,0,0.4);border:1px solid rgba(60,140,60,0.2);border-radius:9px;padding:12px;}
+.col-box h4{font-size:12px;color:var(--gold);margin-bottom:6px;}
+.col-box p{font-size:11px;color:rgba(180,200,180,0.6);line-height:1.6;}
+
+/* ボタン擬似 */
+.btn-demo{display:inline-flex;align-items:center;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:bold;letter-spacing:1px;margin-bottom:4px;}
+.btn-end{background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;}
+.btn-sur{background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;border:1px solid #8a2222;}
+
+#footer{text-align:center;padding:32px 0 0;font-size:10px;letter-spacing:2px;color:rgba(80,120,80,0.35);}
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="wrap">
+
+  <header id="pageHeader">
+    <div>
+      <div class="header-logo">ELEMON</div>
+      <div class="header-sub">How to Play</div>
+    </div>
+    <a href="top_sp.html" class="back-btn">◈ TOP</a>
+  </header>
+
+  <!-- ルームの始め方 -->
+  <div class="guide-block">
+    <div class="section-title">Getting Started</div>
+    <h2 class="guide-h">ルーム対戦の始め方</h2>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">STEP 01</div>
+        <div class="step-body"><h4>デッキを作る</h4><p>「デッキ構築」から20枚・1属性のデッキを作成してスロットに保存。</p></div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">STEP 02</div>
+        <div class="step-body"><h4>ルームを作成・参加</h4><p>好きなルームIDを入力して作成。相手は同じIDで「参加」を押します。</p></div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">STEP 03</div>
+        <div class="step-body"><h4>対戦スタート</h4><p>両者が揃うと自動でゲーム開始。4桁の観戦IDで観戦参加も可能。</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 画面の見方 -->
+  <div class="guide-block">
+    <div class="section-title">Game Screen</div>
+    <h2 class="guide-h">ゲーム画面の見方</h2>
+    <div class="mat-diagram">
+      <div class="mat-row">
+        <div class="mat-label">相手情報</div>
+        <div class="mat-zone mz-enemy" style="max-width:80px;font-size:8px;">デッキ / 捨て場</div>
+        <div class="mat-zone mz-enemy">LIFE / ENERGY</div>
+      </div>
+      <div class="mat-row">
+        <div class="mat-label">相手手札</div>
+        <div class="mat-zone mz-enemy">裏向きの手札</div>
+      </div>
+      <div class="mat-row">
+        <div class="mat-label">直接攻撃</div>
+        <div class="mat-zone mz-direct">⚔ DIRECT ATTACK</div>
+      </div>
+      <div class="mat-row">
+        <div class="mat-label">相手フィールド</div>
+        <div class="mat-zone mz-field-enemy">相手ユニット（最大3体）</div>
+        <div class="mat-zone mz-fs">FIELD</div>
+      </div>
+      <div class="mz-divider"></div>
+      <div class="mat-row">
+        <div class="mat-label">自分フィールド</div>
+        <div class="mat-zone mz-fs">FIELD</div>
+        <div class="mat-zone mz-field">自分ユニット（最大3体）</div>
+      </div>
+      <div class="mat-row">
+        <div class="mat-label">自分情報</div>
+        <div class="mat-zone mz-my">LIFE / ENERGY</div>
+        <div class="mat-zone mz-my" style="max-width:80px;font-size:8px;">デッキ / 捨て場</div>
+      </div>
+      <div class="mat-row">
+        <div class="mat-label">手札</div>
+        <div class="mat-zone mz-hand">タップで使用・選択</div>
+      </div>
+    </div>
+    <div class="notice">上が相手、下が自分のエリアです。</div>
+  </div>
+
+  <!-- ユニット召喚 -->
+  <div class="guide-block">
+    <div class="section-title">Summon</div>
+    <h2 class="guide-h">ユニットの召喚</h2>
+    <div class="flow-list">
+      <div class="flow-item"><div class="flow-chip hl">手札のユニットをタップ</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip">「使用しますか？」確認ダイアログ</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip hl">OKで場に召喚</div></div>
+    </div>
+    <div class="two-col">
+      <div class="col-box"><h4>コスト</h4><p>エネルギー以下のコストのカードのみ使用できます。</p></div>
+      <div class="col-box"><h4>上限</h4><p>場に出せるユニットは最大3体まで。</p></div>
+    </div>
+    <div class="tip">召喚したターン中に攻撃できます（先攻1ターン目を除く）。</div>
+  </div>
+
+  <!-- スペル -->
+  <div class="guide-block">
+    <div class="section-title">Spell</div>
+    <h2 class="guide-h">スペルの使い方</h2>
+    <div class="flow-list">
+      <div class="flow-item"><div class="flow-chip hl">手札のスペルをタップ</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip">確認 → OK</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip hl">効果発動 → 捨て場へ</div></div>
+    </div>
+    <ul class="guide-list" style="margin-top:12px;">
+      <li><div class="gi">!</div><div><strong>対象選択が必要なスペル：</strong>「対象を選択してください」と表示されたら場のユニットをタップして選びます。</div></li>
+      <li><div class="gi">F</div><div><strong>フィールドスペル：</strong>場のFIELDスロットに設置。継続効果を発揮し、耐久0で破壊されます。</div></li>
+
+    </ul>
+  </div>
+
+  <!-- 攻撃 -->
+  <div class="guide-block">
+    <div class="section-title">Attack</div>
+    <h2 class="guide-h">攻撃の仕方</h2>
+
+    <h4 style="font-size:13px;color:var(--gold);margin-bottom:8px;">① ユニット攻撃</h4>
+    <div class="flow-list">
+      <div class="flow-item"><div class="flow-chip hl">自分のユニットをタップ（選択状態に）</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip">攻撃したい相手ユニットをタップ</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip hl">確認 → OK</div></div>
+    </div>
+    <div class="notice" style="margin-top:8px;">相手にユニットがいる場合、必ずいずれかに攻撃。直接攻撃は不可。</div>
+
+    <h4 style="font-size:13px;color:var(--gold);margin:14px 0 8px;">② 直接攻撃（相手の場が空の時）</h4>
+    <div class="flow-list">
+      <div class="flow-item"><div class="flow-chip hl">自分のユニットをタップ（選択）</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip">「⚔ DIRECT ATTACK」をタップ</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip hl">確認 → OK</div></div>
+    </div>
+
+    <h4 style="font-size:13px;color:var(--gold);margin:14px 0 8px;">③ フィールドスペルへの攻撃</h4>
+    <div class="flow-list">
+      <div class="flow-item"><div class="flow-chip hl">自分のユニットをタップ（選択）</div></div>
+      <div class="flow-item"><div class="flow-arr" style="margin-left:40px;">▼</div></div>
+      <div class="flow-item"><div class="flow-chip">相手のFIELDスロットのカードをタップ</div></div>
+    </div>
+    <div class="tip" style="margin-top:8px;">選択を解除したい時は同じユニットをもう一度タップ。</div>
+  </div>
+
+  <!-- ボタン説明 -->
+  <div class="guide-block">
+    <div class="section-title">UI Guide</div>
+    <h2 class="guide-h">画面情報の見方</h2>
+    <ul class="guide-list">
+      <li><div class="gi">①</div><div><span class="btn-demo btn-end">TURN END</span><br><strong>ターン終了</strong>：行動をすべて終えたらタップ。手札が8枚以上あると捨て処理が要求されます。</div></li>
+      <li><div class="gi">②</div><div><span class="btn-demo btn-sur">SURRENDER</span><br><strong>降参</strong>：確認後に即投了。相手の勝利になります。</div></li>
+      <li><div class="gi">③</div><div><strong style="color:#eee">LOG ボタン（ヘッダー）</strong>：そのゲームの全行動履歴をモーダルで確認できます。</div></li>
+      <li><div class="gi">④</div><div><strong style="color:#eee">捨て場パイル</strong>：自分・相手の捨て場パイルをタップするとカード一覧が表示されます。</div></li>
+      <li><div class="gi">⑤</div><div><strong style="color:#eee">カードプレビュー</strong>：場のカードを長押しすると大きな画像で確認できます。</div></li>
+      <li><div class="gi">⑥</div><div><strong style="color:#eee">🎵 / 🔊 ボタン</strong>：BGMと効果音のON/OFFを切り替えます。</div></li>
+    </ul>
+  </div>
+
+  <!-- 対戦後 -->
+  <div class="guide-block">
+    <div class="section-title">After Battle</div>
+    <h2 class="guide-h">対戦終了後</h2>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">再戦</div>
+        <div class="step-body"><h4>このルームで再戦</h4><p>終了後のダイアログからデッキ変更して再戦できます。両者が押すと開始。</p></div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">観戦</div>
+        <div class="step-body"><h4>観戦機能</h4><p>ロビーで4桁の観戦IDを入力すると対戦を観戦できます。手札は非公開。</p></div>
+      </div>
+    </div>
+  </div>
+
+  <footer id="footer">ELEMON HOW TO PLAY &nbsp;|&nbsp; © 2026</footer>
+</div>
+</body>
+</html>
