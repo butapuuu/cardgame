@@ -973,6 +973,20 @@ function spRenderFieldSpell(elementId,fsData){
   const dur=document.createElement("div"); dur.className="sp-stat";
   dur.textContent="耐久:"+fsData.durability;
   div.appendChild(img); div.appendChild(dur);
+
+  // ★崩壊（DES_PERM_SPELL）対象選択モード：自分・相手どちらもタップで破壊
+  if(spSelectTargetMode && spSelectTargetMode.type==="fieldSpell"){
+    div.style.outline="3px solid #ff66ff";
+    div.style.borderRadius="6px";
+    div.onclick=()=>{
+      const side = elementId==="spMyFieldSpell" ? "my" : "op";
+      socket.emit("action",{type:"select_target",fieldSpellTarget:side});
+      spSelectTargetMode=null;
+    };
+    el.appendChild(div);
+    return;
+  }
+
   // 相手フィールドスペルへの攻撃
   if(elementId==="spEnemyFieldSpell"){
     div.onclick=()=>{
@@ -1241,15 +1255,15 @@ socket.on("selectTarget",(data)=>{
   notice.innerText="⚔ "+data.message; notice.style.display="block";
   setTimeout(()=>{notice.style.display="none";},2500);
   if(data.type==="fieldSpell"){
-    const myFs=spLatestState?.myFieldSpell, enFs=spLatestState?.enemyFieldSpell;
-    let msg="崩壊：破壊するフィールドスペルを選択\n";
-    if(myFs)msg+="[自分] "+myFs.name+"（耐久"+myFs.durability+"）\n";
-    if(enFs)msg+="[相手] "+enFs.name+"（耐久"+enFs.durability+"）\n";
-    msg+="OKで相手、キャンセルで自分のFSを破壊";
-    spConfirm(msg).then(choice=>{
-      socket.emit("action",{type:"select_target",fieldSpellTarget:choice?"op":"my"});
-      spSelectTargetMode=null;
-    });
+    spSelectTargetMode=data;
+    const notice=document.getElementById("spTargetNotice");
+    if(notice){
+      notice.innerText="⚔ 破壊するフィールドスペルをタップしてください";
+      notice.style.display="block";
+      setTimeout(()=>{notice.style.display="none";},2500);
+    }
+    spRenderFieldSpell("spMyFieldSpell", spLatestState?.myFieldSpell);
+    spRenderFieldSpell("spEnemyFieldSpell", spLatestState?.enemyFieldSpell);
     return;
   }
   if(data.type==="lifeInput"){

@@ -2026,6 +2026,22 @@ const op=getOpponent(socket.id);
         return;
       }
 
+      // ★崩壊（DES_PERM_SPELL）：フィールドスペル選択
+      if(eff==="DES_PERM_SPELL"){
+        const target=data.fieldSpellTarget;
+        const targetPlayer=target==="my"?p:op;
+        if(!game.fieldSpell[targetPlayer]){
+          socket.emit("message","対象のフィールドスペルがありません");
+          game.pendingTarget=pt;
+          socket.emit("selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択してください"});
+          send();return;
+        }
+        destroyFieldSpell(targetPlayer);
+        game.pendingTarget=null;
+        send();
+        return;
+      }
+
       const targetBoard = targetSide==="my" ? game.board[p] : game.board[op];
       const targetUnit = targetBoard ? targetBoard[targetIndex] : null;
 
@@ -3178,6 +3194,22 @@ function roomHandleSelectTarget(room, socket, data){
     roomNotifyPendingTarget(room);roomSend(room);return;
   }
 
+  // ★崩壊（DES_PERM_SPELL）：フィールドスペル選択
+  if(eff==="DES_PERM_SPELL"){
+    const tgt=data.fieldSpellTarget;
+    const tp=tgt==="my"?p:op;
+    if(!room.fieldSpell[tp]){
+      socket.emit("message","対象のフィールドスペルがありません");
+      room.pendingTarget=pt;
+      socket.emit("selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択"});
+      roomSend(room);return;
+    }
+    roomDestroyFieldSpell(room,tp);
+    room.pendingTarget=null;
+    roomSend(room);
+    return;
+  }
+
   const targetBoard=targetSide==="my"?room.board[p]:room.board[op];
   const targetUnit=targetBoard?targetBoard[targetIndex]:null;
   if(!targetUnit){socket.emit("message","対象が見つかりません");return;}
@@ -4256,6 +4288,22 @@ function csPlayerSelectTarget(cs,data){
       }
     } else { cs.pendingTarget=null; }
     csSend(cs); return;
+  }
+
+ // ★崩壊（DES_PERM_SPELL）：フィールドスペル選択
+  if(eff==="DES_PERM_SPELL"){
+    const tgt=data.fieldSpellTarget;
+    const tp=tgt==="my"?p:op;
+    if(!cs.fieldSpell[tp]){
+      csEmit(cs,"message","対象のフィールドスペルがありません");
+      cs.pendingTarget=pt;
+      csEmit(cs,"selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択"});
+      csSend(cs);return;
+    }
+    csDestroyFS(cs,tp);
+    cs.pendingTarget=null;
+    csSend(cs);
+    return;
   }
 
   // ユニット対象
