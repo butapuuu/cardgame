@@ -1271,6 +1271,21 @@ function renderFieldSpell(elementId, fsData){
   div.appendChild(img);
   div.appendChild(dur);
 
+// ★崩壊（DES_PERM_SPELL）対象選択モード：自分・相手どちらもクリックで破壊
+  if(selectTargetMode && selectTargetMode.type==="fieldSpell"){
+    div.style.outline="3px solid #ff66ff";
+    div.style.borderRadius="6px";
+    div.style.animation="popIn 0.4s ease-out";
+    div.onclick=()=>{
+      const side = elementId==="myFieldSpell" ? "my" : "op";
+      socket.emit("action",{type:"select_target",fieldSpellTarget:side});
+      selectTargetMode=null;
+      const el=document.getElementById("targetNotice"); if(el) el.remove();
+    };
+    el.appendChild(div);
+    return;
+  }
+
   // ★相手フィールドスペルへの攻撃
   if(elementId==="enemyFieldSpell"){
     div.onclick=()=>{
@@ -2059,14 +2074,15 @@ socket.on("selectTarget",(data)=>{
   document.getElementById("turn").innerText="⚔ "+data.message;
 
 if(data.type==="fieldSpell"){
-    const myFs=latestGameState?.myFieldSpell;
-    const enFs=latestGameState?.enemyFieldSpell;
-    let msg="崩壊：破壊するフィールドスペルを選択\n";
-    if(myFs) msg+=`[自分] ${myFs.name}（耐久${myFs.durability}）\n`;
-    if(enFs) msg+=`[相手] ${enFs.name}（耐久${enFs.durability}）\n`;
-    const choice=confirm(msg+"OKで相手、キャンセルで自分のフィールドスペルを破壊");
-    const target=choice?"op":"my";
-    socket.emit("action",{type:"select_target",fieldSpellTarget:target});
+    selectTargetMode=data;
+    const notice=document.createElement("div");
+    notice.id="targetNotice";
+    notice.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.85);color:#ffe066;padding:16px 28px;border-radius:10px;font-size:15px;z-index:500;border:2px solid #ffe066;text-align:center;pointer-events:none;";
+    notice.innerText="⚔ 破壊するフィールドスペルをクリックしてください";
+    document.body.appendChild(notice);
+    setTimeout(()=>{ const el=document.getElementById("targetNotice"); if(el) el.remove(); },2500);
+    renderFieldSpell("myFieldSpell", latestGameState?.myFieldSpell);
+    renderFieldSpell("enemyFieldSpell", latestGameState?.enemyFieldSpell);
     return;
   }
 
