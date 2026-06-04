@@ -417,7 +417,8 @@ function damageLife(p, amount){
 function damageAllUnits(targetPlayer, amount, attackerPlayer){
   const toDestroy=[];
   game.board[targetPlayer].forEach((u,i)=>{
-    const dmg = u.damageReduce ? Math.min(1, amount) : amount;
+    let dmg = u.damageReduce ? Math.min(1, amount) : amount;
+    if(u.barrier) dmg=0;
     u.hp -= dmg;
     if(dmg>0) sendDamagePop(targetPlayer, dmg, false, i);
     if(u.hp<=0) toDestroy.push(i);
@@ -1354,6 +1355,7 @@ function destroyFieldSpell(ownerPlayer){
     addLog(ownerPlayer,`「${fs.name}」破壊：相手場の全ユニットATK+1（元に戻す）`);
   }
   addLog(ownerPlayer,`フィールドスペル「${fs.name}」が破壊されました`);
+  game.graves[ownerPlayer].push({name:fs.name});
   delete game.fieldSpell[ownerPlayer];
 }
 
@@ -1781,13 +1783,13 @@ const op=getOpponent(socket.id);
           addLog(socket.id,`「${atk.name}」攻撃時効果：相手ライフ-1`);
         }
         if(atkCard && atkCard.attackEffect==="HAN1"){
-          if(game.hands[op].length>=2){
+          if(game.hands[op].length>=3){
             const discarded=discardRandom(op);
             addLog(socket.id,`「${atk.name}」攻撃時効果：相手手札「${discarded||"なし"}」をランダム破棄`);
             const _sh=io.sockets.sockets.get(socket.id);
             if(_sh&&discarded) _sh.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
           }else{
-            addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が1枚以下のため不発`);
+            addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が2枚以下のため不発`);
           }
         }
         if(atkCard && atkCard.attackEffect==="ATTACK_HEAL_DMG"){
@@ -1808,13 +1810,13 @@ const op=getOpponent(socket.id);
           showEffect(atk.name);
         }
         if(atkCard && atkCard.attackEffect==="HAN1"){
-          if(game.hands[op].length>=2){
+          if(game.hands[op].length>=3){
             const discarded=discardRandom(op);
             addLog(socket.id,`「${atk.name}」攻撃時効果：相手手札「${discarded||"なし"}」をランダム破棄`);
             const _sh=io.sockets.sockets.get(socket.id);
             if(_sh&&discarded) _sh.emit("message",`相手の手札「${discarded}」が捨て場に送られました`);
           }else{
-            addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が1枚以下のため不発`);
+            addLog(socket.id,`「${atk.name}」攻撃時効果：相手の手札が2枚以下のため不発`);
           }
         }
         if(atkCard && atkCard.attackEffect==="L_DMG1"){
@@ -2894,13 +2896,13 @@ function roomDestroyFieldSpell(room, ownerPlayer){
   if(eff==="PERM_SPELL_IRON_FACTORY"){room.board[ownerPlayer].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット"){u.atk=Math.max(0,u.atk-1);}});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場のギアトークン等ATK-1`);}
   if(eff==="PERM_SPELL_DARK_DEBUFF"){const op=roomGetOpponent(room,ownerPlayer);room.board[op].forEach(u=>{u.atk+=1;});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：相手場ATK+1`);}
   roomAddLog(room,ownerPlayer,`フィールドスペル「${fs.name}」が破壊されました`);
+  room.graves[ownerPlayer].push({name:fs.name});
   delete room.fieldSpell[ownerPlayer];
 }
 
 function roomDamageAllUnits(room, targetPlayer, amount, attackerPlayer){
-  const toDestroy=[];
-  room.board[targetPlayer].forEach((u,i)=>{
-    const dmg=u.damageReduce?Math.min(1,amount):amount;
+  let dmg=u.damageReduce?Math.min(1,amount):amount;
+    if(u.barrier) dmg=0;
     u.hp-=dmg;
     if(dmg>0) roomSendDamagePop(room,targetPlayer,dmg,false,i);
     if(u.hp<=0) toDestroy.push(i);
@@ -3358,7 +3360,7 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
     if(atk.hp<=0){const ai=room.board[p].indexOf(atk);if(ai!==-1){room.board[p].splice(ai,1);if(!atk.isToken)room.graves[p].push(atk);roomAddLog(room,p,`→「${atk.name}」が反撃で倒れた`);roomTriggerDestroyEffect(room,atk,p);}}
     if(atkCard&&atkCard.attackEffect&&!atk.rollbackAttack&&atkCard.attackEffect!=="ALL_UNIT_DMG1")roomShowEffect(room,atk.name);
     if(atkCard&&atkCard.attackEffect==="L_DMG1"){roomDamageLife(room,op,1);roomAddLog(room,p,`攻撃時効果：ライフ-1`);}
-    if(atkCard&&atkCard.attackEffect==="HAN1"){if(room.hands[op].length>=2){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`攻撃時効果：相手手札「${d||"なし"}」破棄`);const sh=io.sockets.sockets.get(p);if(sh&&d)sh.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`攻撃時効果：ハンデス不発`);}}
+    if(atkCard&&atkCard.attackEffect==="HAN1"){if(room.hands[op].length>=3){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`攻撃時効果：相手手札「${d||"なし"}」破棄`);const sh=io.sockets.sockets.get(p);if(sh&&d)sh.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`攻撃時効果：ハンデス不発`);}}
     if(atkCard&&atkCard.attackEffect==="ATTACK_HEAL_DMG"){room.life[p]+=aad;roomAddLog(room,p,`攻撃時効果：自分ライフ+${aad}`);}
   }else{
     const ap=isSecond?Math.floor(atk.atk/2):atk.atk;
@@ -3368,7 +3370,7 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
     (room.spectators||[]).forEach(sid=>{const ss=io.sockets.sockets.get(sid);if(ss)ss.emit("hitEffect",{targetIdx:-1,attr:roomGetAttr(atk.name)||"neutral",attackerIdx:data.a,hasAttackAnim:true,isDirect:true,attackerIsP1:socket.id===room.player1});});
     if(atkCard&&atkCard.attackEffect&&!atk.rollbackAttack)roomShowEffect(room,atk.name);
     if(atkCard&&atkCard.attackEffect==="L_DMG1"){roomDamageLife(room,op,1);roomAddLog(room,p,`攻撃時効果：ライフ-1`);}
-    if(atkCard&&atkCard.attackEffect==="HAN1"){if(room.hands[op].length>=2){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`攻撃時効果：相手手札「${d||"なし"}」破棄`);const sh=io.sockets.sockets.get(p);if(sh&&d)sh.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`攻撃時効果：ハンデス不発`);}}
+    if(atkCard&&atkCard.attackEffect==="HAN1"){if(room.hands[op].length>=3){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`攻撃時効果：相手手札「${d||"なし"}」破棄`);const sh=io.sockets.sockets.get(p);if(sh&&d)sh.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`攻撃時効果：ハンデス不発`);}}
     if(atkCard&&atkCard.attackEffect==="ATTACK_HEAL_DMG"){room.life[p]+=ap;roomAddLog(room,p,`攻撃時効果：自分ライフ+${ap}`);}
   }
   roomNotifyPendingTarget(room);roomSend(room);
@@ -3664,6 +3666,7 @@ function csDestroyFS(cs,owner){
   if(e==="PERM_SPELL_IRON_FACTORY")cs.board[owner].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット")u.atk=Math.max(0,u.atk-1);});
   if(e==="PERM_SPELL_DARK_DEBUFF")cs.board[op].forEach(u=>{u.atk+=1;});
   csLog(cs,owner,`フィールドスペル「${fs.name}」が破壊されました`);
+  cs.graves[owner].push({name:fs.name});
   delete cs.fieldSpell[owner];
 }
 
@@ -4181,7 +4184,7 @@ function csPlayerAttackEffect(cs,atk,op,atkPow){
   const p=cs.player;
   csShowEffect(cs,atk.name);
   if(c.attackEffect==="L_DMG1"){csDamageLife(cs,op,1);csLog(cs,p,`「${atk.name}」攻撃時効果：相手ライフ-1`);}
-  if(c.attackEffect==="HAN1"){if(cs.hands[op].length>=2){const d=csDiscardRandom(cs,op);csLog(cs,p,`「${atk.name}」攻撃時効果：相手手札「${d||"なし"}」破棄`);const s=csSock(cs);if(s&&d)s.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else csLog(cs,p,`「${atk.name}」攻撃時効果：相手手札1枚以下のため不発`);}
+  if(c.attackEffect==="HAN1"){if(cs.hands[op].length>=3){const d=csDiscardRandom(cs,op);csLog(cs,p,`「${atk.name}」攻撃時効果：相手手札「${d||"なし"}」破棄`);const s=csSock(cs);if(s&&d)s.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else csLog(cs,p,`「${atk.name}」攻撃時効果：相手手札2枚以下のため不発`);}
   if(c.attackEffect==="ATTACK_HEAL_DMG"){cs.life[p]+=atkPow;csLog(cs,p,`「${atk.name}」攻撃時効果：自分ライフ+${atkPow}`);}
   if(c.attackEffect==="ALL_UNIT_DMG1"){csDamageAllUnits(cs,op,1);csLog(cs,p,`「${atk.name}」攻撃時効果：相手全体1ダメージ`);}
 }
@@ -4646,7 +4649,7 @@ function csCpuAttackEffect(cs,atk,atkPow){
   const p=CPU_ID, op=cs.player;
   csShowEffect(cs,atk.name);
   if(c.attackEffect==="L_DMG1"){csDamageLife(cs,op,1);csLog(cs,p,`「${atk.name}」攻撃時効果：相手ライフ-1`);}
-  if(c.attackEffect==="HAN1"){if(cs.hands[op].length>=2){const d=csDiscardRandom(cs,op);csLog(cs,p,`「${atk.name}」攻撃時効果：相手手札「${d||"なし"}」破棄`);const s=csSock(cs);if(s&&d)s.emit("message",`あなたの手札「${d}」が捨て場に送られました`);}}
+  if(c.attackEffect==="HAN1"){if(cs.hands[op].length>=3){const d=csDiscardRandom(cs,op);csLog(cs,p,`「${atk.name}」攻撃時効果：相手手札「${d||"なし"}」破棄`);const s=csSock(cs);if(s&&d)s.emit("message",`あなたの手札「${d}」が捨て場に送られました`);}}
   if(c.attackEffect==="ATTACK_HEAL_DMG"){cs.life[p]+=atkPow;csLog(cs,p,`「${atk.name}」攻撃時効果：自分ライフ+${atkPow}`);}
   if(c.attackEffect==="ALL_UNIT_DMG1"){csDamageAllUnits(cs,op,1);csLog(cs,p,`「${atk.name}」攻撃時効果：相手全体1ダメージ`);}
 }
