@@ -3791,5 +3791,59 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-06-05": {
+    "total": 6,
+    "hours": {
+      "23": 6
+    },
+    "pages": {
+      "index.html": 2,
+      "room.html": 4
+    },
+    "visitors": [
+      {
+        "time": "2026-06-05 14:18:32",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-05 14:18:35",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-05 14:18:38",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-05 14:18:54",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-05 14:23:08",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-05 14:23:11",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }

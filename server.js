@@ -2901,7 +2901,9 @@ function roomDestroyFieldSpell(room, ownerPlayer){
 }
 
 function roomDamageAllUnits(room, targetPlayer, amount, attackerPlayer){
-  let dmg=u.damageReduce?Math.min(1,amount):amount;
+  const toDestroy=[];
+  room.board[targetPlayer].forEach((u,i)=>{
+    let dmg=u.damageReduce?Math.min(1,amount):amount;
     if(u.barrier) dmg=0;
     u.hp-=dmg;
     if(dmg>0) roomSendDamagePop(room,targetPlayer,dmg,false,i);
