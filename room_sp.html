@@ -395,6 +395,7 @@ let spPrevMyDeckCount=null,spPrevEnemyDeckCount=null;
 let spPrevMyBoardCount=null,spPrevEnemyBoardCount=null;
 let spPrevAllLogsLen=0;
 let spPendingAttackerIndex=null;
+let _spCounterDmgPos=null;
 let spHitActiveMy=false,spHitActiveEnemy=false;
 let spHitMyTimer=null,spHitEnemyTimer=null;
 let _spTurnChangeFinishTime=0,_spPrevTurn=null;
@@ -584,6 +585,10 @@ function spReplayRoom(){
   const old=document.getElementById("spAfterGameDialog");if(old)old.remove();
   spCloseResult();
   spResultShown=false;
+  // ★再戦時にBGMを確実に再開
+  _bgmPlaying=false;
+  spStopBGM();
+  setTimeout(()=>spStartBGM(),200);
   if(deck){
     spApplyAttrColor(spDetectDeckAttr(deck));
     socket.emit("roomAction",{type:"reset",deck});
@@ -676,20 +681,27 @@ socket.on("damagePop",(data)=>{
   const now=Date.now();if(!window._spDpLast)window._spDpLast={};
   const key=`${data.amount}_${data.isLife}_${data.unitIdx}_${data.isEnemy}_${data.isCounter||false}`;
   if(window._spDpLast[key]&&now-window._spDpLast[key]<200)return;
-  window._spDpLast[key]=now;setTimeout(()=>_spShowDP(data),80);
+  window._spDpLast[key]=now;
+  const delay=data.isCounter?250:80;
+  setTimeout(()=>_spShowDP(data),delay);
 });
 function _spShowDP(data){
   const{amount,isLife,unitIdx,isEnemy}=data;let cx,cy;
+  if(data.isCounter&&!isEnemy&&_spCounterDmgPos){
+    cx=_spCounterDmgPos.x;cy=_spCounterDmgPos.y;
+    const pop=document.createElement("div");pop.className="sp-damage-pop dmg-unit";pop.innerText="-"+amount;pop.style.left=cx+"px";pop.style.top=cy+"px";document.body.appendChild(pop);setTimeout(()=>pop.remove(),1300);
+    return;
+  }
   if(isLife){if(isEnemy){const el=document.getElementById("spDirectZone");if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=150;}}else{const el=document.getElementById("spHandArea");if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top;}else{cx=window.innerWidth/2;cy=window.innerHeight-100;}}}
   else if(unitIdx===-2){const fsId=isEnemy?"spEnemyFieldSpell":"spMyFieldSpell";const fsEl=document.getElementById(fsId)?.querySelector(".sp-card");if(fsEl){const r=fsEl.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
-  else{const cid=isEnemy?"spEnemyUnits":"spMyUnits";const c=document.getElementById(cid);if(c){const cards=Array.from(c.querySelectorAll(".sp-card"));let tc=null;if(isEnemy){tc=cards[unitIdx]||null;}else{const ml=spLatestState?.myBoard?.length??0,dl=cards.length;if(ml===dl&&dl>0)tc=cards[dl-1-unitIdx]||null;else if(dl>0)tc=cards[Math.min(unitIdx,dl-1)]||null;}if(tc){const r=tc.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
+  else{const cid=isEnemy?"spEnemyUnits":"spMyUnits";const c=document.getElementById(cid);if(c){const cards=Array.from(c.querySelectorAll(".sp-card"));let tc=null;if(isEnemy){tc=cards[unitIdx]||null;}else{const dl=cards.length;if(data.isCounter){if(dl>0)tc=cards[dl-1-unitIdx]||cards[Math.min(unitIdx,dl-1)]||null;}else{const ml=spLatestState?.myBoard?.length??0;if(ml===dl&&dl>0)tc=cards[dl-1-unitIdx]||null;else if(dl>0)tc=cards[Math.min(unitIdx,dl-1)]||null;}}if(tc){const r=tc.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
   const pop=document.createElement("div");pop.className="sp-damage-pop"+(isLife?" dmg-life":" dmg-unit")+(isEnemy?" dmg-enemy":"");pop.innerText="-"+amount;pop.style.left=cx+"px";pop.style.top=cy+"px";document.body.appendChild(pop);setTimeout(()=>pop.remove(),1300);
 }
 
 // ===== hitEffect =====
 socket.on("hitEffect",(data)=>{
   if(data.isEnemy){spHitActiveEnemy=true;clearTimeout(spHitEnemyTimer);spHitEnemyTimer=setTimeout(()=>{spHitActiveEnemy=false;},520);}
-  else{spHitActiveMy=true;clearTimeout(spHitMyTimer);spHitMyTimer=setTimeout(()=>{spHitActiveMy=false;},520);}
+  else{spHitActiveMy=true;clearTimeout(spHitMyTimer);spHitMyTimer=setTimeout(()=>{spHitActiveMy=false;},620);}
   const attr=data.attr||"fire";
 
   // ★観戦者用
@@ -892,6 +904,7 @@ socket.on("roomUpdate",(g)=>{
   document.getElementById("spWinner").innerText=g.winner?(spPlayerRole==="spectator"?"対戦終了":(g.winner===socket.id?"YOU WIN！":"YOU LOSE")):"";
   if(g.winner&&!spResultShown&&spPlayerRole!=="spectator")setTimeout(()=>spShowResult(g.winner===socket.id),300);
   if(!g.winner){
+      if(spResultShown){ _bgmPlaying=false; spStartBGM(); }
       spResultShown=false;
       const old=document.getElementById("spAfterGameDialog");if(old)old.remove();
       spCloseResult();
@@ -964,6 +977,8 @@ socket.on("roomUpdate",(g)=>{
           const atkIdx=spSelectedUnitIndex,tIdx=i,atkN=spSelectedUnitName;
           spConfirm(atkN+" で "+c.name+" に攻撃？").then(ok=>{
             if(!ok){spClearSelection();return;}
+            // ★反撃ダメージ表示用に攻撃カードの定位置を保存
+            { const myC=document.getElementById("spMyUnits");const myCards=myC?myC.querySelectorAll(".sp-card"):[];const ml=myCards.length;const di=ml>0?ml-1-atkIdx:atkIdx;const ac=myCards[di];if(ac){const r=ac.getBoundingClientRect();_spCounterDmgPos={x:r.left+r.width/2,y:r.top+r.height/2};}else _spCounterDmgPos=null; }
             spClearSelection();
             spPlayAttackAnim(atkIdx,tIdx,false);
             setTimeout(()=>{
@@ -1016,7 +1031,7 @@ socket.on("roomUpdate",(g)=>{
     const mes=myUnits.querySelectorAll(".sp-unit-slot-empty"),mc=myUnits.querySelectorAll(".sp-card").length;mes.forEach((s,i)=>{s.style.display=i<(3-mc)?"flex":"none";});
     if(spPendingAttackerIndex!==null){const cards=myUnits.querySelectorAll(".sp-card");const di=g.myBoard.length-1-spPendingAttackerIndex;if(cards[di]){spSelectedUnitIndex=spPendingAttackerIndex;spSelectedUnitName=g.myBoard[spPendingAttackerIndex]?.name||"";cards[di].classList.add("selected");}spPendingAttackerIndex=null;}
   };
-  if(spHitActiveMy)setTimeout(_renderMyField,400);else _renderMyField();
+  if(spHitActiveMy)setTimeout(_renderMyField,550);else _renderMyField();
 
   // 手札捨て待ち
   if(g.pendingDiscard&&g.pendingDiscard>0){if(g.isHandLimit)document.getElementById("spTurnLabel").innerText=`⚠️ ${g.pendingDiscard}枚捨ててください`;else if(g.isSoulTrade)document.getElementById("spTurnLabel").innerText="🔄 ソウルトレード：捨てるカードを選択";}

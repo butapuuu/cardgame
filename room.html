@@ -365,6 +365,7 @@ let prevMyDeckCount=null,prevEnemyDeckCount=null;
 let prevMyBoardCount=null,prevEnemyBoardCount=null;
 let prevAllLogsLen=0;
 let pendingAttackerIndex=null;
+let _counterDmgPos=null;
 let hitEffectActiveEnemy=false,hitEffectActiveMy=false;
 let hitEffectEnemyTimer=null,hitEffectMyTimer=null;
 let _prevTurn=null,_turnChangeFinishTime=0;
@@ -524,6 +525,9 @@ function replayRoom(){
   const old=document.getElementById("afterGameDialog");if(old)old.remove();
   closeResult();
   resultShown=false;
+  // ★再戦時にBGMを確実に再開
+  stopBGM();
+  setTimeout(()=>startBGM(),200);
   // デッキ変更あり→新デッキで再戦、なし→サーバーのcustomDeckをそのまま使用
   if(deck){
     applyAttrColor(detectDeckAttr(deck));
@@ -655,20 +659,28 @@ socket.on("damagePop",(data)=>{
   const key=`${data.amount}_${data.isLife}_${data.unitIdx}_${data.isEnemy}_${data.isCounter||false}`;
   if(window._dpLast[key]&&now-window._dpLast[key]<200)return;
   window._dpLast[key]=now;
-  setTimeout(()=>_showDamagePop(data),80);
+  const delay=data.isCounter?250:80;
+  setTimeout(()=>_showDamagePop(data),delay);
 });
 function _showDamagePop(data){
   const{amount,isLife,unitIdx,isEnemy}=data;let cx,cy;
+  if(data.isCounter&&!isEnemy&&_counterDmgPos){
+    cx=_counterDmgPos.x;cy=_counterDmgPos.y;
+    const pop=document.createElement("div");pop.className="damage-pop dmg-unit";pop.innerText="-"+amount;pop.style.left=cx+"px";pop.style.top=cy+"px";document.body.appendChild(pop);setTimeout(()=>pop.remove(),1300);
+    return;
+  }
   if(isLife){if(isEnemy){const el=document.getElementById("enemyPlayerZone");if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=200;}}else{const el=document.getElementById("handArea");if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top;}else{cx=window.innerWidth/2;cy=window.innerHeight-150;}}}
   else if(unitIdx===-2){const fsId=isEnemy?"enemyFieldSpell":"myFieldSpell";const fsEl=document.getElementById(fsId)?.querySelector(".card");if(fsEl){const r=fsEl.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
-  else{const cid=isEnemy?"enemyUnits":"myUnits";const c=document.getElementById(cid);if(c){const cards=Array.from(c.querySelectorAll(".card"));let tc=null;if(isEnemy){tc=cards[unitIdx]||null;}else{const ml=latestState?.myBoard?.length??0,dl=cards.length;if(ml===dl&&dl>0)tc=cards[dl-1-unitIdx]||null;else if(dl>0)tc=cards[Math.min(unitIdx,dl-1)]||null;}if(tc){const r=tc.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
+  else{const cid=isEnemy?"enemyUnits":"myUnits";const c=document.getElementById(cid);if(c){const cards=Array.from(c.querySelectorAll(".card"));let tc=null;if(isEnemy){tc=cards[unitIdx]||null;
+}else{const dl=cards.length;if(data.isCounter){if(dl>0)tc=cards[dl-1-unitIdx]||cards[Math.min(unitIdx,dl-1)]||null;}else{const ml=latestState?.myBoard?.length??0;if(ml===dl&&dl>0)tc=cards[dl-1-unitIdx]||null;else if(dl>0)tc=cards[Math.min(unitIdx,dl-1)]||null;}}
+if(tc){const r=tc.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
   const pop=document.createElement("div");pop.className="damage-pop"+(isLife?" dmg-life":" dmg-unit")+(isEnemy?" dmg-enemy":"");pop.innerText="-"+amount;pop.style.left=cx+"px";pop.style.top=cy+"px";document.body.appendChild(pop);setTimeout(()=>pop.remove(),1300);
 }
 
 // ===== hitEffect =====
 socket.on("hitEffect",(data)=>{
   if(data.isEnemy){hitEffectActiveEnemy=true;clearTimeout(hitEffectEnemyTimer);hitEffectEnemyTimer=setTimeout(()=>{hitEffectActiveEnemy=false;},520);}
-  else{hitEffectActiveMy=true;clearTimeout(hitEffectMyTimer);hitEffectMyTimer=setTimeout(()=>{hitEffectActiveMy=false;},520);}
+  else{hitEffectActiveMy=true;clearTimeout(hitEffectMyTimer);hitEffectMyTimer=setTimeout(()=>{hitEffectActiveMy=false;},620);}
   const attr=data.attr||"fire";
 
   // ★観戦者用
@@ -864,6 +876,7 @@ socket.on("roomUpdate",(g)=>{
   document.getElementById("winner").innerText=g.winner?(playerRole==="spectator"?"対戦終了":(g.winner===socket.id?"YOU WIN！":"YOU LOSE")):"";
   if(g.winner&&!resultShown&&playerRole!=="spectator")setTimeout(()=>showResult(g.winner===socket.id),300);
   if(!g.winner){
+      if(resultShown){ stopBGM(); setTimeout(()=>startBGM(),200); }
       resultShown=false;
       const old=document.getElementById("afterGameDialog");if(old)old.remove();
       closeResult();
@@ -925,6 +938,8 @@ socket.on("roomUpdate",(g)=>{
         if(selectedUnitIndex!==null){
           if(confirm(`${selectedUnitName} で ${c.name} に攻撃？`)){
             const ai=selectedUnitIndex;const ti=i;const sn=selectedUnitName;
+            // ★反撃ダメージ表示用に攻撃カードの定位置を保存
+            { const myC=document.getElementById("myUnits");const myCards=myC?myC.querySelectorAll(".card"):[];const ml=myCards.length;const di=ml>0?ml-1-ai:ai;const ac=myCards[di];if(ac){const r=ac.getBoundingClientRect();_counterDmgPos={x:r.left+r.width/2,y:r.top+r.height/2};}else _counterDmgPos=null; }
             clearSelection();
             playAttackAnim(ai,ti,false);
             setTimeout(()=>{
@@ -1006,7 +1021,7 @@ socket.on("roomUpdate",(g)=>{
     mes.forEach((s,i)=>{s.style.display=i<(3-mc)?"flex":"none";});
     if(pendingAttackerIndex!==null){const cards=myUnits.querySelectorAll(".card");const di=g.myBoard.length-1-pendingAttackerIndex;if(cards[di]){selectedUnitIndex=pendingAttackerIndex;selectedUnitName=g.myBoard[pendingAttackerIndex]?.name||"";cards[di].classList.add("selected");}pendingAttackerIndex=null;}
   };
-  if(hitEffectActiveMy)setTimeout(_renderMyField,400);else _renderMyField();
+  if(hitEffectActiveMy)setTimeout(_renderMyField,550);else _renderMyField();
 
   document.getElementById("myLife").innerText=g.myLife;
   document.getElementById("myEnergy").innerText=g.myEnergy+"/"+g.myMaxEnergy;

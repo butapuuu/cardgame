@@ -1767,6 +1767,7 @@ const op=getOpponent(socket.id);
         if(atk.hp<=0){
           const atkIdx=game.board[socket.id].indexOf(atk);
           if(atkIdx!==-1){
+            socket.emit("hitEffect",{targetIdx:atkIdx,attr:getAttr(def.name)||"neutral",isEnemy:false});
             game.board[socket.id].splice(atkIdx,1);
             if(!atk.isToken) game.graves[socket.id].push(atk);
             addLog(socket.id,`→「${atk.name}」が反撃で倒れた`);
@@ -3359,7 +3360,7 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
       room.board[op].splice(data.t,1);if(!def.isToken)room.graves[op].push(def);roomAddLog(room,p,`→「${def.name}」を撃破`);roomTriggerDestroyEffect(room,def,op);
       if(room.pendingTarget&&room.pendingTarget.effect==="DES_SUMMON_C2_HAND"){const os2=io.sockets.sockets.get(room.pendingTarget.player);if(os2){os2.emit("selectTarget",{type:"handUnit_cost2",message:"グロウコア：コスト2以下のユニットを召喚"});socket.emit("message","相手がグロウコアの効果を処理中...");}}
     }
-    if(atk.hp<=0){const ai=room.board[p].indexOf(atk);if(ai!==-1){room.board[p].splice(ai,1);if(!atk.isToken)room.graves[p].push(atk);roomAddLog(room,p,`→「${atk.name}」が反撃で倒れた`);roomTriggerDestroyEffect(room,atk,p);}}
+    if(atk.hp<=0){const ai=room.board[p].indexOf(atk);if(ai!==-1){const _sAtk=io.sockets.sockets.get(p);if(_sAtk)_sAtk.emit("hitEffect",{targetIdx:ai,attr:roomGetAttr(def.name)||"neutral",isEnemy:false});room.board[p].splice(ai,1);if(!atk.isToken)room.graves[p].push(atk);roomAddLog(room,p,`→「${atk.name}」が反撃で倒れた`);roomTriggerDestroyEffect(room,atk,p);}}
     if(atkCard&&atkCard.attackEffect&&!atk.rollbackAttack&&atkCard.attackEffect!=="ALL_UNIT_DMG1")roomShowEffect(room,atk.name);
     if(atkCard&&atkCard.attackEffect==="L_DMG1"){roomDamageLife(room,op,1);roomAddLog(room,p,`攻撃時効果：ライフ-1`);}
     if(atkCard&&atkCard.attackEffect==="HAN1"){if(room.hands[op].length>=3){const d=roomDiscardRandom(room,op);roomAddLog(room,p,`攻撃時効果：相手手札「${d||"なし"}」破棄`);const sh=io.sockets.sockets.get(p);if(sh&&d)sh.emit("message",`相手の手札「${d}」が捨て場に送られました`);}else{roomAddLog(room,p,`攻撃時効果：ハンデス不発`);}}
@@ -4169,7 +4170,7 @@ function csPlayerAttack(cs,data){
       if(cs.fieldSpell[p]&&cards[cs.fieldSpell[p].name]?.effect==="PERM_SPELL_FIRE_OVERFLOW"){const ov=atkPow-def.atk;if(ov>0){csDamageLife(cs,op,ov);csLog(cs,p,`「${cs.fieldSpell[p].name}」：${ov}ダメージが相手ライフに`);}}
       cs.board[op].splice(data.t,1); if(!def.isToken)cs.graves[op].push(def); csLog(cs,p,`→「${def.name}」を撃破`); csTriggerDestroy(cs,def,op);
     }
-    if(atk.hp<=0){const ai=cs.board[p].indexOf(atk);if(ai!==-1){cs.board[p].splice(ai,1);if(!atk.isToken)cs.graves[p].push(atk);csLog(cs,p,`→「${atk.name}」が反撃で倒れた`);csTriggerDestroy(cs,atk,p);}}
+    if(atk.hp<=0){const ai=cs.board[p].indexOf(atk);if(ai!==-1){csEmit(cs,"hitEffect",{targetIdx:ai,attr:csAttr(def.name)||"neutral",isEnemy:false});cs.board[p].splice(ai,1);if(!atk.isToken)cs.graves[p].push(atk);csLog(cs,p,`→「${atk.name}」が反撃で倒れた`);csTriggerDestroy(cs,atk,p);}}
     if(atkCard&&atkCard.attackEffect&&!atk.rollbackAttack&&atkCard.attackEffect!=="ALL_UNIT_DMG1")csPlayerAttackEffect(cs,atk,op,actualAtk);
   } else {
     const atkPow=isSecond?Math.floor(atk.atk/2):atk.atk;
