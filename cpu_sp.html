@@ -125,7 +125,7 @@ img{
 .sp-grave-pile .sp-grave-count{ position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:9px;font-weight:bold;text-shadow:0 0 4px #000;pointer-events:none;z-index:10; }
 
 /* ===== 相手手札 ===== */
-#spEnemyHand{ display:flex;gap:2px;justify-content:center;flex-shrink:0;padding:0; }
+#spEnemyHand{ display:flex;gap:2px;justify-content:center;flex-shrink:0;padding:0;min-height:clamp(20px,7vw,28px);align-items:center; }
 #spEnemyHand img{ width:clamp(14px,5vw,20px);border-radius:2px;box-shadow:0 1px 3px #000; }
 
 /* ===== フィールド共通 ===== */
@@ -614,6 +614,7 @@ let spPrevMyDeckCount=null, spPrevEnemyDeckCount=null;
 let spPrevMyBoardCount=null, spPrevEnemyBoardCount=null;
 let spPrevAllLogsLen=0;
 let spPendingAttackerIndex=null;
+let _spCounterDmgPos=null;
 let spHitActiveMy=false, spHitActiveEnemy=false;
 let spHitMyTimer=null, spHitEnemyTimer=null;
 let _spTurnChangeFinishTime=0;
@@ -985,11 +986,17 @@ socket.on("damagePop",(data)=>{
   const key=`${data.amount}_${data.isLife}_${data.unitIdx}_${data.isEnemy}_${data.isCounter||false}`;
   if(window._spDpLastTime[key]&&now-window._spDpLastTime[key]<200)return;
   window._spDpLastTime[key]=now;
-  setTimeout(()=>_spShowDamagePop(data),80);
+  const delay=data.isCounter?250:80;
+  setTimeout(()=>_spShowDamagePop(data),delay);
 });
 function _spShowDamagePop(data){
   const{amount,isLife,unitIdx,isEnemy}=data;
   let cx,cy;
+  if(data.isCounter&&!isEnemy&&_spCounterDmgPos){
+    cx=_spCounterDmgPos.x;cy=_spCounterDmgPos.y;
+    const pop=document.createElement("div");pop.className="sp-damage-pop dmg-unit";pop.innerText="-"+amount;pop.style.left=cx+"px";pop.style.top=cy+"px";document.body.appendChild(pop);setTimeout(()=>pop.remove(),1300);
+    return;
+  }
   if(isLife){
     if(isEnemy){
       const el=document.getElementById("spDirectZone");
@@ -1037,7 +1044,7 @@ socket.on("hitEffect",(data)=>{
     spHitEnemyTimer=setTimeout(()=>{spHitActiveEnemy=false;},520);
   }else{
     spHitActiveMy=true; clearTimeout(spHitMyTimer);
-    spHitMyTimer=setTimeout(()=>{spHitActiveMy=false;},520);
+    spHitMyTimer=setTimeout(()=>{spHitActiveMy=false;},620);
   }
   const attr=data.attr||"fire";
   if(data.hasAttackAnim&&!data.isEnemy){
@@ -1241,11 +1248,14 @@ socket.on("cpuUpdate",(g)=>{
   // 相手手札（裏向き）
   const ehArea=document.getElementById("spEnemyHand");
   if(ehArea){
-    ehArea.innerHTML="";
-    for(let i=0;i<g.enemyHandCount;i++){
-      const img=document.createElement("img");
-      img.src="images/card_back.png";
-      ehArea.appendChild(img);
+    const cur=ehArea.childElementCount;
+    const want=g.enemyHandCount||0;
+    if(cur!==want){
+      if(want>cur){
+        for(let i=cur;i<want;i++){const img=document.createElement("img");img.src="images/card_back.png";ehArea.appendChild(img);}
+      }else{
+        for(let i=cur;i>want;i--){if(ehArea.lastElementChild)ehArea.removeChild(ehArea.lastElementChild);}
+      }
     }
   }
 
@@ -1298,6 +1308,7 @@ socket.on("cpuUpdate",(g)=>{
         if(spSelectedUnitIndex!==null){
           if(confirm(spSelectedUnitName+" で "+c.name+" に攻撃？")){
             const atkIdx=spSelectedUnitIndex; const tIdx=i;
+            { const myC=document.getElementById("spMyUnits");const myCards=myC?myC.querySelectorAll(".sp-card"):[];const ml=myCards.length;const di=ml>0?ml-1-atkIdx:atkIdx;const ac=myCards[di];if(ac){const r=ac.getBoundingClientRect();_spCounterDmgPos={x:r.left+r.width/2,y:r.top+r.height/2};}else _spCounterDmgPos=null; }
             spClearSelection();
             spPlayAttackAnim(atkIdx, tIdx, false);
             setTimeout(()=>socket.emit("cpuAction",{type:"attack",a:atkIdx,t:tIdx}), 200);
@@ -1386,7 +1397,7 @@ socket.on("cpuUpdate",(g)=>{
       spPendingAttackerIndex=null;
     }
   };
-  if(spHitActiveMy)setTimeout(_renderMyField,400); else _renderMyField();
+  if(spHitActiveMy)setTimeout(_renderMyField,550); else _renderMyField();
 
   // 直接攻撃ゾーン活性化
   const dz=document.getElementById("spDirectZone");

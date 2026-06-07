@@ -777,6 +777,12 @@ function renderCards(){
 // ===== デッキ描画 =====
 function render(){
   document.getElementById("countVal").innerText=deck.length;
+  // ★カード定義順に自動整列（属性ごと→ユニット低コスト順→スペル順）
+  deck.sort((a,b)=>{
+    const ia=cardDataList.findIndex(x=>x.name===a);
+    const ib=cardDataList.findIndex(x=>x.name===b);
+    return ia-ib;
+  });
   const area=document.getElementById("deck");
   area.innerHTML="";
   deck.forEach((c,i)=>{

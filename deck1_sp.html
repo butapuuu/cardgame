@@ -213,6 +213,12 @@ function lp(el,name){
   el.addEventListener("touchmove",()=>clearTimeout(t));
 }
 function renderDeck(){
+  // ★カード定義順に自動整列（属性ごと→ユニット低コスト順→スペル順）
+  deck.sort((a,b)=>{
+    const ia=CDL.findIndex(x=>x.name===a);
+    const ib=CDL.findIndex(x=>x.name===b);
+    return ia-ib;
+  });
   const g=document.getElementById("dgrid"); g.innerHTML="";
   for(let i=0;i<20;i++){
     const s=document.createElement("div");

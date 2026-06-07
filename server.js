@@ -3626,7 +3626,8 @@ function csDamageLife(cs,p,amount){
 function csDamageAllUnits(cs,targetPlayer,amount){
   const toDestroy=[];
   cs.board[targetPlayer].forEach((u,i)=>{
-    const dmg=u.damageReduce?Math.min(1,amount):amount;
+    let dmg=u.damageReduce?Math.min(1,amount):amount;
+    if(u.barrier) dmg=0;
     u.hp-=dmg; if(dmg>0)csDamagePop(cs,targetPlayer,dmg,false,i);
     if(u.hp<=0)toDestroy.push(i);
   });
@@ -3708,6 +3709,8 @@ function csTriggerDestroy(cs,unit,owner){
             // プレイヤー：選択させる
             cs.pendingTarget={player:owner,effect:"DES_SUMMON_C2_HAND",card:unit.name};
             csLog(cs,lp,`「${unit.name}」破壊時効果：コスト3以下の森ユニットを召喚できます`);
+            const _sg=csSock(cs);
+            if(_sg)_sg.emit("selectTarget",{type:"handUnit_cost3",message:"グロウコア破壊時効果：コスト3以下の森ユニットを召喚してください"});
           }
         }
       }
@@ -4555,6 +4558,7 @@ function csCpuSummon(cs,name){
 
 function csCpuTryAttack(cs,canKill){
   const p=CPU_ID, op=cs.player;
+  if(cs.noAttack[p]) return false;
   const myB=cs.board[p], opB=cs.board[op];
   const attackers=myB.filter(u=>{ if(u.disabled)return false; if(u.attacked&&!(u.denko&&!u.denkoAttackedThisTurn))return false; return true; });
   if(attackers.length===0)return false;
