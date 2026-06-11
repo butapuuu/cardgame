@@ -478,6 +478,11 @@ function applyFieldSpellOnSummon(unit, ownerPlayer){
   if(game.fieldSpell[ownerPlayer]&&cards[game.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_FOREST_BUFF"){
     unit.atk+=1; unit.hp+=1;
   }
+// 薬草の湿地：自分フィールドスペルがある場合HP+1
+  if(game.fieldSpell[ownerPlayer]&&cards[game.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_HERB_HEAL"){
+    unit.hp+=1;
+  }
+
   // 深海の神殿：自分フィールドスペルがある場合ATK+1
   if(game.fieldSpell[ownerPlayer]&&cards[game.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_WATER_ENERGY"){
     unit.atk+=1;
@@ -1164,10 +1169,12 @@ function processSpellEffect(cardName, p, socket){
         game.board[p].forEach(u=>{u.atk+=1;});
         addLog(p,`「${cardName}」：場の全ユニットATK+1`);
       }
-      // 薬草の湿地：発動時ライフ+3
+      // 薬草の湿地：発動時ライフ+3、場の全ユニットHP+1
       if(eff==="PERM_SPELL_HERB_HEAL"){
         game.life[p]+=3;
         addLog(p,`「${cardName}」：ライフ+3`);
+        game.board[p].forEach(u=>{u.hp+=1;});
+        addLog(p,`「${cardName}」：場の全ユニットHP+1`);
       }
       // 世界樹の聖域：即座に場のユニット全体ATK/HP+1
       if(eff==="PERM_SPELL_FOREST_BUFF"){
@@ -1333,10 +1340,21 @@ function destroyFieldSpell(ownerPlayer){
   const fs=game.fieldSpell[ownerPlayer];
   if(!fs) return;
   const eff=cards[fs.name]?.effect||"";
-  // 世界樹の聖域：場のユニットATK/HP-1
+  // 世界樹の聖域：場のユニットATK/HP-1（HP0以下で破壊）
   if(eff==="PERM_SPELL_FOREST_BUFF"){
-    game.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp=Math.max(1,u.hp-1);});
+    game.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp-=1;});
     addLog(ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK/HP-1`);
+    const _dead=[];
+    game.board[ownerPlayer].forEach((u,i)=>{if(u.hp<=0)_dead.push(i);});
+    _dead.reverse().forEach(i=>{const d=game.board[ownerPlayer].splice(i,1)[0];if(!d.isToken)game.graves[ownerPlayer].push(d);triggerDestroyEffect(d,ownerPlayer);});
+  }
+// 薬草の湿地：場のユニットHP-1（HP0以下で破壊）
+  if(eff==="PERM_SPELL_HERB_HEAL"){
+    game.board[ownerPlayer].forEach(u=>{u.hp-=1;});
+    addLog(ownerPlayer,`「${fs.name}」破壊：場の全ユニットHP-1`);
+    const _dead=[];
+    game.board[ownerPlayer].forEach((u,i)=>{if(u.hp<=0)_dead.push(i);});
+    _dead.reverse().forEach(i=>{const d=game.board[ownerPlayer].splice(i,1)[0];if(!d.isToken)game.graves[ownerPlayer].push(d);triggerDestroyEffect(d,ownerPlayer);});
   }
   // 深海の神殿：場の全ユニットATK-1（元に戻す）
   if(eff==="PERM_SPELL_WATER_ENERGY"){
@@ -2881,6 +2899,7 @@ function roomSummonToken(room, p, tokenName, n){
 function roomApplyFieldSpellOnSummon(room, unit, ownerPlayer){
   const op=roomGetOpponent(room,ownerPlayer);
   if(room.fieldSpell[ownerPlayer]&&cards[room.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_FOREST_BUFF"){unit.atk+=1;unit.hp+=1;}
+if(room.fieldSpell[ownerPlayer]&&cards[room.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_HERB_HEAL"){unit.hp+=1;}
   if(room.fieldSpell[ownerPlayer]&&cards[room.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_WATER_ENERGY"){unit.atk+=1;}
   if(room.fieldSpell[ownerPlayer]&&cards[room.fieldSpell[ownerPlayer].name]?.effect==="PERM_SPELL_IRON_FACTORY"){
     if(unit.name==="ギアスカウト"||unit.name==="プロトタイプユニット") unit.atk+=1;
@@ -2892,7 +2911,8 @@ function roomDestroyFieldSpell(room, ownerPlayer){
   const fs=room.fieldSpell[ownerPlayer];
   if(!fs) return;
   const eff=cards[fs.name]?.effect||"";
-  if(eff==="PERM_SPELL_FOREST_BUFF"){room.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp=Math.max(1,u.hp-1);});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK/HP-1`);}
+  if(eff==="PERM_SPELL_FOREST_BUFF"){room.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp-=1;});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK/HP-1`);const _d=[];room.board[ownerPlayer].forEach((u,i)=>{if(u.hp<=0)_d.push(i);});_d.reverse().forEach(i=>{const dd=room.board[ownerPlayer].splice(i,1)[0];if(!dd.isToken)room.graves[ownerPlayer].push(dd);roomTriggerDestroyEffect(room,dd,ownerPlayer);});}
+  if(eff==="PERM_SPELL_HERB_HEAL"){room.board[ownerPlayer].forEach(u=>{u.hp-=1;});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場の全ユニットHP-1`);const _d=[];room.board[ownerPlayer].forEach((u,i)=>{if(u.hp<=0)_d.push(i);});_d.reverse().forEach(i=>{const dd=room.board[ownerPlayer].splice(i,1)[0];if(!dd.isToken)room.graves[ownerPlayer].push(dd);roomTriggerDestroyEffect(room,dd,ownerPlayer);});}
   if(eff==="PERM_SPELL_WATER_ENERGY"){room.board[ownerPlayer].forEach(u=>{u.atk=Math.max(0,u.atk-1);});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場の全ユニットATK-1`);}
   if(eff==="PERM_SPELL_IRON_FACTORY"){room.board[ownerPlayer].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット"){u.atk=Math.max(0,u.atk-1);}});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：場のギアトークン等ATK-1`);}
   if(eff==="PERM_SPELL_DARK_DEBUFF"){const op=roomGetOpponent(room,ownerPlayer);room.board[op].forEach(u=>{u.atk+=1;});roomAddLog(room,ownerPlayer,`「${fs.name}」破壊：相手場ATK+1`);}
@@ -3063,7 +3083,7 @@ function roomProcessSpellEffect(room, cardName, p, socket){
       room.fieldSpell[p]={name:cardName,durability:dur};
       roomAddLog(room,p,`「${cardName}」をフィールドに設置（耐久${dur}）`);
       if(eff==="PERM_SPELL_WATER_ENERGY"){room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+1);room.energy[p]=Math.min(room.maxEnergy[p],room.energy[p]+1);roomAddLog(room,p,`「${cardName}」：エネルギー+1`);room.board[p].forEach(u=>{u.atk+=1;});roomAddLog(room,p,`「${cardName}」：場の全ユニットATK+1`);}
-      if(eff==="PERM_SPELL_HERB_HEAL"){room.life[p]+=3;roomAddLog(room,p,`「${cardName}」：ライフ+3`);}
+      if(eff==="PERM_SPELL_HERB_HEAL"){room.life[p]+=3;roomAddLog(room,p,`「${cardName}」：ライフ+3`);room.board[p].forEach(u=>{u.hp+=1;});roomAddLog(room,p,`「${cardName}」：場の全ユニットHP+1`);}
       if(eff==="PERM_SPELL_FOREST_BUFF"){room.board[p].forEach(u=>{u.atk+=1;u.hp+=1;});roomAddLog(room,p,`「${cardName}」：全ユニットATK/HP+1`);}
       if(eff==="PERM_SPELL_IRON_FACTORY"){room.board[p].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット"){u.atk+=1;}});roomAddLog(room,p,`「${cardName}」：ギアトークン等ATK+1`);if(room.board[p].length<3){const gt={name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true};room.board[p].push(gt);roomApplyFieldSpellOnSummon(room,gt,p);roomAddLog(room,p,`「${cardName}」：ギギアトークン召喚`);}}
       if(eff==="PERM_SPELL_DARK_DEBUFF"){room.board[op].forEach(u=>{u.atk=Math.max(0,u.atk-1);});roomAddLog(room,p,`「${cardName}」：相手全ユニットATK-1`);}
@@ -3647,6 +3667,7 @@ function csApplyFSOnSummon(cs,unit,owner){
   if(cs.fieldSpell[owner]){
     const e=cards[cs.fieldSpell[owner].name]?.effect;
     if(e==="PERM_SPELL_FOREST_BUFF"){unit.atk+=1;unit.hp+=1;}
+    if(e==="PERM_SPELL_HERB_HEAL"){unit.hp+=1;}
     if(e==="PERM_SPELL_WATER_ENERGY"){unit.atk+=1;}
     if(e==="PERM_SPELL_IRON_FACTORY"){ if(unit.name==="ギアスカウト"||unit.name==="プロトタイプユニット")unit.atk+=1; }
   }
@@ -3665,7 +3686,8 @@ function csSummonToken(cs,p,tokenName,n){
 function csDestroyFS(cs,owner){
   const fs=cs.fieldSpell[owner]; if(!fs)return;
   const e=cards[fs.name]?.effect||""; const op=csOpp(cs,owner);
-  if(e==="PERM_SPELL_FOREST_BUFF")cs.board[owner].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp=Math.max(1,u.hp-1);});
+  if(e==="PERM_SPELL_FOREST_BUFF"){cs.board[owner].forEach(u=>{u.atk=Math.max(0,u.atk-1);u.hp-=1;});const _d=[];cs.board[owner].forEach((u,i)=>{if(u.hp<=0)_d.push(i);});_d.reverse().forEach(i=>{const dd=cs.board[owner].splice(i,1)[0];if(!dd.isToken)cs.graves[owner].push(dd);csTriggerDestroy(cs,dd,owner);});}
+  if(e==="PERM_SPELL_HERB_HEAL"){cs.board[owner].forEach(u=>{u.hp-=1;});const _d=[];cs.board[owner].forEach((u,i)=>{if(u.hp<=0)_d.push(i);});_d.reverse().forEach(i=>{const dd=cs.board[owner].splice(i,1)[0];if(!dd.isToken)cs.graves[owner].push(dd);csTriggerDestroy(cs,dd,owner);});}
   if(e==="PERM_SPELL_WATER_ENERGY")cs.board[owner].forEach(u=>{u.atk=Math.max(0,u.atk-1);});
   if(e==="PERM_SPELL_IRON_FACTORY")cs.board[owner].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット")u.atk=Math.max(0,u.atk-1);});
   if(e==="PERM_SPELL_DARK_DEBUFF")cs.board[op].forEach(u=>{u.atk+=1;});
@@ -3878,7 +3900,7 @@ function csSpell(cs,cardName,p){
       cs.fieldSpell[p]={name:cardName,durability:dur};
       csLog(cs,p,`「${cardName}」をフィールドに設置（耐久${dur}）`);
       if(eff==="PERM_SPELL_WATER_ENERGY"){cs.maxEnergy[p]=Math.min(10,cs.maxEnergy[p]+1);cs.energy[p]=Math.min(cs.maxEnergy[p],cs.energy[p]+1);cs.board[p].forEach(u=>u.atk+=1);csLog(cs,p,`「${cardName}」：エネルギー+1、場の全ユニットATK+1`);}
-      if(eff==="PERM_SPELL_HERB_HEAL"){cs.life[p]+=3;csLog(cs,p,`「${cardName}」：ライフ+3`);}
+      if(eff==="PERM_SPELL_HERB_HEAL"){cs.life[p]+=3;csLog(cs,p,`「${cardName}」：ライフ+3`);cs.board[p].forEach(u=>{u.hp+=1;});csLog(cs,p,`「${cardName}」：場の全ユニットHP+1`);}
       if(eff==="PERM_SPELL_FOREST_BUFF"){cs.board[p].forEach(u=>{u.atk+=1;u.hp+=1;});csLog(cs,p,`「${cardName}」：場の全ユニットATK/HP+1`);}
       if(eff==="PERM_SPELL_IRON_FACTORY"){cs.board[p].forEach(u=>{if(u.name==="ギアトークン"||u.name==="ギアスカウト"||u.name==="プロトタイプユニット")u.atk+=1;});if(cs.board[p].length<3){const gt={name:"ギギアトークン",atk:2,hp:2,attacked:false,attr:"steel",isToken:true};cs.board[p].push(gt);csApplyFSOnSummon(cs,gt,p);}csLog(cs,p,`「${cardName}」：ギアトークン強化＋ギギアトークン召喚`);}
       if(eff==="PERM_SPELL_DARK_DEBUFF"){cs.board[op].forEach(u=>{u.atk=Math.max(0,u.atk-1);});csLog(cs,p,`「${cardName}」：相手全ユニットATK-1`);}
