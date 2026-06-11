@@ -631,7 +631,7 @@ function spRenderFieldSpell(elementId,fsData){
   el.innerHTML="";
   const div=document.createElement("div");div.className="sp-card";
   const img=document.createElement("img");img.src="images/"+fsData.name+".png";img.style.cssText="width:52px;border-radius:4px;box-shadow:0 2px 5px #000;";img.onerror=()=>{img.style.display="none";};
-  img.onclick=()=>{document.getElementById("spPreviewImg").src="images/"+fsData.name+".png";document.getElementById("spPreviewModal").classList.add("open");};
+  img.onclick=(e)=>{if(spSelectedUnitIndex!==null){if(e&&e.stopPropagation)e.stopPropagation();return;}document.getElementById("spPreviewImg").src="images/"+fsData.name+".png";document.getElementById("spPreviewModal").classList.add("open");};
   const dur=document.createElement("div");dur.className="sp-stat";dur.textContent="耐久:"+fsData.durability;
   div.appendChild(img);div.appendChild(dur);
   if(elementId==="spEnemyFieldSpell"&&spPlayerRole!=="spectator"){

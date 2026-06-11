@@ -4452,10 +4452,15 @@ function csCpuOneAction(cs){
     }
   }
 
-  // 3) スペル（除去・全体・バフ等）
+  // 3) 場が手薄（2体未満）なら先にユニット展開を優先（ライフ防衛・横並び）
+  energy=cs.energy[p];
+  if(cs.board[p].length<2&&csCpuTryUnit(cs,energy,attr))return true;
+
+  // 4) スペル（除去・全体・バフ等）
+  energy=cs.energy[p];
   if(csCpuTrySpell(cs,energy,canKill,attr))return true;
 
-  // 4) ユニット展開
+  // 5) 残りエネルギーでさらにユニット展開
   energy=cs.energy[p];
   if(cs.board[p].length<3&&csCpuTryUnit(cs,energy,attr))return true;
 
@@ -4553,11 +4558,11 @@ function csCpuTryUnit(cs,energy,attr){
   const cands=hand.map((name,idx)=>({name,idx})).filter(({name})=>{
     const c=cards[name]; if(!c||c.type!=="unit"||energy<(c.cost||0))return false;
     if(name==="マッドサイエンティスト"&&cs.life[p]>8)return false;
-    if(fieldBuffUnits.includes(name)&&cs.board[p].length===0&&energy>(c.cost||0))return false;
     if(name==="メガコンストラクト"&&cs.board[p].length<2)return false;
     return true;
   }).sort((a,b)=>{
     const ca=cards[a.name],cb=cards[b.name];
+    // 場が埋まっていない時は低コスト優先で多く展開、コスト同じならATK高い順
     const d=(ca.cost||0)-(cb.cost||0); if(d!==0)return d;
     return (cb.atk||0)-(ca.atk||0);
   });
