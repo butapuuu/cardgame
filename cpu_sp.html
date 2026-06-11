@@ -390,6 +390,29 @@ img{
   </div>
 </div>
 
+<!-- カスタム確認モーダル -->
+<div id="spConfirmModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9000;justify-content:center;align-items:center;">
+  <div style="background:#1e2e1e;border:2px solid #3a6a3a;border-radius:12px;padding:20px;width:85%;max-width:340px;text-align:center;">
+    <div id="spConfirmMsg" style="color:#eee;font-size:14px;line-height:1.7;margin-bottom:16px;white-space:pre-wrap;"></div>
+    <div style="display:flex;gap:10px;">
+      <button id="spConfirmOK" style="flex:1;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:6px;padding:10px;font-size:13px;font-weight:bold;cursor:pointer;">OK</button>
+      <button id="spConfirmCancel" style="flex:1;background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;border:1px solid #8a2222;border-radius:6px;padding:10px;font-size:13px;font-weight:bold;cursor:pointer;">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- カスタム入力モーダル -->
+<div id="spPromptModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9000;justify-content:center;align-items:center;">
+  <div style="background:#1e2e1e;border:2px solid #3a6a3a;border-radius:12px;padding:20px;width:85%;max-width:340px;text-align:center;">
+    <div id="spPromptMsg" style="color:#eee;font-size:14px;line-height:1.7;margin-bottom:12px;white-space:pre-wrap;"></div>
+    <input id="spPromptInput" type="text" style="width:100%;background:#0e1a0e;color:#eee;border:1px solid #3a6a3a;border-radius:6px;padding:8px;font-size:16px;text-align:center;margin-bottom:12px;">
+    <div style="display:flex;gap:10px;">
+      <button id="spPromptOK" style="flex:1;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:6px;padding:10px;font-size:13px;font-weight:bold;cursor:pointer;">OK</button>
+      <button id="spPromptCancel" style="flex:1;background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;border:1px solid #8a2222;border-radius:6px;padding:10px;font-size:13px;font-weight:bold;cursor:pointer;">キャンセル</button>
+    </div>
+  </div>
+</div>
+
 <!-- 全体レイアウト -->
 <div id="gameRoot">
 
@@ -511,6 +534,29 @@ img{
 <script>
 const socket=io();
 let _cpuMyTurn=false;
+
+// ===== カスタムダイアログ（confirm/promptの代替・BGM停止を防ぐ） =====
+function spConfirm(msg){
+  return new Promise(resolve=>{
+    const modal=document.getElementById("spConfirmModal");
+    document.getElementById("spConfirmMsg").innerText=msg;
+    modal.style.display="flex";
+    const ok=document.getElementById("spConfirmOK"),cancel=document.getElementById("spConfirmCancel");
+    function cleanup(r){modal.style.display="none";ok.onclick=null;cancel.onclick=null;resolve(r);}
+    ok.onclick=()=>cleanup(true);cancel.onclick=()=>cleanup(false);
+  });
+}
+function spPrompt(msg){
+  return new Promise(resolve=>{
+    const modal=document.getElementById("spPromptModal");
+    document.getElementById("spPromptMsg").innerText=msg;
+    const input=document.getElementById("spPromptInput");input.value="";
+    modal.style.display="flex";setTimeout(()=>input.focus(),100);
+    const ok=document.getElementById("spPromptOK"),cancel=document.getElementById("spPromptCancel");
+    function cleanup(r){modal.style.display="none";ok.onclick=null;cancel.onclick=null;resolve(r);}
+    ok.onclick=()=>cleanup(input.value);cancel.onclick=()=>cleanup(null);
+  });
+}
 
 // ===== BGM・SE =====
 const BGM_WIN_SP=new Audio("sounds/勝利.mp3"); BGM_WIN_SP.volume=0.8;
@@ -724,7 +770,7 @@ function spReset(){
   spResultShown=false; spStopBGM(); spStartBGM();
 }
 function spEndTurn(){if(!_cpuMyTurn)return;spClearSelection();socket.emit("cpuAction",{type:"end_turn"});}
-function spSurrender(){if(!confirm("本当に降参しますか？"))return;socket.emit("cpuAction",{type:"surrender"});}
+function spSurrender(){spConfirm("本当に降参しますか？").then(ok=>{if(ok)socket.emit("cpuAction",{type:"surrender"});});}
 
 function spClearSelection(){
   spSelectedUnitIndex=null;spSelectedUnitName=null;
@@ -734,11 +780,14 @@ function spClearSelection(){
 function spDirectAttack(){
   if(!_cpuMyTurn)return;
   if(spSelectedUnitIndex===null)return;
-  if(!confirm(spSelectedUnitName+" でプレイヤーに直接攻撃？"))return;
   const atkIdx=spSelectedUnitIndex;
-  spClearSelection();
-  spPlayAttackAnim(atkIdx, null, true);
-  setTimeout(()=>socket.emit("cpuAction",{type:"attack",a:atkIdx}), 200);
+  const atkN=spSelectedUnitName;
+  spConfirm(atkN+" でプレイヤーに直接攻撃？").then(ok=>{
+    if(!ok)return;
+    spClearSelection();
+    spPlayAttackAnim(atkIdx, null, true);
+    setTimeout(()=>socket.emit("cpuAction",{type:"attack",a:atkIdx}), 200);
+  });
 }
 
 // ===== 攻撃アニメーション（PC版と同等） =====
@@ -878,7 +927,8 @@ function spRenderFieldSpell(elementId,fsData){
       }
       const atkIdx=spSelectedUnitIndex;
       const atkName=spLatestState?.myBoard?.[atkIdx]?.name||"ユニット";
-      if(!confirm("「"+atkName+"」で「"+fsData.name+"」に攻撃しますか？"))return;
+      spConfirm("「"+atkName+"」で「"+fsData.name+"」に攻撃しますか？").then(ok=>{
+      if(!ok)return;
       // FSへの攻撃アニメーション
       const myContainer=document.getElementById("spMyUnits");
       const myCards=myContainer?myContainer.querySelectorAll(".sp-card"):[];
@@ -903,6 +953,7 @@ function spRenderFieldSpell(elementId,fsData){
       spClearSelection();
       spPlaySE(SP_SE.atk[spGetClientAttr(atkName)]||SP_SE.atk.neutral);
       setTimeout(()=>socket.emit("cpuAction",{type:"attack",a:atkIdx,target:"fieldSpell"}),200);
+      });
     };
   }
   el.appendChild(div);
@@ -1145,31 +1196,34 @@ socket.on("selectTarget",(data)=>{
     let msg="崩壊：破壊するフィールドスペルを選択\n";
     if(myFs)msg+="[自分] "+myFs.name+"（耐久"+myFs.durability+"）\n";
     if(enFs)msg+="[相手] "+enFs.name+"（耐久"+enFs.durability+"）\n";
-    const choice=confirm(msg+"OKで相手、キャンセルで自分のFSを破壊");
-    socket.emit("cpuAction",{type:"select_target",fieldSpellTarget:choice?"op":"my"});
-    spSelectTargetMode=null;
+    spConfirm(msg+"OKで相手、キャンセルで自分のFSを破壊").then(choice=>{
+      socket.emit("cpuAction",{type:"select_target",fieldSpellTarget:choice?"op":"my"});
+      spSelectTargetMode=null;
+    });
     return;
   }
   if(data.type==="lifeInput"){
     const maxVal=data.message.includes("1〜")?3:99;
-    const input=prompt(data.message)||"0";
-    const amount=parseInt(input,10);
-    if(amount>0&&amount<=maxVal){
-      socket.emit("cpuAction",{type:"select_target",targetSide:"life",lifeAmount:amount});
-      spSelectTargetMode=null;
-      document.getElementById("spTurnLabel").innerText="▶ YOUR TURN";
-    }else{socket.emit("cpuAction",{type:"select_target",targetSide:"life",lifeAmount:0});}
+    spPrompt(data.message).then(input=>{
+      const amount=parseInt(input||"0",10);
+      if(amount>0&&amount<=maxVal){
+        socket.emit("cpuAction",{type:"select_target",targetSide:"life",lifeAmount:amount});
+        spSelectTargetMode=null;
+        document.getElementById("spTurnLabel").innerText="▶ YOUR TURN";
+      }else{socket.emit("cpuAction",{type:"select_target",targetSide:"life",lifeAmount:0});}
+    });
     return;
   }
   if(data.type==="graveSelect"){
     const options=data.options||[];
-    const choice=prompt(data.message+"\n"+options.map((n,i)=>i+": "+n).join("\n"))||"";
-    const idx=parseInt(choice,10);
-    if(!isNaN(idx)&&idx>=0&&idx<options.length){
-      socket.emit("cpuAction",{type:"select_target",targetSide:"grave",graveIndex:idx});
-      spSelectTargetMode=null;
-      document.getElementById("spTurnLabel").innerText="▶ YOUR TURN";
-    }
+    spPrompt(data.message+"\n"+options.map((n,i)=>i+": "+n).join("\n")).then(choice=>{
+      const idx=parseInt(choice||"",10);
+      if(!isNaN(idx)&&idx>=0&&idx<options.length){
+        socket.emit("cpuAction",{type:"select_target",targetSide:"grave",graveIndex:idx});
+        spSelectTargetMode=null;
+        document.getElementById("spTurnLabel").innerText="▶ YOUR TURN";
+      }
+    });
     return;
   }
   if(data.type==="soulTrade"){return;} // 手札クリックで処理
@@ -1306,13 +1360,14 @@ socket.on("cpuUpdate",(g)=>{
           return;
         }
         if(spSelectedUnitIndex!==null){
-          if(confirm(spSelectedUnitName+" で "+c.name+" に攻撃？")){
-            const atkIdx=spSelectedUnitIndex; const tIdx=i;
+          const atkIdx=spSelectedUnitIndex; const tIdx=i; const atkN=spSelectedUnitName;
+          spConfirm(atkN+" で "+c.name+" に攻撃？").then(ok=>{
+            if(!ok){spClearSelection();return;}
             { const myC=document.getElementById("spMyUnits");const myCards=myC?myC.querySelectorAll(".sp-card"):[];const ml=myCards.length;const di=ml>0?ml-1-atkIdx:atkIdx;const ac=myCards[di];if(ac){const r=ac.getBoundingClientRect();_spCounterDmgPos={x:r.left+r.width/2,y:r.top+r.height/2};}else _spCounterDmgPos=null; }
             spClearSelection();
             spPlayAttackAnim(atkIdx, tIdx, false);
             setTimeout(()=>socket.emit("cpuAction",{type:"attack",a:atkIdx,t:tIdx}), 200);
-          }else spClearSelection();
+          });
         }else{
           document.getElementById("spPreviewImg").src="images/"+c.name+".png";
           document.getElementById("spPreviewModal").classList.add("open");
@@ -1461,7 +1516,7 @@ function _spRenderHand(handCards,g){
       clearTimeout(pressTimer);
       if(_longPressed){ _longPressed=false; return; } // 長押しなら何もしない
       if(g.pendingDiscard&&g.pendingDiscard>0){
-        if(confirm(card+" を捨てますか？"))socket.emit("cpuAction",{type:"discard_hand",card});
+        spConfirm(card+" を捨てますか？").then(ok=>{if(ok)socket.emit("cpuAction",{type:"discard_hand",card});});
         return;
       }
       if(spSelectTargetMode&&(spSelectTargetMode.type==="handUnit_steel_cost3"||spSelectTargetMode.type==="handUnit_cost2"||spSelectTargetMode.type==="handUnit_cost3"||spSelectTargetMode.type==="handUnit_steel")){
@@ -1472,15 +1527,17 @@ function _spRenderHand(handCards,g){
         return;
       }
       if(spSelectTargetMode&&spSelectTargetMode.type==="soulTrade"){
-        if(confirm(card+" を捨てますか？")){
-          const hi2=g.myHand.indexOf(card);
-          socket.emit("cpuAction",{type:"select_target",targetSide:"soulTrade",handIndex:hi2,card:card});
-          spSelectTargetMode=null;
-          document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"🤖 CPU思考中...";
-        }
+        spConfirm(card+" を捨てますか？").then(ok=>{
+          if(ok){
+            const hi2=g.myHand.indexOf(card);
+            socket.emit("cpuAction",{type:"select_target",targetSide:"soulTrade",handIndex:hi2,card:card});
+            spSelectTargetMode=null;
+            document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"🤖 CPU思考中...";
+          }
+        });
         return;
       }
-      if(confirm(card+" を使用しますか？"))socket.emit("cpuAction",{type:"play_card",card});
+      spConfirm(card+" を使用しますか？").then(ok=>{if(ok)socket.emit("cpuAction",{type:"play_card",card});});
     };
     div.appendChild(img); hand.appendChild(div);
   });

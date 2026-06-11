@@ -4134,13 +4134,13 @@
     ]
   },
   "2026-06-07": {
-    "total": 8,
+    "total": 12,
     "hours": {
-      "23": 8
+      "23": 12
     },
     "pages": {
       "index.html": 2,
-      "room.html": 5,
+      "room.html": 9,
       "deck1.html": 1
     },
     "visitors": [
@@ -4195,6 +4195,95 @@
       },
       {
         "time": "2026-06-07 14:28:31",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-07 14:47:40",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-07 14:47:41",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-07 14:49:43",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-07 14:49:46",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
+  },
+  "2026-06-11": {
+    "total": 7,
+    "hours": {
+      "22": 7
+    },
+    "pages": {
+      "index.html": 3,
+      "room.html": 4
+    },
+    "visitors": [
+      {
+        "time": "2026-06-11 13:44:54",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-11 13:44:56",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-06-11 13:44:57",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-06-11 13:45:03",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-06-11 13:45:05",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-11 13:46:12",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-11 13:46:15",
         "page": "room.html",
         "device": "PC",
         "browser": "Chrome",
