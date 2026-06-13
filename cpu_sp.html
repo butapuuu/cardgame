@@ -911,11 +911,7 @@ function spRenderFieldSpell(elementId,fsData){
   img.src="images/"+fsData.name+".png";
   img.style.cssText="width:52px;border-radius:4px;box-shadow:0 2px 5px #000;";
   img.onerror=()=>{img.style.display="none";};
-  img.onclick=(e)=>{
-    if(spSelectedUnitIndex!==null)return;
-    document.getElementById("spPreviewImg").src="images/"+fsData.name+".png";
-    document.getElementById("spPreviewModal").classList.add("open");
-  };
+  img.onclick=null;
   const dur=document.createElement("div"); dur.className="sp-stat";
   dur.textContent="耐久:"+fsData.durability;
   div.appendChild(img); div.appendChild(dur);
@@ -923,7 +919,8 @@ function spRenderFieldSpell(elementId,fsData){
   if(elementId==="spEnemyFieldSpell"){
     div.onclick=()=>{
       if(spSelectedUnitIndex===null){
-        img.onclick(); // プレビュー表示
+        document.getElementById("spPreviewImg").src="images/"+fsData.name+".png";
+        document.getElementById("spPreviewModal").classList.add("open");
         return;
       }
       const atkIdx=spSelectedUnitIndex;
