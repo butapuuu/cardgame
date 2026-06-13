@@ -116,6 +116,7 @@ body{
 .pm-wrapper{ display:flex; flex-direction:column; gap:6px; width:100%; }
 .pm-half{ display:flex; align-items:stretch; gap:8px; min-height:180px; position:relative; }
 .pm-side{ display:flex; flex-direction:column; justify-content:center; align-items:center; gap:8px; flex-shrink:0; width:110px; }
+#enemyDeckSide{ justify-content:flex-end; padding-bottom:1px; }
 .life-circle{ width:72px; height:72px; border-radius:50%; background:radial-gradient(circle at 40% 35%,#5a1a1a,#1a0808); border:3px solid #cc4444; box-shadow:0 0 12px rgba(200,50,50,0.5),inset 0 0 8px rgba(0,0,0,0.6); display:flex; flex-direction:column; align-items:center; justify-content:center; }
 .life-circle .lc-val{ font-size:22px; font-weight:bold; color:#ffaaaa; line-height:1; font-family:Georgia,serif; }
 .life-circle .lc-label{ font-size:9px; color:#cc6666; letter-spacing:2px; margin-top:1px; }
@@ -147,6 +148,14 @@ body{
 .card img{ width:72px; border-radius:5px; box-shadow:0 2px 6px #000; }
 .card .stat{ font-size:11px; color:#ffe066; margin-top:2px; background:rgba(0,0,0,0.6); border-radius:3px; padding:1px 4px; }
 .card.selected img{ outline:3px solid #ff4444; border-radius:5px; }
+/* 特殊状態バッジ（カード右上に重ねる） */
+.status-badges{ position:absolute; top:2px; right:2px; display:flex; flex-direction:column; gap:2px; z-index:20; pointer-events:none; }
+.status-badge{ width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; box-shadow:0 0 6px rgba(0,0,0,0.8); border:1.5px solid rgba(255,255,255,0.85); }
+.status-badge.brainwash{ background:radial-gradient(circle at 35% 30%,#c77dff,#7b2cbf); color:#fff; text-shadow:0 0 3px #4a0a7a; }
+.status-badge.restrain{ background:radial-gradient(circle at 35% 30%,#5eff7d,#1a9a3a); color:#fff; text-shadow:0 0 3px #0a5a1a; }
+.status-badge.crystal{ background:radial-gradient(circle at 35% 30%,#7dewff,#1a9aca); background:radial-gradient(circle at 35% 30%,#7de4ff,#1a9aca); color:#fff; text-shadow:0 0 3px #0a5a7a; }
+.status-badge.denko{ background:radial-gradient(circle at 35% 30%,#fff27d,#e0a800); color:#7a5a00; text-shadow:none; position:relative; }
+.status-badge.denko .denko-count{ position:absolute; bottom:-3px; right:-3px; background:#222; color:#ffe066; font-size:8px; font-weight:bold; width:11px; height:11px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #ffe066; }
 #enemyPlayerZone{ background:linear-gradient(135deg,rgba(80,0,0,0.25),rgba(120,0,0,0.15)); border:1px solid rgba(180,60,60,0.4); border-radius:6px; height:36px; display:flex; align-items:center; justify-content:center; color:rgba(220,100,100,0.7); font-size:11px; font-weight:bold; letter-spacing:3px; cursor:pointer; transition:all 0.2s; }
 #enemyPlayerZone:hover{ background:linear-gradient(135deg,rgba(160,20,20,0.4),rgba(100,0,0,0.3)); border-color:rgba(255,80,80,0.7); color:rgba(255,150,150,0.95); }
 #handArea{ background:rgba(0,0,0,0.3); border:2px solid #2d4a2d; border-radius:10px; min-height:110px; padding:8px 16px; display:flex; align-items:flex-end; justify-content:center; flex-wrap:nowrap; overflow:visible; position:relative; }
@@ -272,7 +281,7 @@ body{
     <div id="spectateIdBadge" style="display:none;position:fixed;bottom:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,200,0,0.4);border-radius:6px;padding:4px 10px;font-size:11px;color:#ffe066;z-index:200;pointer-events:none;">👁 観戦ID: <span id="spectateIdBadgeVal">----</span></div>
     <div class="pm-wrapper">
       <div class="pm-half">
-        <div class="pm-side">
+        <div class="pm-side" id="enemyDeckSide">
           <div class="deck-grave-area">
             <div class="grave-pile" id="enemyGravePile" onclick="showEnemyGrave()"><div class="grave-empty" id="enemyGraveEmpty">GRAVE</div></div>
             <div class="deck-pile"><img src="images/card_back.png" id="enemyDeckImg"><div class="deck-count" id="enemyDeck">-</div></div>
@@ -951,9 +960,7 @@ socket.on("roomUpdate",(g)=>{
       };
       const stat=document.createElement("div");stat.className="stat";const ba=getBaseAtk(c.name);let ac="#ffe066";if(ba!==null){if(c.atk>ba)ac="#66aaff";else if(c.atk<ba)ac="#ff6666";}
       stat.innerHTML=`HP${c.hp} <span style="color:${ac}">AT${c.atk}</span>`;
-      if(c.disabled&&c.disabledCount!==undefined)stat.innerHTML+=" <span style='color:#44dd44'>【拘束】</span>";else if(c.disabled)stat.innerHTML+=" <span style='color:#cc66ff'>【洗脳】</span>";
-      if(c.barrier)stat.innerHTML+=" <span style='color:#44ddff'>【結晶】</span>";
-      if(c.denko&&!c.attacked)stat.innerHTML+=" ⚡x2";if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)stat.innerHTML+=" ⚡x1";
+      _appendStatusBadges(div,c);
       div.appendChild(img);div.appendChild(stat);ef.appendChild(div);
     });
     const es=ef.querySelectorAll(".unit-slot-empty"),cc=ef.querySelectorAll(".card").length;
@@ -1012,9 +1019,7 @@ socket.on("roomUpdate",(g)=>{
       };
       const stat=document.createElement("div");stat.className="stat";const ba=getBaseAtk(c.name);let ac="#ffe066";if(ba!==null){if(c.atk>ba)ac="#66aaff";else if(c.atk<ba)ac="#ff6666";}
       stat.innerHTML=`HP${c.hp} <span style="color:${ac}">AT${c.atk}</span>`;
-      if(c.disabled&&c.disabledCount!==undefined)stat.innerHTML+=" <span style='color:#44dd44'>【拘束】</span>";else if(c.disabled)stat.innerHTML+=" <span style='color:#cc66ff'>【洗脳】</span>";
-      if(c.barrier)stat.innerHTML+=" <span style='color:#44ddff'>【結晶】</span>";
-      if(c.denko&&!c.attacked)stat.innerHTML+=" ⚡x2";if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)stat.innerHTML+=" ⚡x1";
+      _appendStatusBadges(div,c);
       div.appendChild(img);div.appendChild(stat);myUnits.appendChild(div);
     });
     const mes=myUnits.querySelectorAll(".unit-slot-empty"),mc=myUnits.querySelectorAll(".card").length;
@@ -1036,6 +1041,19 @@ socket.on("roomUpdate",(g)=>{
   if(!_didDrawAnim){document.getElementById("myDeck").innerText=g.myDeckCount;const mdi=document.getElementById("myDeckImg");if(mdi)mdi.style.opacity=g.myDeckCount>0?"1":"0.2";}
   void drawAnimPromise;
 });
+
+// ===== 特殊状態バッジ生成 =====
+function _appendStatusBadges(div,c){
+  const wrap=document.createElement("div");wrap.className="status-badges";
+  let has=false;
+  if(c.disabled&&c.disabledCount!==undefined){const b=document.createElement("div");b.className="status-badge restrain";b.innerText="⛓";b.title="拘束";wrap.appendChild(b);has=true;}
+  else if(c.disabled){const b=document.createElement("div");b.className="status-badge brainwash";b.innerText="✦";b.title="洗脳";wrap.appendChild(b);has=true;}
+  if(c.barrier){const b=document.createElement("div");b.className="status-badge crystal";b.innerText="◆";b.title="結晶";wrap.appendChild(b);has=true;}
+  let denkoLeft=0;
+  if(c.denko&&!c.attacked)denkoLeft=2;else if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)denkoLeft=1;
+  if(denkoLeft>0){const b=document.createElement("div");b.className="status-badge denko";b.innerHTML="⚡<span class='denko-count'>"+denkoLeft+"</span>";b.title="電光石火 残り"+denkoLeft+"回";wrap.appendChild(b);has=true;}
+  if(has)div.appendChild(wrap);
+}
 
 // ===== 攻撃アニメーション =====
 function playAttackAnim(attackerIdx,targetIdx,isDirect){

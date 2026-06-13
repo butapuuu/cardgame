@@ -178,6 +178,14 @@ img{
 }
 .sp-card.selected img{ outline:2px solid #ff4444;border-radius:3px; }
 
+.sp-status-badges{ position:absolute; top:1px; right:1px; display:flex; flex-direction:column; gap:1px; z-index:20; pointer-events:none; }
+.sp-status-badge{ width:14px; height:14px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:bold; box-shadow:0 0 4px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.85); position:relative; }
+.sp-status-badge.brainwash{ background:radial-gradient(circle at 35% 30%,#c77dff,#7b2cbf); color:#fff; }
+.sp-status-badge.restrain{ background:radial-gradient(circle at 35% 30%,#5eff7d,#1a9a3a); color:#fff; }
+.sp-status-badge.crystal{ background:radial-gradient(circle at 35% 30%,#7de4ff,#1a9aca); color:#fff; }
+.sp-status-badge.denko{ background:radial-gradient(circle at 35% 30%,#fff27d,#e0a800); color:#7a5a00; }
+.sp-status-badge.denko .sp-denko-count{ position:absolute; bottom:-2px; right:-2px; background:#222; color:#ffe066; font-size:6px; font-weight:bold; width:8px; height:8px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #ffe066; }
+
 /* ===== 直接攻撃ゾーン ===== */
 #spDirectZone{
   background:linear-gradient(135deg,rgba(80,0,0,0.25),rgba(120,0,0,0.15));
@@ -790,6 +798,17 @@ function spDirectAttack(){
   });
 }
 
+// ===== 特殊状態バッジ生成 =====
+function _spAppendStatusBadges(div,c){
+  const wrap=document.createElement("div");wrap.className="sp-status-badges";let has=false;
+  if(c.disabled&&c.disabledCount!==undefined){const b=document.createElement("div");b.className="sp-status-badge restrain";b.innerText="⛓";wrap.appendChild(b);has=true;}
+  else if(c.disabled){const b=document.createElement("div");b.className="sp-status-badge brainwash";b.innerText="✦";wrap.appendChild(b);has=true;}
+  if(c.barrier){const b=document.createElement("div");b.className="sp-status-badge crystal";b.innerText="◆";wrap.appendChild(b);has=true;}
+  let dk=0;if(c.denko&&!c.attacked)dk=2;else if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)dk=1;
+  if(dk>0){const b=document.createElement("div");b.className="sp-status-badge denko";b.innerHTML="⚡<span class='sp-denko-count'>"+dk+"</span>";wrap.appendChild(b);has=true;}
+  if(has)div.appendChild(wrap);
+}
+
 // ===== 攻撃アニメーション（PC版と同等） =====
 function spPlayAttackAnim(attackerIdx, targetIdx, isDirect){
   const myContainer=document.getElementById("spMyUnits");
@@ -1376,10 +1395,7 @@ socket.on("cpuUpdate",(g)=>{
       let atkColor="#ffe066";
       if(baseAtk!==null){if(c.atk>baseAtk)atkColor="#66aaff";else if(c.atk<baseAtk)atkColor="#ff6666";}
       stat.innerHTML=`HP${c.hp} <span style="color:${atkColor}">AT${c.atk}</span>`;
-      if(c.disabled)stat.innerHTML+=" 🚫";
-      if(c.barrier)stat.innerHTML+=" 💎";
-      if(c.denko&&!c.attacked)stat.innerHTML+=" ⚡x2";
-      if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)stat.innerHTML+=" ⚡x1";
+      _spAppendStatusBadges(div,c);
       div.appendChild(img); div.appendChild(stat); ef.appendChild(div);
     });
     const emptySlots=ef.querySelectorAll(".sp-unit-slot-empty");
@@ -1429,10 +1445,7 @@ socket.on("cpuUpdate",(g)=>{
       let atkColorMy="#ffe066";
       if(baseAtkMy!==null){if(c.atk>baseAtkMy)atkColorMy="#66aaff";else if(c.atk<baseAtkMy)atkColorMy="#ff6666";}
       stat.innerHTML=`HP${c.hp} <span style="color:${atkColorMy}">AT${c.atk}</span>`;
-      if(c.disabled)stat.innerHTML+=" 🚫";
-      if(c.barrier)stat.innerHTML+=" 🛡";
-      if(c.denko&&!c.attacked)stat.innerHTML+=" ⚡x2";
-      if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)stat.innerHTML+=" ⚡x1";
+      _spAppendStatusBadges(div,c);
       div.appendChild(img); div.appendChild(stat); myUnits.appendChild(div);
     });
     const myEmptySlots=myUnits.querySelectorAll(".sp-unit-slot-empty");
