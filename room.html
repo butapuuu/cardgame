@@ -309,7 +309,7 @@ body{
         <div class="pm-center">
           <div class="field-row" id="myField">
             <div id="myFieldSpell" class="fs-slot"></div>
-            <div style="width:20px;flex-shrink:0;"></div>
+            <div style="width:32px;flex-shrink:0;"></div>
             <div id="myUnits" class="unit-slots"><div class="unit-slot-empty"></div><div class="unit-slot-empty"></div><div class="unit-slot-empty"></div></div>
           </div>
           <div id="handArea"></div>
@@ -335,7 +335,73 @@ body{
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const socket=io();
+const socket=io({reconnection:true,reconnectionAttempts:Infinity,reconnectionDelay:800,reconnectionDelayMax:4000,timeout:20000});
+let _disconnected=false;       // 切断中フラグ
+let _lastUpdateTime=Date.now(); // 最後にサーバー応答を受けた時刻
+let _gameStarted=false;        // 対戦が始まったか（ロビー中は監視しない）
+
+// ===== 接続状態バナー =====
+function _showConnBanner(text,color){
+  let b=document.getElementById("connBanner");
+  if(!b){
+    b=document.createElement("div");b.id="connBanner";
+    b.style.cssText="position:fixed;top:0;left:0;width:100%;text-align:center;padding:8px;font-size:13px;font-weight:bold;z-index:9000;letter-spacing:1px;";
+    document.body.appendChild(b);
+  }
+  b.style.background=color;b.style.color="#fff";b.innerText=text;b.style.display="block";
+}
+function _hideConnBanner(){const b=document.getElementById("connBanner");if(b)b.style.display="none";}
+
+// 切断検知
+socket.on("disconnect",(reason)=>{
+  _disconnected=true;
+  _showConnBanner("⚠️ 接続が切れました。再接続しています…","rgba(180,40,40,0.95)");
+});
+// 再接続中
+socket.io.on("reconnect_attempt",()=>{
+  if(_disconnected)_showConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");
+});
+// 再接続成功
+socket.io.on("reconnect",()=>{
+  _disconnected=false;
+  _showConnBanner("✅ 再接続しました。盤面を復元しています…","rgba(40,140,40,0.95)");
+  // 現在の状態を取り直す
+  socket.emit("roomResync");
+  setTimeout(_hideConnBanner,1500);
+});
+// 再接続成功（connイベント側でも保険）
+socket.on("connect",()=>{
+  if(_disconnected){
+    _disconnected=false;
+    socket.emit("roomResync");
+    _showConnBanner("✅ 再接続しました","rgba(40,140,40,0.95)");
+    setTimeout(_hideConnBanner,1500);
+  }
+});
+
+// ===== 無応答（フリーズ）検知：30秒応答が無ければリロードを促す =====
+setInterval(()=>{
+  if(!_gameStarted||_disconnected)return;
+  if(Date.now()-_lastUpdateTime>30000){
+    let f=document.getElementById("freezeHelp");
+    if(!f){
+      f=document.createElement("div");f.id="freezeHelp";
+      f.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#2a1a1a;border:2px solid #cc6666;border-radius:12px;padding:24px;z-index:9500;text-align:center;box-shadow:0 0 30px rgba(0,0,0,0.8);max-width:90vw;";
+      f.innerHTML=`<div style="color:#ffaaaa;font-size:14px;font-weight:bold;margin-bottom:6px;">⚠️ 通信が停止している可能性があります</div>
+        <div style="color:#ccc;font-size:12px;margin-bottom:14px;line-height:1.6;">サーバーからの応答が一定時間ありません。<br>下のボタンで再接続を試せます。</div>
+        <button onclick="_tryResync()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:bold;cursor:pointer;margin-right:8px;">🔄 再接続を試す</button>
+        <button onclick="location.reload()" style="background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;border:1px solid #8a2222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:bold;cursor:pointer;">↻ 再読み込み</button>`;
+      document.body.appendChild(f);
+    }
+  }
+},5000);
+function _tryResync(){
+  const f=document.getElementById("freezeHelp");if(f)f.remove();
+  if(!socket.connected){ socket.connect(); }
+  socket.emit("roomResync");
+  _showConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");
+  setTimeout(_hideConnBanner,2000);
+}
 
 // ===== BGM・SE =====
 const BGM_WIN=new Audio("sounds/勝利.mp3"); BGM_WIN.volume=0.8;
@@ -851,6 +917,10 @@ socket.on("selectTarget",(data)=>{
 // ===== roomUpdate（メインのゲーム状態受信） =====
 socket.on("roomUpdate",(g)=>{
   latestState=g;
+  _lastUpdateTime=Date.now();
+  _gameStarted=true;
+  _disconnected=false;
+  { const f=document.getElementById("freezeHelp"); if(f)f.remove(); _hideConnBanner(); }
 
   if(_prevTurn!==null&&_prevTurn!==g.turn&&!g.winner)showTurnChangeAnim();
   _prevTurn=g.turn;

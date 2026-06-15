@@ -3452,11 +3452,13 @@ io.on("connection",(socket)=>{
 
   // ルームアクション
   socket.on("roomAction",(data)=>{
+   try{
     // どのルームか特定
     let room=null;
     for(const r of Object.values(rooms)){
       if(r.player1===socket.id||r.player2===socket.id){room=r;break;}
     }
+    if(!room){ socket.emit("message","ルームが見つかりません。再接続してください"); return; }
     // resetと surrenderはwinnerチェック前に処理
     if(data.type==="reset"){
       // deckが送られた場合のみ更新、なければ前回のcustomDeckをそのまま使用
@@ -3528,6 +3530,21 @@ io.on("connection",(socket)=>{
       room.noAttack[socket.id]=false;room.prevLogs[socket.id]=[...(room.turnLogs[socket.id]||[])];room.turnLogs[socket.id]=[];room.turn=op;
       roomStartTurn(room,room.turn);roomNotifyPendingTarget(room);roomSend(room);return;
     }
+   }catch(err){
+    console.error("roomAction error:",err);
+    socket.emit("message","エラーが発生しました。画面が固まった場合は再読み込みしてください");
+   }
+  });
+
+  // ★再接続時：現在のゲーム状態を再送
+  socket.on("roomResync",()=>{
+    try{
+      let room=null;
+      for(const r of Object.values(rooms)){
+        if(r.player1===socket.id||r.player2===socket.id||(r.spectators&&r.spectators.includes(socket.id))){room=r;break;}
+      }
+      if(room){ roomSend(room); }
+    }catch(err){ console.error("roomResync error:",err); }
   });
 
   // 切断時：ルームから削除
@@ -4452,9 +4469,9 @@ function csCpuOneAction(cs){
     }
   }
 
-  // 3) 場が手薄（2体未満）なら先にユニット展開を優先（ライフ防衛・横並び）
+  // 3) 横並び最優先：トドメを狙えない限り、場が埋まるまでユニット展開を優先（ライフ防衛）
   energy=cs.energy[p];
-  if(cs.board[p].length<2&&csCpuTryUnit(cs,energy,attr))return true;
+  if(!canKill&&cs.board[p].length<3&&csCpuTryUnit(cs,energy,attr))return true;
 
   // 4) スペル（除去・全体・バフ等）
   energy=cs.energy[p];
@@ -4551,14 +4568,25 @@ function csCpuTryUnit(cs,energy,attr){
     if(fieldBuffUnits.includes(name)&&cs.board[p].length===0&&energy>c.cost)continue;
     return csCpuSummon(cs,name);
   }
-  // メガコンストラクト
-  if(attr==="steel"&&hand.includes("メガコンストラクト")&&energy>=5&&cs.board[p].length>=2){ return csCpuSummon(cs,"メガコンストラクト"); }
+  // メガコンストラクト：鉄ユニット2体以上いる時のみ（自分含め3体×3=ATK9相当を狙う）
+  if(attr==="steel"&&hand.includes("メガコンストラクト")&&energy>=5){
+    const ironCount=cs.board[p].filter(u=>csAttr(u.name)==="steel").length;
+    if(ironCount>=2&&cs.board[p].length<3){ return csCpuSummon(cs,"メガコンストラクト"); }
+  }
+  // トキシックドラゴン：失ったライフ分のATK/HP。ライフが高い（弱い）うちは出さない。
+  // ライフ8以下（ATK/HP7以上）なら出す。ただしトドメを取れる時は別途攻撃で処理。
+  if(hand.includes("トキシックドラゴン")&&energy>=5&&cs.life[p]<=8&&cs.board[p].length<3){
+    return csCpuSummon(cs,"トキシックドラゴン");
+  }
+  // ヴェノムアルケミスト：ライフ依存でATK獲得。ライフが少なすぎる時は出し損なので、ライフ4以上で出す
+  // （csTriggerSummon内でmin(5,life-1)を支払う。ライフ3以下だとATK+2以下で弱い）
 
   // 一般：低コスト優先で横展開
   const cands=hand.map((name,idx)=>({name,idx})).filter(({name})=>{
     const c=cards[name]; if(!c||c.type!=="unit"||energy<(c.cost||0))return false;
     if(name==="マッドサイエンティスト"&&cs.life[p]>8)return false;
-    if(name==="メガコンストラクト"&&cs.board[p].length<2)return false;
+    if(name==="メガコンストラクト")return false; // 上で専用判定済み
+    if(name==="トキシックドラゴン"&&cs.life[p]>8)return false; // ライフ高い時は弱いので出さない
     return true;
   }).sort((a,b)=>{
     const ca=cards[a.name],cb=cards[b.name];
@@ -4590,30 +4618,64 @@ function csCpuTryAttack(cs,canKill){
   const attackers=myB.filter(u=>{ if(u.disabled)return false; if(u.attacked&&!(u.denko&&!u.denkoAttackedThisTurn))return false; return true; });
   if(attackers.length===0)return false;
 
-  // トドメ：直接攻撃
-  if(canKill&&opB.length===0){
-    const atk=attackers[0];
-    csCpuExecuteAttack(cs,atk,null);
+  const noReflect=!!(cs.fieldSpell[p]&&cards[cs.fieldSpell[p].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
+  // 実効打点（電光石火2回目は半減だが、ここでは1回目のフル打点で評価）
+  const power=u=>{ const hasDenko=u.denko===true; const isSecond=u.attacked&&hasDenko&&!u.denkoAttackedThisTurn; return isSecond?Math.floor(u.atk/2):u.atk; };
+
+  // 相手ユニットがいない→全員でライフを叩く（トドメ含む）
+  if(opB.length===0){
+    const a=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
+    csCpuExecuteAttack(cs,a,null);
     return true;
   }
-  if(opB.length>0){
-    // 優先ターゲット：電光石火・攻撃時効果
-    const prioT=opB.filter(u=>{const c=cards[u.name];return (u.denko&&!u.denkoAttackedThisTurn)||(c&&c.attackEffect);});
-    let target=prioT.length>0?prioT.reduce((b,u)=>csThreat(u)>csThreat(b)?u:b,prioT[0]):opB.reduce((b,u)=>csThreat(u)>csThreat(b)?u:b,opB[0]);
-    const noReflect=!!(cs.fieldSpell[p]&&cards[cs.fieldSpell[p].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
-    const counterDmg=noReflect?0:Math.floor(target.atk/2);
-    const safe=attackers.filter(u=>{ if(u.denko&&!u.attacked)return true; return u.hp>counterDmg; });
-    const sac=attackers.filter(u=>!safe.includes(u));
-    let attacker=null;
-    if(safe.length>0)attacker=safe.reduce((b,u)=>u.atk>b.atk?u:b,safe[0]);
-    else if(sac.length>0)attacker=sac.reduce((w,u)=>u.hp<w.hp?u:w,sac[0]);
-    if(!attacker)return false;
-    csCpuExecuteAttack(cs,attacker,target);
+
+  // ===== ダメージ効率の振り分け =====
+  // この1手で「敵を倒す」か「ライフを叩く」かを、全体効率で1つ選ぶ。
+  // 各攻撃可能ユニットについて、最も良い使い道を評価しスコア化、最高スコアの1手を実行する。
+
+  // 1) まず「確実に倒せる敵×最小の手数」を探す。
+  //    倒せる敵がいるなら、無駄なく倒せる（オーバーキルが小さい）組み合わせを優先。
+  let bestAction=null; // {attacker, target|null, score}
+
+  attackers.forEach(atk=>{
+    const ap=power(atk);
+    // --- 候補A：敵ユニットを攻撃 ---
+    opB.forEach(def=>{
+      let dmg=def.damageReduce?Math.min(1,ap):ap;
+      if(def.barrier)dmg=0;
+      const counter=(atk.denko&&!atk.attacked)?0:(noReflect?0:Math.floor(def.atk/2));
+      const myDmg=atk.damageReduce?Math.min(1,counter):counter;
+      const willKill=dmg>=def.hp;
+      const willDie=myDmg>=atk.hp;
+      // 脅威度：その敵を放置した時の危険さ
+      const threat=csThreat(def);
+      let score=0;
+      if(willKill){
+        // 倒せる：脅威が高い敵ほど高評価。オーバーキル（無駄打点）は減点。
+        score=100+threat-(dmg-def.hp); // オーバーキル分マイナス
+        // 電光石火・攻撃時効果持ちを倒すのは特に価値が高い
+        const dc=cards[def.name];
+        if((def.denko&&!def.denkoAttackedThisTurn)||(dc&&dc.attackEffect))score+=20;
+        // 相打ち（自分も死ぬ）はやや減点、ただし高脅威なら許容
+        if(willDie)score-=Math.max(0,30-threat);
+        // 倒すのに打点が大きすぎるユニットを使うのは非効率（その打点はライフに回せた）
+        score-=Math.max(0,ap-def.hp)*0.5;
+      } else {
+        // 倒せない：削るだけ。反撃で自分が損するなら低評価。
+        score=10+dmg-myDmg*2;
+        if(willDie)score-=40; // 倒せず自分だけ死ぬのは最悪
+      }
+      if(!bestAction||score>bestAction.score) bestAction={attacker:atk,target:def,score};
+    });
+    // --- 候補B：ライフを直接叩く（相手ユニットがいる間は不可）---
+    // ルール上、相手ユニットがいる場合は直接攻撃できないため候補Bは無し。
+  });
+
+  if(bestAction){
+    csCpuExecuteAttack(cs,bestAction.attacker,bestAction.target);
     return true;
   }
-  // 直接攻撃
-  csCpuExecuteAttack(cs,attackers[0],null);
-  return true;
+  return false;
 }
 
 // CPU攻撃実行（targetがnull=直接攻撃）
@@ -4690,6 +4752,7 @@ function csCpuAttackEffect(cs,atk,atkPow){
 
 // ===== CPUステップ実行（1手→送信→待機→次）=====
 function csCpuStep(cs){
+ try{
   if(!cs||cs.winner){ if(cs)csSend(cs); return; }
   if(cs.turn!==CPU_ID){ cs.cpuBusy=false; return; }
   const did=csCpuOneAction(cs);
@@ -4705,6 +4768,15 @@ function csCpuStep(cs){
     csSend(cs);
     setTimeout(()=>{ cs.cpuBusy=false; csPassTurn(cs); },800);
   }
+ }catch(err){
+  console.error("csCpuStep error:",err);
+  // CPUが詰まってもプレイヤーに手番を返す
+  try{
+    cs.cpuBusy=false;
+    if(cs.turn===CPU_ID&&!cs.winner){ csEndTurnProcess(cs,CPU_ID); csPassTurn(cs); }
+    else csSend(cs);
+  }catch(e2){ console.error("csCpuStep recover error:",e2); }
+ }
 }
 
 // ===== ゲーム初期化 =====
@@ -4741,6 +4813,7 @@ io.on("connection",(socket)=>{
   });
 
   socket.on("cpuAction",(data)=>{
+   try{
     const cs=cpuSessions[socket.id]; if(!cs)return;
     if(data.type==="reset"){
       const pd=data.playerDeck||cs._lastPd; const cd=data.cpuDeck||cs._lastCd;
@@ -4785,6 +4858,10 @@ io.on("connection",(socket)=>{
       csPassTurn(cs);
       return;
     }
+   }catch(err){
+    console.error("cpuAction error:",err);
+    socket.emit("message","エラーが発生しました。画面が固まった場合は再読み込みしてください");
+   }
   });
 
   socket.on("disconnect",()=>{

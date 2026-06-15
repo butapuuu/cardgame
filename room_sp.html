@@ -338,7 +338,33 @@ img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; poi
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-const socket=io();
+const socket=io({reconnection:true,reconnectionAttempts:Infinity,reconnectionDelay:800,reconnectionDelayMax:4000,timeout:20000});
+let _spDisconnected=false;
+let _spLastUpdateTime=Date.now();
+let _spGameStarted=false;
+function _spShowConnBanner(text,color){
+  let b=document.getElementById("spConnBanner");
+  if(!b){b=document.createElement("div");b.id="spConnBanner";b.style.cssText="position:fixed;top:0;left:0;width:100%;text-align:center;padding:6px;font-size:11px;font-weight:bold;z-index:9000;letter-spacing:1px;";document.body.appendChild(b);}
+  b.style.background=color;b.style.color="#fff";b.innerText=text;b.style.display="block";
+}
+function _spHideConnBanner(){const b=document.getElementById("spConnBanner");if(b)b.style.display="none";}
+socket.on("disconnect",()=>{_spDisconnected=true;_spShowConnBanner("⚠️ 接続が切れました。再接続しています…","rgba(180,40,40,0.95)");});
+socket.io.on("reconnect_attempt",()=>{if(_spDisconnected)_spShowConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");});
+socket.io.on("reconnect",()=>{_spDisconnected=false;_spShowConnBanner("✅ 再接続しました。盤面を復元しています…","rgba(40,140,40,0.95)");socket.emit("roomResync");setTimeout(_spHideConnBanner,1500);});
+socket.on("connect",()=>{if(_spDisconnected){_spDisconnected=false;socket.emit("roomResync");_spShowConnBanner("✅ 再接続しました","rgba(40,140,40,0.95)");setTimeout(_spHideConnBanner,1500);}});
+function _spTryResync(){const f=document.getElementById("spFreezeHelp");if(f)f.remove();if(!socket.connected)socket.connect();socket.emit("roomResync");_spShowConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");setTimeout(_spHideConnBanner,2000);}
+setInterval(()=>{
+  if(!_spGameStarted||_spDisconnected)return;
+  if(Date.now()-_spLastUpdateTime>30000){
+    let f=document.getElementById("spFreezeHelp");
+    if(!f){
+      f=document.createElement("div");f.id="spFreezeHelp";
+      f.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#2a1a1a;border:2px solid #cc6666;border-radius:12px;padding:18px;z-index:9500;text-align:center;box-shadow:0 0 30px rgba(0,0,0,0.8);width:85%;max-width:320px;";
+      f.innerHTML=`<div style="color:#ffaaaa;font-size:13px;font-weight:bold;margin-bottom:6px;">⚠️ 通信が停止しているかもしれません</div><div style="color:#ccc;font-size:11px;margin-bottom:12px;line-height:1.6;">サーバーからの応答が一定時間ありません。</div><button onclick="_spTryResync()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:6px;padding:10px;font-size:12px;font-weight:bold;width:100%;margin-bottom:8px;">🔄 再接続を試す</button><button onclick="location.reload()" style="background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;border:1px solid #8a2222;border-radius:6px;padding:10px;font-size:12px;font-weight:bold;width:100%;">↻ 再読み込み</button>`;
+      document.body.appendChild(f);
+    }
+  }
+},5000);
 
 // ===== カスタムダイアログ =====
 function spConfirm(msg){
@@ -898,6 +924,10 @@ socket.on("selectTarget",(data)=>{
 // ===== roomUpdate =====
 socket.on("roomUpdate",(g)=>{
   spLatestState=g;
+  _spLastUpdateTime=Date.now();
+  _spGameStarted=true;
+  _spDisconnected=false;
+  { const f=document.getElementById("spFreezeHelp"); if(f)f.remove(); _spHideConnBanner(); }
   if(_spPrevTurn!==null&&_spPrevTurn!==g.turn&&!g.winner)spShowTurnChangeAnim();
   _spPrevTurn=g.turn;
 
