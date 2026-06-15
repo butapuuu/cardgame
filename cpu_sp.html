@@ -438,6 +438,8 @@ img{
     <div style="display:flex;align-items:center;gap:4px;width:100%;">
       <button onclick="window.open('deck1_sp.html','_blank')" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border-color:#2a4a6a;">デッキ構築</button>
       <a href="top_sp.html" style="background:linear-gradient(135deg,#0a1a0a,#1a2a1a);color:rgba(180,220,100,0.8);border:1px solid rgba(60,140,60,0.4);border-radius:4px;padding:4px 8px;font-size:11px;font-weight:bold;text-decoration:none;">◈TOP</a>
+      <button id="spBgmBtn" onclick="spToggleBGM()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:4px;padding:3px 7px;font-size:10px;font-weight:bold;cursor:pointer;">🎵</button>
+      <button id="spSeBtn" onclick="spToggleSE()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:4px;padding:3px 7px;font-size:10px;font-weight:bold;cursor:pointer;">🔊</button>
       <span id="spTurnLabel" style="margin-left:auto;"></span>
       <span id="spWinner"></span>
     </div>
@@ -573,9 +575,10 @@ let spResultShown=false;
 
 // BGMはAudioContextで実装（途切れ防止）
 let _bgmCtx=null, _bgmGain=null, _bgmBuf=null, _bgmSrc=null, _bgmPlaying=false;
+let _spBgmEnabled=true,_spSeEnabled=true;
 
 async function spStartBGM(){
-  if(_bgmPlaying) return;
+  if(_bgmPlaying||!_spBgmEnabled) return;
   try{
     if(!_bgmCtx){
       _bgmCtx=new(window.AudioContext||window.webkitAudioContext)();
@@ -613,6 +616,9 @@ function spStopBGM(){
   if(window._bgmFallback){_bgmFallback.pause();_bgmFallback.currentTime=0;}
   _bgmPlaying=false;
 }
+function spToggleBGM(){_spBgmEnabled=!_spBgmEnabled;const btn=document.getElementById("spBgmBtn");if(_spBgmEnabled){btn.style.color="#88aacc";btn.style.opacity="1";btn.innerText="🎵";spStartBGM();}else{btn.style.color="#666";btn.style.opacity="0.5";btn.innerText="🔇";spStopBGM();}}
+function spToggleSE(){_spSeEnabled=!_spSeEnabled;const btn=document.getElementById("spSeBtn");if(_spSeEnabled){btn.style.color="#88aacc";btn.style.opacity="1";btn.innerText="🔊";}else{btn.style.color="#666";btn.style.opacity="0.5";btn.innerText="🔇";}}
+
 
 // ★iOSでconfirm/alertが出るとAudioContextがsuspendされるため、復帰処理
 document.addEventListener("visibilitychange",()=>{
@@ -657,7 +663,7 @@ Object.values(SP_SE).forEach(v=>{if(v instanceof Audio)v.volume=1.0;});
 Object.values(SP_SE.atk).forEach(v=>{v.volume=1.0;});
 SP_SE.draw.volume=0.9;
 const SE_TC_SP=new Audio("sounds/turn_change.mp3"); SE_TC_SP.volume=1.0;
-function spPlaySE(se){if(!se)return;se.currentTime=0;se.play().catch(()=>{});}
+function spPlaySE(se){if(!se||!_spSeEnabled)return;se.currentTime=0;se.play().catch(()=>{});}
 
 // ===== 状態 =====
 let spSelectedUnitIndex=null, spSelectedUnitName=null;
@@ -768,14 +774,14 @@ function cpuStartGame(){
   if(!_cpuPlayerDeck||!_cpuPlayerDeck.length){alert("あなたのデッキを選択してください");return;}
   if(!_cpuCpuDeck||!_cpuCpuDeck.length){alert("CPUのデッキを選択してください");return;}
   socket.emit("cpuStart",{playerDeck:_cpuPlayerDeck,cpuDeck:_cpuCpuDeck});
-  spStartBGM();
+  spResultShown=false; _bgmPlaying=false; spStopBGM(); setTimeout(()=>spStartBGM(),200);
 }
 
 // ===== ゲーム操作 =====
 function spReset(){
   socket.emit("cpuAction",{type:"reset",playerDeck:_cpuPlayerDeck,cpuDeck:_cpuCpuDeck});
   _spLastDisplayedLogs=[];spPrevAllLogsLen=0;spAllLogs=[];
-  spResultShown=false; spStopBGM(); spStartBGM();
+  spResultShown=false; _bgmPlaying=false; spStopBGM(); setTimeout(()=>spStartBGM(),200);
 }
 function spEndTurn(){if(!_cpuMyTurn)return;spClearSelection();socket.emit("cpuAction",{type:"end_turn"});}
 function spSurrender(){spConfirm("本当に降参しますか？").then(ok=>{if(ok)socket.emit("cpuAction",{type:"surrender"});});}
@@ -1314,7 +1320,7 @@ socket.on("cpuUpdate",(g)=>{
   }
   document.getElementById("spWinner").innerText=g.winner?(g.winner===socket.id?"YOU WIN！":"YOU LOSE"):"";
   if(g.winner&&!spResultShown)setTimeout(()=>spShowResult(g.winner===socket.id),300);
-  if(!g.winner)spResultShown=false;
+  if(!g.winner){if(spResultShown){_bgmPlaying=false;setTimeout(()=>spStartBGM(),200);}spResultShown=false;}
 
   // 相手手札（裏向き）
   const ehArea=document.getElementById("spEnemyHand");
