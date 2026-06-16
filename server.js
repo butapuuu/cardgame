@@ -3564,7 +3564,7 @@ io.on("connection",(socket)=>{
       if(opSock) opSock.emit("message","相手が再接続しました");
       socket.emit("rejoinOK",{roomId:data.roomId,role:data.role,spectateId:room.spectateId});
       roomSend(room);
-    }catch(err){ console.error("roomRejoin error:",err); socket.emit("rejoinFailed",{reason:"復帰に失敗しました"}); }
+    }catch(err){ console.error("roomRejoin error:",err); socket.emit("rejoinFailed",{reason:"例外:"+(err&&err.message?err.message:String(err))}); }
   });
 
   // ★再接続時：現在のゲーム状態を再送
