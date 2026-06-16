@@ -3550,10 +3550,25 @@ io.on("connection",(socket)=>{
         roomSend(room);
         return;
       }
+      // 旧socket.idを特定（切断でnullにしたので、データ側に残る旧idを探す）
+      const allDataIds=Object.keys(room.hands||{});
+      const liveOther=data.role==="p1"?room.player2:room.player1; // 生存中の相手id
+      const oldId=allDataIds.find(k=>k!==liveOther); // 相手以外＝自分の旧id
       // P1/P2スロットを新しいsocket.idで埋め直す
       if(data.role==="p1") room.player1=socket.id;
       else if(data.role==="p2") room.player2=socket.id;
       else { socket.emit("rejoinFailed",{reason:"立場が不明です"}); return; }
+      // 旧idのゲームデータを新idへ引き継ぐ
+      if(oldId&&oldId!==socket.id){
+        ["board","hands","decks","graves","energy","maxEnergy","life","noAttack","pendingDiscard","turnBuffs","customDeck","turnLogs","prevLogs"].forEach(key=>{
+          if(room[key]&&room[key][oldId]!==undefined){ room[key][socket.id]=room[key][oldId]; delete room[key][oldId]; }
+        });
+        if(room.turn===oldId) room.turn=socket.id;
+        if(room.firstPlayer===oldId) room.firstPlayer=socket.id;
+        if(room.winner===oldId) room.winner=socket.id;
+        if(room.pendingTarget&&room.pendingTarget.player===oldId) room.pendingTarget.player=socket.id;
+        if(room.pendingHandLimitDiscard===oldId) room.pendingHandLimitDiscard=socket.id;
+      }
       socket.join("room_"+data.roomId);
       // 破棄タイマー解除
       if(room._destroyTimer){ clearTimeout(room._destroyTimer); room._destroyTimer=null; }
