@@ -3539,8 +3539,9 @@ io.on("connection",(socket)=>{
   // ★再接続時：元のルームに同じ立場で復帰
   socket.on("roomRejoin",(data)=>{
     try{
+      console.log("roomRejoin受信:",JSON.stringify(data),"現存ルーム:",Object.keys(rooms));
       const room=rooms[data.roomId];
-      if(!room){ socket.emit("rejoinFailed",{reason:"ルームが見つかりません"}); return; }
+      if(!room){ socket.emit("rejoinFailed",{reason:"ルーム未存在 id="+(data&&data.roomId)+" 現存="+Object.keys(rooms).join(",")}); return; }
       if(data.role==="spectator"){
         room.spectators=room.spectators||[];
         if(!room.spectators.includes(socket.id)) room.spectators.push(socket.id);
