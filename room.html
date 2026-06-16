@@ -361,22 +361,38 @@ socket.on("disconnect",(reason)=>{
 socket.io.on("reconnect_attempt",()=>{
   if(_disconnected)_showConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");
 });
+function _pcDoRejoin(){
+  const rid=sessionStorage.getItem("pcMyRoomId");
+  const role=sessionStorage.getItem("pcMyRole");
+  if(rid&&role){ socket.emit("roomRejoin",{roomId:rid,role:role}); }
+  else { socket.emit("roomResync"); }
+}
 // 再接続成功
 socket.io.on("reconnect",()=>{
   _disconnected=false;
   _showConnBanner("✅ 再接続しました。盤面を復元しています…","rgba(40,140,40,0.95)");
-  // 現在の状態を取り直す
-  socket.emit("roomResync");
+  _pcDoRejoin();
   setTimeout(_hideConnBanner,1500);
 });
 // 再接続成功（connイベント側でも保険）
 socket.on("connect",()=>{
   if(_disconnected){
     _disconnected=false;
-    socket.emit("roomResync");
+    _pcDoRejoin();
     _showConnBanner("✅ 再接続しました","rgba(40,140,40,0.95)");
     setTimeout(_hideConnBanner,1500);
   }
+});
+socket.on("rejoinOK",(data)=>{
+  playerRole=data.role;
+  document.getElementById("lobby").style.display="none";
+  document.getElementById("waitingScreen").style.display="none";
+  document.getElementById("gameArea").style.display="contents";
+  _showConnBanner("✅ 試合に復帰しました","rgba(40,140,40,0.95)");
+  setTimeout(_hideConnBanner,1500);
+});
+socket.on("rejoinFailed",(data)=>{
+  _showConnBanner("⚠️ 復帰できませんでした。再接続を試すか再読み込みしてください","rgba(180,40,40,0.95)");
 });
 
 // ===== 無応答（フリーズ）検知：30秒応答が無ければリロードを促す =====
@@ -398,7 +414,7 @@ setInterval(()=>{
 function _tryResync(){
   const f=document.getElementById("freezeHelp");if(f)f.remove();
   if(!socket.connected){ socket.connect(); }
-  socket.emit("roomResync");
+  _pcDoRejoin();
   _showConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");
   setTimeout(_hideConnBanner,2000);
 }
@@ -505,6 +521,7 @@ function joinSpectate(){
 // ===== ロビーイベント =====
 socket.on("roomCreated",(data)=>{
   playerRole=data.playerRole;
+  sessionStorage.setItem("pcMyRoomId",data.roomId);sessionStorage.setItem("pcMyRole",data.playerRole);
   document.getElementById("lobby").style.display="none";
   const ws=document.getElementById("waitingScreen");
   ws.style.display="block";
@@ -518,6 +535,7 @@ socket.on("roomCreated",(data)=>{
 
 socket.on("roomJoined",(data)=>{
   playerRole=data.playerRole;
+  sessionStorage.setItem("pcMyRoomId",data.roomId);sessionStorage.setItem("pcMyRole",data.playerRole);
   document.getElementById("lobby").style.display="none";
   document.getElementById("waitingScreen").style.display="none";
   document.getElementById("gameArea").style.display="contents";
@@ -532,6 +550,7 @@ socket.on("roomJoined",(data)=>{
 
 socket.on("spectateJoined",(data)=>{
   playerRole="spectator";
+  sessionStorage.setItem("pcMyRoomId",data.roomId);sessionStorage.setItem("pcMyRole","spectator");
   document.getElementById("lobby").style.display="none";
   document.getElementById("waitingScreen").style.display="none";
   document.getElementById("gameArea").style.display="contents";
@@ -583,7 +602,7 @@ function showAfterGameDialog(){
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <button onclick="replayRoom()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🔄 このルームで再戦</button>
-      <button onclick="location.reload()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aaff;border:1px solid #2a4a8a;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🚪 別のルームへ</button>
+      <button onclick="sessionStorage.removeItem('pcMyRoomId');sessionStorage.removeItem('pcMyRole');location.reload()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aaff;border:1px solid #2a4a8a;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;letter-spacing:1px;">🚪 別のルームへ</button>
 
     </div>`;
   document.body.appendChild(d);

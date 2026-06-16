@@ -358,11 +358,6 @@ socket.io.on("reconnect_attempt",()=>{if(_spDisconnected)_spShowConnBanner("🔄
 function _spDoRejoin(){
   const rid=sessionStorage.getItem("spMyRoomId");
   const role=sessionStorage.getItem("spMyRole");
-  const dbg=document.createElement("div");
-  dbg.style.cssText="position:fixed;top:40px;left:50%;transform:translateX(-50%);background:rgba(0,0,80,0.95);color:#aef;padding:8px 14px;border-radius:8px;z-index:99999;font-size:11px;max-width:90%;text-align:center;word-break:break-all;";
-  dbg.innerText="再接続送信 id="+rid+" role="+role;
-  document.body.appendChild(dbg);
-  setTimeout(()=>dbg.remove(),5000);
   if(rid&&role){ socket.emit("roomRejoin",{roomId:rid,role:role}); }
   else { socket.emit("roomResync"); }
 }
@@ -381,7 +376,7 @@ socket.on("rejoinFailed",(data)=>{
   const box=document.createElement("div");box.id="spRejoinFailBox";
   box.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#2a1010;border:2px solid #cc4444;border-radius:12px;padding:20px;z-index:99999;width:90%;max-width:340px;text-align:center;box-shadow:0 0 30px rgba(0,0,0,0.9);";
   box.innerHTML="<div style='color:#ffaaaa;font-size:13px;font-weight:bold;margin-bottom:10px;'>復帰できませんでした</div>"
-    +"<div style='color:#fff;font-size:11px;line-height:1.6;word-break:break-all;margin-bottom:14px;'>"+((data&&data.reason)||"理由不明")+"</div>"
+    +"<div style='color:#fff;font-size:11px;line-height:1.6;word-break:break-all;margin-bottom:14px;'>もう一度「再接続を試す」か、再読み込みしてください</div>"
     +"<button onclick=\"document.getElementById('spRejoinFailBox').remove()\" style='background:#444;color:#eee;border:1px solid #666;border-radius:6px;padding:8px 18px;font-size:12px;'>閉じる</button>";
   document.body.appendChild(box);
 });
