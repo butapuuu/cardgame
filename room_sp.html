@@ -339,6 +339,11 @@ img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; poi
 <script src="/socket.io/socket.io.js"></script>
 <script>
 const socket=io({reconnection:true,reconnectionAttempts:Infinity,reconnectionDelay:800,reconnectionDelayMax:4000,timeout:20000});
+
+// ロビーに戻る/別ルームへ移動した時のために、ページ離脱がリロードならsessionStorageは保持される。
+// ただし対戦終了で「別のルームへ」を選んだ場合は復帰不要なのでクリアする。
+window._spClearRejoin=function(){ sessionStorage.removeItem("spMyRoomId"); sessionStorage.removeItem("spMyRole"); };
+
 let _spDisconnected=false;
 let _spLastUpdateTime=Date.now();
 let _spGameStarted=false;
@@ -350,9 +355,26 @@ function _spShowConnBanner(text,color){
 function _spHideConnBanner(){const b=document.getElementById("spConnBanner");if(b)b.style.display="none";}
 socket.on("disconnect",()=>{_spDisconnected=true;_spShowConnBanner("⚠️ 接続が切れました。再接続しています…","rgba(180,40,40,0.95)");});
 socket.io.on("reconnect_attempt",()=>{if(_spDisconnected)_spShowConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");});
-socket.io.on("reconnect",()=>{_spDisconnected=false;_spShowConnBanner("✅ 再接続しました。盤面を復元しています…","rgba(40,140,40,0.95)");socket.emit("roomResync");setTimeout(_spHideConnBanner,1500);});
-socket.on("connect",()=>{if(_spDisconnected){_spDisconnected=false;socket.emit("roomResync");_spShowConnBanner("✅ 再接続しました","rgba(40,140,40,0.95)");setTimeout(_spHideConnBanner,1500);}});
-function _spTryResync(){const f=document.getElementById("spFreezeHelp");if(f)f.remove();if(!socket.connected)socket.connect();socket.emit("roomResync");_spShowConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");setTimeout(_spHideConnBanner,2000);}
+function _spDoRejoin(){
+  const rid=sessionStorage.getItem("spMyRoomId");
+  const role=sessionStorage.getItem("spMyRole");
+  if(rid&&role){ socket.emit("roomRejoin",{roomId:rid,role:role}); }
+  else { socket.emit("roomResync"); }
+}
+socket.io.on("reconnect",()=>{_spDisconnected=false;_spShowConnBanner("✅ 再接続しました。盤面を復元しています…","rgba(40,140,40,0.95)");_spDoRejoin();setTimeout(_spHideConnBanner,1500);});
+socket.on("connect",()=>{if(_spDisconnected){_spDisconnected=false;_spDoRejoin();_spShowConnBanner("✅ 再接続しました","rgba(40,140,40,0.95)");setTimeout(_spHideConnBanner,1500);}});
+socket.on("rejoinOK",(data)=>{
+  spPlayerRole=data.role;
+  document.getElementById("spLobby").style.display="none";
+  document.getElementById("spWaiting").style.display="none";
+  document.getElementById("spGameRoot").style.display="flex";
+  _spShowConnBanner("✅ 試合に復帰しました","rgba(40,140,40,0.95)");
+  setTimeout(_spHideConnBanner,1500);
+});
+socket.on("rejoinFailed",(data)=>{
+  _spShowConnBanner("⚠️ 復帰できませんでした："+(data&&data.reason||""),"rgba(180,40,40,0.95)");
+});
+function _spTryResync(){const f=document.getElementById("spFreezeHelp");if(f)f.remove();if(!socket.connected)socket.connect();_spDoRejoin();_spShowConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");setTimeout(_spHideConnBanner,2000);}
 setInterval(()=>{
   if(!_spGameStarted||_spDisconnected)return;
   if(Date.now()-_spLastUpdateTime>30000){
@@ -487,6 +509,7 @@ function spJoinSpectate(){
 // ===== ロビーイベント =====
 socket.on("roomCreated",(data)=>{
   spPlayerRole=data.playerRole;
+  sessionStorage.setItem("spMyRoomId",data.roomId);sessionStorage.setItem("spMyRole",data.playerRole);
   document.getElementById("spLobby").style.display="none";
   document.getElementById("spWaiting").style.display="block";
   document.getElementById("spWaitingRoomId").innerText="ルームID: "+data.roomId;
@@ -497,6 +520,7 @@ socket.on("roomCreated",(data)=>{
 });
 socket.on("roomJoined",(data)=>{
   spPlayerRole=data.playerRole;
+  sessionStorage.setItem("spMyRoomId",data.roomId);sessionStorage.setItem("spMyRole",data.playerRole);
   document.getElementById("spLobby").style.display="none";
   document.getElementById("spWaiting").style.display="none";
   document.getElementById("spGameRoot").style.display="flex";
@@ -510,6 +534,7 @@ socket.on("roomJoined",(data)=>{
 });
 socket.on("spectateJoined",(data)=>{
   spPlayerRole="spectator";
+  sessionStorage.setItem("spMyRoomId",data.roomId);sessionStorage.setItem("spMyRole","spectator");
   document.getElementById("spLobby").style.display="none";
   document.getElementById("spWaiting").style.display="none";
   document.getElementById("spGameRoot").style.display="flex";
@@ -616,7 +641,7 @@ function spShowAfterGameDialog(){
     </div>
     <div style="display:flex;flex-direction:column;gap:9px;">
       <button onclick="spReplayRoom()" style="background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">🔄 このルームで再戦</button>
-      <button onclick="location.reload()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aaff;border:1px solid #2a4a8a;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">🚪 別のルームへ</button>
+      <button onclick="window._spClearRejoin();location.reload()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aaff;border:1px solid #2a4a8a;border-radius:8px;padding:12px;font-size:13px;font-weight:bold;cursor:pointer;">🚪 別のルームへ</button>
 
     </div>`;
   document.body.appendChild(d);

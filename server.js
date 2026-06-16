@@ -3536,6 +3536,36 @@ io.on("connection",(socket)=>{
    }
   });
 
+  // ★再接続時：元のルームに同じ立場で復帰
+  socket.on("roomRejoin",(data)=>{
+    try{
+      const room=rooms[data.roomId];
+      if(!room){ socket.emit("rejoinFailed",{reason:"ルームが見つかりません"}); return; }
+      if(data.role==="spectator"){
+        room.spectators=room.spectators||[];
+        if(!room.spectators.includes(socket.id)) room.spectators.push(socket.id);
+        socket.join("room_"+data.roomId);
+        socket.emit("rejoinOK",{roomId:data.roomId,role:"spectator",spectateId:room.spectateId});
+        roomSend(room);
+        return;
+      }
+      // P1/P2スロットを新しいsocket.idで埋め直す
+      if(data.role==="p1") room.player1=socket.id;
+      else if(data.role==="p2") room.player2=socket.id;
+      else { socket.emit("rejoinFailed",{reason:"立場が不明です"}); return; }
+      socket.join("room_"+data.roomId);
+      // 破棄タイマー解除
+      if(room._destroyTimer){ clearTimeout(room._destroyTimer); room._destroyTimer=null; }
+      if(room._disconnectedSlot) room._disconnectedSlot[data.role]=false;
+      // 相手に復帰を通知
+      const opId=data.role==="p1"?room.player2:room.player1;
+      const opSock=opId?io.sockets.sockets.get(opId):null;
+      if(opSock) opSock.emit("message","相手が再接続しました");
+      socket.emit("rejoinOK",{roomId:data.roomId,role:data.role,spectateId:room.spectateId});
+      roomSend(room);
+    }catch(err){ console.error("roomRejoin error:",err); socket.emit("rejoinFailed",{reason:"復帰に失敗しました"}); }
+  });
+
   // ★再接続時：現在のゲーム状態を再送
   socket.on("roomResync",()=>{
     try{
@@ -3547,17 +3577,28 @@ io.on("connection",(socket)=>{
     }catch(err){ console.error("roomResync error:",err); }
   });
 
-  // 切断時：ルームから削除
+  // 切断時：即削除せず再接続猶予を設ける
   socket.on("disconnect",()=>{
     for(const [roomId,room] of Object.entries(rooms)){
       if(room.player1===socket.id||room.player2===socket.id){
+        const isP1=room.player1===socket.id;
         // 相手に通知
-        const op2=room.player1===socket.id?room.player2:room.player1;
+        const op2=isP1?room.player2:room.player1;
         const ops3=io.sockets.sockets.get(op2);
-        if(ops3) ops3.emit("message","相手が切断しました");
-        // 観戦IDを解放
-        usedSpectateIds.delete(room.spectateId);
-        delete rooms[roomId];
+        if(ops3) ops3.emit("message","相手が切断しました。再接続を待っています…");
+        // どちらが抜けたか記録（再接続用）。socket.idはnullにして本人不在を示す
+        if(isP1) room.player1=null; else room.player2=null;
+        room._disconnectedSlot=room._disconnectedSlot||{};
+        room._disconnectedSlot[isP1?"p1":"p2"]=true;
+        // 60秒以内に再接続が無ければルーム破棄
+        if(room._destroyTimer) clearTimeout(room._destroyTimer);
+        room._destroyTimer=setTimeout(()=>{
+          // まだ誰も復帰していなければ破棄
+          if(!room.player1&&!room.player2){
+            usedSpectateIds.delete(room.spectateId);
+            delete rooms[roomId];
+          }
+        },60000);
         break;
       }
       // 観戦者の切断
