@@ -4678,10 +4678,36 @@ function csCpuTryAttack(cs,canKill){
   // 実効打点（電光石火2回目は半減だが、ここでは1回目のフル打点で評価）
   const power=u=>{ const hasDenko=u.denko===true; const isSecond=u.attacked&&hasDenko&&!u.denkoAttackedThisTurn; return isSecond?Math.floor(u.atk/2):u.atk; };
 
-  // 相手ユニットがいない→全員でライフを叩く（トドメ含む）
+  // 相手フィールドスペルの脅威ランク（3=最強,2=次点,1=低,0=なし）
+  const fsName=cs.fieldSpell[op]?cs.fieldSpell[op].name:null;
+  const fsRank=(()=>{
+    if(!fsName)return 0;
+    if(["機甲要塞都市","世界樹の聖域","深海の神殿"].includes(fsName))return 3;
+    if(["薬草の湿地","瘴気の迷宮"].includes(fsName))return 2;
+    if(["ハイボルテージゾーン","灼熱地獄"].includes(fsName))return 1;
+    return 1;
+  })();
+  // 自軍の総打点（電光石火2回目の半減も考慮）
+  const totalPower=attackers.reduce((s,u)=>s+power(u)+((u.denko&&!u.attacked)?Math.floor(power(u)/2):0),0);
+
+  // 相手ユニットがいない→ライフを削り切れるなら全員でライフ、無理ならFSを叩く
   if(opB.length===0){
+    const canLethal=totalPower>=cs.life[op];
+    if(!canLethal && fsRank>=1 && attackers.length>0){
+      // ライフを削り切れない＆FSがある→最大打点でFSを叩く（ライフ攻撃は次の手で）
+      const a=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
+      csCpuExecuteAttack(cs,a,"fieldSpell");
+      return true;
+    }
     const a=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
     csCpuExecuteAttack(cs,a,null);
+    return true;
+  }
+
+  // 相手ユニットがいる時でも、最強ランクFS(3)なら攻撃役を1体残せる場合に1体だけFSへ回す
+  if(fsRank>=3 && attackers.length>=2){
+    const a=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
+    csCpuExecuteAttack(cs,a,"fieldSpell");
     return true;
   }
 
@@ -4745,6 +4771,20 @@ function csCpuExecuteAttack(cs,attacker,target){
   const atkCard=cards[attacker.name];
   const isAllAttack=atkCard&&atkCard.effect==="ALL_ATTACK";
   csEmit(cs,"playSound","atk_"+atkAttr);
+
+  // フィールドスペル攻撃
+  if(target==="fieldSpell"&&cs.fieldSpell[op]){
+    if(isSecond){attacker.attacked=true;attacker.denkoAttackedThisTurn=true;}else{attacker.attacked=true;}
+    const fs=cs.fieldSpell[op];
+    const atkPow=isSecond?Math.floor(attacker.atk/2):attacker.atk;
+    fs.durability-=atkPow;
+    if(atkPow>0)csDamagePop(cs,op,atkPow,false,-2);
+    csLog(cs,p,`「${attacker.name}」がフィールドスペル「${fs.name}」に${atkPow}ダメージ（残耐久${Math.max(0,fs.durability)}）`);
+    csEmit(cs,"hitEffect",{targetIdx:-2,attr:atkAttr,isEnemy:false,hasAttackAnim:true,attackerIdx:atkIdx,cpuAttacker:true,isFieldSpell:true});
+    if(fs.durability<=0)csDestroyFS(cs,op);
+    if(atkCard&&atkCard.attackEffect)csCpuAttackEffect(cs,attacker,atkPow);
+    return;
+  }
 
   // 全体攻撃
   if(isAllAttack&&cs.board[op].length>0){
