@@ -4777,5 +4777,45 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-06-18": {
+    "total": 4,
+    "hours": {
+      "8": 4
+    },
+    "pages": {
+      "index.html": 2,
+      "room.html": 2
+    },
+    "visitors": [
+      {
+        "time": "2026-06-18 23:27:25",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-18 23:27:49",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-18 23:27:51",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-18 23:27:52",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }

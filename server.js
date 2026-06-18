@@ -4690,25 +4690,29 @@ function csCpuTryAttack(cs,canKill){
   // 自軍の総打点（電光石火2回目の半減も考慮）
   const totalPower=attackers.reduce((s,u)=>s+power(u)+((u.denko&&!u.attacked)?Math.floor(power(u)/2):0),0);
 
-  // 相手ユニットがいない→ライフを削り切れるなら全員でライフ、無理ならFSを叩く
+  // 相手ユニットがいない→ライフ最優先。ただしFSを1撃で壊せる余剰打点があるなら先に壊す
   if(opB.length===0){
     const canLethal=totalPower>=cs.life[op];
-    if(!canLethal && fsRank>=1 && attackers.length>0){
-      // ライフを削り切れない＆FSがある→最大打点でFSを叩く（ライフ攻撃は次の手で）
-      const a=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
-      csCpuExecuteAttack(cs,a,"fieldSpell");
-      return true;
+    if(!canLethal && fsRank>=1 && cs.fieldSpell[op] && attackers.length>=2){
+      // 攻撃役が2体以上いて、1体でFSを壊し切れるなら壊す（残りはライフへ）
+      const fsDur=cs.fieldSpell[op].durability;
+      const breaker=attackers.find(u=>power(u)>=fsDur);
+      if(breaker){ csCpuExecuteAttack(cs,breaker,"fieldSpell"); return true; }
     }
+    // それ以外はライフを叩く
     const a=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
     csCpuExecuteAttack(cs,a,null);
     return true;
   }
 
-  // 相手ユニットがいる時でも、最強ランクFS(3)なら攻撃役を1体残せる場合に1体だけFSへ回す
-  if(fsRank>=3 && attackers.length>=2){
-    const a=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
-    csCpuExecuteAttack(cs,a,"fieldSpell");
-    return true;
+  // 最強ランクFS(3)を「1撃で破壊できる」攻撃役がいて、かつ他に攻撃役を残せる場合のみFSへ
+  if(fsRank>=3 && attackers.length>=2 && cs.fieldSpell[op]){
+    const fsDur=cs.fieldSpell[op].durability;
+    const breaker=attackers.find(u=>power(u)>=fsDur);
+    if(breaker){
+      csCpuExecuteAttack(cs,breaker,"fieldSpell");
+      return true;
+    }
   }
 
   // ===== ダメージ効率の振り分け =====

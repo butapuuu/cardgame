@@ -364,6 +364,10 @@ socket.io.on("reconnect_attempt",()=>{
 function _pcDoRejoin(){
   const rid=sessionStorage.getItem("pcMyRoomId");
   const role=sessionStorage.getItem("pcMyRole");
+  const dbg=document.createElement("div");
+  dbg.style.cssText="position:fixed;top:50px;left:50%;transform:translateX(-50%);background:rgba(0,0,80,0.95);color:#aef;padding:8px 14px;border-radius:8px;z-index:99999;font-size:13px;";
+  dbg.innerText="PC再接続送信 id="+rid+" role="+role;
+  document.body.appendChild(dbg);setTimeout(()=>dbg.remove(),6000);
   if(rid&&role){ socket.emit("roomRejoin",{roomId:rid,role:role}); }
   else { socket.emit("roomResync"); }
 }
