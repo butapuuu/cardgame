@@ -1096,8 +1096,8 @@ function _spShowDamagePop(data){
       else{
         const myBoardLen=spLatestState?.myBoard?.length??0;
         const myDomLen=cards.length;
-        if(myBoardLen===myDomLen&&myDomLen>0){targetCard=cards[myDomLen-1-unitIdx]||null;}
-        else if(myDomLen>0){targetCard=cards[Math.min(unitIdx,myDomLen-1)]||null;}
+        let di=myBoardLen-1-unitIdx-(myBoardLen-myDomLen);
+        targetCard=(myDomLen>0)?(cards[di]||null):null;
       }
       if(targetCard){const r=targetCard.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}
       else{cx=window.innerWidth/2;cy=window.innerHeight/2;}
@@ -1138,8 +1138,11 @@ socket.on("hitEffect",(data)=>{
       }
       else{
         const myCards=Array.from(document.getElementById("spMyUnits")?.querySelectorAll(".sp-card")||[]);
-        const myLen=myCards.length;
-        const di=myLen>0?myLen-1-data.targetIdx:data.targetIdx;
+        const logicalLen=(spLatestState&&spLatestState.myBoard)?spLatestState.myBoard.length:myCards.length;
+        const domLen=myCards.length;
+        // サーバーidx→表示idx（自分盤面は逆順描画）。DOM枚数が論理枚数と違う場合は差分を補正
+        let di=logicalLen-1-data.targetIdx;
+        di=di-(logicalLen-domLen); // 枚数が減っていれば前詰め補正
         const tgt=myCards[di];
         if(tgt){const tr=tgt.getBoundingClientRect();dx=((tr.left+tr.width/2)-(atkRect.left+atkRect.width/2))*0.7;dy=((tr.top+tr.height/2)-(atkRect.top+atkRect.height/2))*0.7;}
       }
@@ -1161,8 +1164,9 @@ socket.on("hitEffect",(data)=>{
         return;
       }
       const myCards2=Array.from(document.getElementById("spMyUnits")?.querySelectorAll(".sp-card")||[]);
-      const myLen2=myCards2.length;
-      const di2=myLen2>0?myLen2-1-data.targetIdx:data.targetIdx;
+      const logicalLen2=(spLatestState&&spLatestState.myBoard)?spLatestState.myBoard.length:myCards2.length;
+      const domLen2=myCards2.length;
+      let di2=logicalLen2-1-data.targetIdx-(logicalLen2-domLen2);
       const hitCard=myCards2[di2]; if(!hitCard)return;
       const r=hitCard.getBoundingClientRect();
       const fx=document.createElement("img");
