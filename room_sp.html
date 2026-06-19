@@ -781,7 +781,7 @@ function _spShowDP(data){
   }
   if(isLife){if(isEnemy){const el=document.getElementById("spDirectZone");if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=150;}}else{const el=document.getElementById("spHandArea");if(el){const r=el.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top;}else{cx=window.innerWidth/2;cy=window.innerHeight-100;}}}
   else if(unitIdx===-2){const fsId=isEnemy?"spEnemyFieldSpell":"spMyFieldSpell";const fsEl=document.getElementById(fsId)?.querySelector(".sp-card");if(fsEl){const r=fsEl.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
-  else{const cid=isEnemy?"spEnemyUnits":"spMyUnits";const c=document.getElementById(cid);if(c){const cards=Array.from(c.querySelectorAll(".sp-card"));let tc=null;if(isEnemy){tc=cards[unitIdx]||null;}else{const dl=cards.length;if(data.isCounter){if(dl>0)tc=cards[dl-1-unitIdx]||cards[Math.min(unitIdx,dl-1)]||null;}else{const ml=spLatestState?.myBoard?.length??0;if(ml===dl&&dl>0)tc=cards[dl-1-unitIdx]||null;else if(dl>0)tc=cards[Math.min(unitIdx,dl-1)]||null;}}if(tc){const r=tc.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
+  else{const cid=isEnemy?"spEnemyUnits":"spMyUnits";const c=document.getElementById(cid);if(c){const cards=Array.from(c.querySelectorAll(".sp-card"));let tc=null;if(isEnemy){tc=cards[unitIdx]||null;}else{const dl=cards.length;const ml=spLatestState?.myBoard?.length??dl;if(data.isCounter){if(dl>0){const di=ml-1-unitIdx-(ml-dl);tc=cards[di]||cards[Math.min(unitIdx,dl-1)]||null;}}else{if(dl>0){const di=ml-1-unitIdx-(ml-dl);tc=cards[di]||null;}}}if(tc){const r=tc.getBoundingClientRect();cx=r.left+r.width/2;cy=r.top+r.height/2;}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}else{cx=window.innerWidth/2;cy=window.innerHeight/2;}}
   const pop=document.createElement("div");pop.className="sp-damage-pop"+(isLife?" dmg-life":" dmg-unit")+(isEnemy?" dmg-enemy":"");pop.innerText="-"+amount;pop.style.left=cx+"px";pop.style.top=cy+"px";document.body.appendChild(pop);setTimeout(()=>pop.remove(),1300);
 }
 
@@ -873,8 +873,10 @@ socket.on("hitEffect",(data)=>{
         setTimeout(()=>{const fc=document.getElementById("spMyFieldSpell")?.querySelector(".sp-card");if(!fc)return;const r=fc.getBoundingClientRect();const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;fx.style.cssText=`position:fixed;left:${r.left+r.width/2}px;top:${r.top+r.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;document.body.appendChild(fx);setTimeout(()=>fx.remove(),500);},180);
       }else{
         const myC=document.getElementById("spMyUnits");if(!myC)return;
-        const myCards=Array.from(myC.querySelectorAll(".sp-card"));const ml=myCards.length;
-        const di=ml>0?ml-1-data.targetIdx:data.targetIdx;
+        const myCards=Array.from(myC.querySelectorAll(".sp-card"));
+        const logicalLen=(spLatestState&&spLatestState.myBoard)?spLatestState.myBoard.length:myCards.length;
+        const domLen=myCards.length;
+        const di=logicalLen-1-data.targetIdx-(logicalLen-domLen);
         const tgt=myCards[di];if(tgt){const tr=tgt.getBoundingClientRect();dx=((tr.left+tr.width/2)-(useRect.left+useRect.width/2))*0.7;dy=((tr.top+tr.height/2)-(useRect.top+useRect.height/2))*0.7;}
       }
       if(atkCard){
@@ -890,8 +892,10 @@ socket.on("hitEffect",(data)=>{
       }
       if(data.isDirect||data.isFieldSpell)return;
       const myC2=document.getElementById("spMyUnits");if(!myC2)return;
-      const myCards2=Array.from(myC2.querySelectorAll(".sp-card"));const ml2=myCards2.length;
-      const di2=ml2>0?ml2-1-data.targetIdx:data.targetIdx;
+      const myCards2=Array.from(myC2.querySelectorAll(".sp-card"));
+      const logicalLen2=(spLatestState&&spLatestState.myBoard)?spLatestState.myBoard.length:myCards2.length;
+      const domLen2=myCards2.length;
+      const di2=logicalLen2-1-data.targetIdx-(logicalLen2-domLen2);
       const hitCard=myCards2[di2];if(!hitCard)return;
       const r2=hitCard.getBoundingClientRect();
       const fx=document.createElement("img");fx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
