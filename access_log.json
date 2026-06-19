@@ -4819,12 +4819,12 @@
     ]
   },
   "2026-06-19": {
-    "total": 2,
+    "total": 8,
     "hours": {
-      "9": 2
+      "9": 8
     },
     "pages": {
-      "room.html": 2
+      "room.html": 8
     },
     "visitors": [
       {
@@ -4836,6 +4836,48 @@
       },
       {
         "time": "2026-06-19 00:19:33",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-19 00:45:30",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::ffff:127.0.0.1"
+      },
+      {
+        "time": "2026-06-19 00:45:32",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-19 00:53:47",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-19 00:53:50",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-19 00:54:09",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-19 00:54:37",
         "page": "room.html",
         "device": "PC",
         "browser": "Chrome",

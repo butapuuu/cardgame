@@ -4798,6 +4798,30 @@ function csCpuExecuteAttack(cs,attacker,target){
   const isAllAttack=atkCard&&atkCard.effect==="ALL_ATTACK";
   csEmit(cs,"playSound","atk_"+atkAttr);
 
+  // ★ストームタイタン等：攻撃時効果ALL_UNIT_DMG1は攻撃ダメージより先に発動
+  // 対象ユニット攻撃で、まだこの攻撃で全体ダメージを出していない場合のみ
+  if(target&&target!=="fieldSpell"&&atkCard&&atkCard.attackEffect==="ALL_UNIT_DMG1"&&!attacker.rollbackAttack){
+    csShowEffect(cs,attacker.name);
+    csDamageAllUnits(cs,op,1);
+    csLog(cs,p,`「${attacker.name}」攻撃時効果：相手全体1ダメージ`);
+    // 全体ダメージで攻撃対象が消えたら、攻撃自体を巻き戻して対象を選び直す
+    if(!cs.board[op].includes(target)){
+      attacker.rollbackAttack=true; // 次回は攻撃時効果を出さない
+      // フラグは立てない（まだ攻撃していない扱い）
+      // 攻撃対象を選び直して再攻撃
+      if(cs.board[op].length>0){
+        // 残った敵から効率の良い対象を選ぶ（最大HP以下を倒せる相手優先、なければ最大脅威）
+        let newTarget=cs.board[op].find(d=>{let dd=d.damageReduce?Math.min(1,attacker.atk):attacker.atk;if(d.barrier)dd=0;return dd>=d.hp;});
+        if(!newTarget) newTarget=cs.board[op].reduce((b,u)=>csThreat(u)>csThreat(b)?u:b,cs.board[op][0]);
+        csCpuExecuteAttack(cs,attacker,newTarget);
+      }else{
+        // 敵が全滅→このターンこのユニットは攻撃済みにする（ライフは次手で）
+        attacker.attacked=true;
+      }
+      return;
+    }
+  }
+
   // フィールドスペル攻撃
   if(target==="fieldSpell"&&cs.fieldSpell[op]){
     if(isSecond){attacker.attacked=true;attacker.denkoAttackedThisTurn=true;}else{attacker.attacked=true;}
@@ -4853,7 +4877,6 @@ function csCpuExecuteAttack(cs,attacker,target){
     }
     if(attacker.hp<=0){const ai=cs.board[p].indexOf(attacker);if(ai!==-1){cs.board[p].splice(ai,1);if(!attacker.isToken)cs.graves[p].push(attacker);csLog(cs,p,`→「${attacker.name}」が反撃で倒れた`);csTriggerDestroy(cs,attacker,p);}}
     if(atkCard&&atkCard.attackEffect&&atkCard.attackEffect!=="ALL_UNIT_DMG1")csCpuAttackEffect(cs,attacker,actualAtk);
-    else if(atkCard&&atkCard.attackEffect==="ALL_UNIT_DMG1")csCpuAttackEffect(cs,attacker,actualAtk);
   } else {
     csDamageLife(cs,op,atkPow);
     csLog(cs,p,`「${attacker.name}」でプレイヤーに直接攻撃（${atkPow}ダメージ、相手ライフ${cs.life[op]}）`);
