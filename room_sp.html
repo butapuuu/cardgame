@@ -371,6 +371,13 @@ socket.on("rejoinOK",(data)=>{
   _spShowConnBanner("✅ 試合に復帰しました","rgba(40,140,40,0.95)");
   setTimeout(_spHideConnBanner,1500);
 });
+
+socket.on("needRejoin",()=>{
+  _spDoRejoin();
+  _spShowConnBanner("🔄 接続を復元しています…","rgba(180,120,0,0.95)");
+  setTimeout(_spHideConnBanner,1500);
+});
+
 socket.on("rejoinFailed",(data)=>{
   const old=document.getElementById("spRejoinFailBox");if(old)old.remove();
   const box=document.createElement("div");box.id="spRejoinFailBox";

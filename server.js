@@ -3458,7 +3458,7 @@ io.on("connection",(socket)=>{
     for(const r of Object.values(rooms)){
       if(r.player1===socket.id||r.player2===socket.id){room=r;break;}
     }
-    if(!room){ socket.emit("message","ルームが見つかりません。再接続してください"); return; }
+    if(!room){ socket.emit("needRejoin"); return; }
     // resetと surrenderはwinnerチェック前に処理
     if(data.type==="reset"){
       // deckが送られた場合のみ更新、なければ前回のcustomDeckをそのまま使用
@@ -3549,10 +3549,13 @@ io.on("connection",(socket)=>{
         roomSend(room);
         return;
       }
+      // 既にこのスロットが自分のidなら復帰済み→データ移動は不要
+      const alreadyJoined=(data.role==="p1"&&room.player1===socket.id)||(data.role==="p2"&&room.player2===socket.id);
       // 旧socket.idを特定（切断でnullにしたので、データ側に残る旧idを探す）
       const allDataIds=Object.keys(room.hands||{});
       const liveOther=data.role==="p1"?room.player2:room.player1; // 生存中の相手id
-      const oldId=allDataIds.find(k=>k!==liveOther); // 相手以外＝自分の旧id
+      // 相手id・自分の新idの両方を除外して旧idを探す
+      const oldId=alreadyJoined?null:allDataIds.find(k=>k!==liveOther&&k!==socket.id);
       // P1/P2スロットを新しいsocket.idで埋め直す
       if(data.role==="p1") room.player1=socket.id;
       else if(data.role==="p2") room.player2=socket.id;
@@ -4690,27 +4693,46 @@ function csCpuTryAttack(cs,canKill){
   // 自軍の総打点（電光石火2回目の半減も考慮）
   const totalPower=attackers.reduce((s,u)=>s+power(u)+((u.denko&&!u.attacked)?Math.floor(power(u)/2):0),0);
 
-  // 相手ユニットがいない→ライフ最優先。ただしFSを1撃で壊せる余剰打点があるなら先に壊す
+  // 相手ユニットがいない場合
   if(opB.length===0){
     const canLethal=totalPower>=cs.life[op];
+    // ライフを削り切れない＆FSがある→最弱以外の攻撃役を1体だけFS削りに回す（残りはライフ）
+    // ライフを削り切れるならFSは無視してライフ最優先（勝ちを逃さない）
     if(!canLethal && fsRank>=1 && cs.fieldSpell[op] && attackers.length>=2){
-      // 攻撃役が2体以上いて、1体でFSを壊し切れるなら壊す（残りはライフへ）
-      const fsDur=cs.fieldSpell[op].durability;
-      const breaker=attackers.find(u=>power(u)>=fsDur);
-      if(breaker){ csCpuExecuteAttack(cs,breaker,"fieldSpell"); return true; }
+      // 最も打点の高い1体をFSへ。1撃で壊せなくても耐久を削る意味がある
+      const fsAtk=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
+      csCpuExecuteAttack(cs,fsAtk,"fieldSpell");
+      return true;
     }
-    // それ以外はライフを叩く
     const a=attackers.reduce((b,u)=>power(u)>power(b)?u:b,attackers[0]);
     csCpuExecuteAttack(cs,a,null);
     return true;
   }
 
-  // 最強ランクFS(3)を「1撃で破壊できる」攻撃役がいて、かつ他に攻撃役を残せる場合のみFSへ
-  if(fsRank>=3 && attackers.length>=2 && cs.fieldSpell[op]){
-    const fsDur=cs.fieldSpell[op].durability;
-    const breaker=attackers.find(u=>power(u)>=fsDur);
-    if(breaker){
-      csCpuExecuteAttack(cs,breaker,"fieldSpell");
+  // ===== 相手ユニットがいる場合：FSを削る余裕があるか判定 =====
+  // 「相手ユニットを全部倒すのに必要な攻撃役の数」を見積もり、それでも攻撃役が余るならFSへ回す。
+  if(fsRank>=1 && cs.fieldSpell[op]){
+    // 各敵を倒すのに要る攻撃役のうち、最低限必要な数をざっくり見積もる
+    // （倒せる敵の数だけ攻撃役を割り当て、残った攻撃役を「余り」とする）
+    const sortedAtk=[...attackers].sort((a,b)=>power(b)-power(a));
+    let used=0;
+    // 各敵について、1体の攻撃役で倒せるなら1体割り当てる（高打点から順に消費）
+    const remaining=[...sortedAtk];
+    opB.forEach(def=>{
+      const idx=remaining.findIndex(u=>{
+        let d=def.damageReduce?Math.min(1,power(u)):power(u);
+        if(def.barrier)d=0;
+        return d>=def.hp;
+      });
+      if(idx!==-1){ remaining.splice(idx,1); used++; }
+    });
+    // remaining が「敵対応に使わずに済む余剰攻撃役」
+    // 強FS(3)は余り1体以上、次点(2)は余り2体以上で削りに行く
+    const needSurplus = fsRank>=3 ? 1 : 2;
+    if(remaining.length>=needSurplus){
+      // 余剰のうち最も打点の高い1体でFSを叩く（1撃で壊せなくても削る）
+      const fsAtk=remaining.reduce((b,u)=>power(u)>power(b)?u:b,remaining[0]);
+      csCpuExecuteAttack(cs,fsAtk,"fieldSpell");
       return true;
     }
   }

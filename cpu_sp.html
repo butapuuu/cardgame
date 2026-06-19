@@ -1132,7 +1132,11 @@ socket.on("hitEffect",(data)=>{
       if(!useRect)return;
       const atkRect=useRect; let dx=0,dy=0;
       if(data.isDirect){dx=0;dy=160;}
-      else if(!data.isFieldSpell){
+      else if(data.isFieldSpell){
+        const fsCard=document.getElementById("spMyFieldSpell")?.querySelector(".sp-card");
+        if(fsCard){const tr=fsCard.getBoundingClientRect();dx=((tr.left+tr.width/2)-(atkRect.left+atkRect.width/2))*0.7;dy=((tr.top+tr.height/2)-(atkRect.top+atkRect.height/2))*0.7;}
+      }
+      else{
         const myCards=Array.from(document.getElementById("spMyUnits")?.querySelectorAll(".sp-card")||[]);
         const myLen=myCards.length;
         const di=myLen>0?myLen-1-data.targetIdx:data.targetIdx;
@@ -1145,7 +1149,17 @@ socket.on("hitEffect",(data)=>{
         atkCard.style.transition="transform 0.18s ease-out"; atkCard.style.transform=`translate(${dx}px,${dy}px)`;
         setTimeout(()=>{atkCard.style.transition="transform 0.16s ease-in";atkCard.style.transform="translate(0,0)";setTimeout(()=>{atkCard.style.transition="";atkCard.style.transform="";},180);},200);
       }
-      if(data.isDirect||data.isFieldSpell)return;
+      if(data.isDirect)return;
+      if(data.isFieldSpell){
+        const fsCard2=document.getElementById("spMyFieldSpell")?.querySelector(".sp-card");
+        if(!fsCard2)return;
+        const fr=fsCard2.getBoundingClientRect();
+        const ffx=document.createElement("img");
+        ffx.src=`effects/hit_${attr}.gif?t=${Date.now()}`;
+        ffx.style.cssText=`position:fixed;left:${fr.left+fr.width/2}px;top:${fr.top+fr.height/2}px;transform:translate(-50%,-50%);width:80px;pointer-events:none;z-index:999;`;
+        document.body.appendChild(ffx); setTimeout(()=>ffx.remove(),500);
+        return;
+      }
       const myCards2=Array.from(document.getElementById("spMyUnits")?.querySelectorAll(".sp-card")||[]);
       const myLen2=myCards2.length;
       const di2=myLen2>0?myLen2-1-data.targetIdx:data.targetIdx;
