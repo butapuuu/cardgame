@@ -1897,22 +1897,25 @@ const op=getOpponent(socket.id);
 
 // ライフ入力系（ヴェノムアルケミスト・ヴェノムロード）
       if(eff==="SUM_L_SELF-X_A+X"||eff==="SUM_L_SELF-X_DRAWX"){
-        const amount=data.lifeAmount;
-        const maxAmount = eff==="SUM_L_SELF-X_DRAWX" ? Math.min(3, game.life[p]-1) : game.life[p]-1;
-        if(!amount||amount<=0||amount>maxAmount){
-          const msg = eff==="SUM_L_SELF-X_DRAWX"
+        const amount=(data.lifeAmount===undefined||data.lifeAmount===null||isNaN(data.lifeAmount))?0:data.lifeAmount;
+        const isDraw = eff==="SUM_L_SELF-X_DRAWX";
+        const maxAmount = isDraw ? Math.min(3, game.life[p]-1) : game.life[p]-1;
+        const minAmount = isDraw ? 1 : 0; // アルケミストは0（払わない）可
+        if(amount<minAmount||amount>maxAmount){
+          const msg = isDraw
             ? `1〜${maxAmount}の範囲で入力してください（現在:${game.life[p]}）`
-            : `有効なライフ量を入力してください（1以上かつ現在ライフ未満）`;
+            : `0〜${maxAmount}の範囲で入力してください（0で支払わない・現在:${game.life[p]}）`;
           socket.emit("message",msg);
           game.pendingTarget=pt;
-          socket.emit("selectTarget",{type:"lifeInput",message:`支払うライフを入力してください（現在:${game.life[p]}）`});
+          socket.emit("selectTarget",{type:"lifeInput",message: isDraw?`支払うライフを入力してください（現在:${game.life[p]}）`:`支払うライフを入力（0で支払わない・現在:${game.life[p]}）`});
           send();return;
         }
         game.life[p]-=amount;
         if(eff==="SUM_L_SELF-X_A+X"){
           const conv=game.board[p].find(u=>u.name===pt.card);
           if(conv){conv.atk+=amount;}
-          addLog(p,`「${pt.card}」：ライフ${amount}を支払い、ATK+${amount}`);
+          if(amount>0) addLog(p,`「${pt.card}」：ライフ${amount}を支払い、ATK+${amount}`);
+          else addLog(p,`「${pt.card}」：ライフを支払わず着地`);
         }else{
           drawN(p,amount);
           addLog(p,`「${pt.card}」：ライフ${amount}を支払い、${amount}枚ドロー`);
