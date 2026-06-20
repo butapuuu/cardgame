@@ -285,7 +285,7 @@ img{ -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; poi
   </div>
 
   <div id="spMat">
-    <div id="spSpectateBanner">👁 観戦モード（手札は非公開）</div>
+    <div id="spSpectateBanner">👁 観戦モード</div>
     <div id="spSpectateIdBadge" style="display:none;position:fixed;bottom:6px;right:6px;background:rgba(0,0,0,0.75);border:1px solid rgba(255,200,0,0.4);border-radius:5px;padding:3px 8px;font-size:10px;color:#ffe066;z-index:200;pointer-events:none;">👁 観戦ID: <span id="spSpectateIdBadgeVal">----</span></div>
 
     <div class="sp-info-bar" id="spEnemyInfoBar">
@@ -967,6 +967,18 @@ socket.on("selectTarget",(data)=>{
 socket.on("roomUpdate",(g)=>{
   spLatestState=g;
   _spLastUpdateTime=Date.now();
+  if(g.spectatorCount!==undefined){
+    const sb=document.getElementById("spSpectateBanner");
+    if(sb&&spPlayerRole==="spectator")sb.innerText="👁 観戦モード　観戦者 "+g.spectatorCount+"人";
+    if(spPlayerRole!=="spectator"){
+      const badge=document.getElementById("spSpectateIdBadge");
+      if(badge){
+        let cntEl=document.getElementById("spSpectateCountInBadge");
+        if(!cntEl){cntEl=document.createElement("span");cntEl.id="spSpectateCountInBadge";badge.appendChild(cntEl);}
+        cntEl.innerText="　観戦 "+g.spectatorCount+"人";
+      }
+    }
+  }
   _spGameStarted=true;
   _spDisconnected=false;
   { const f=document.getElementById("spFreezeHelp"); if(f)f.remove(); _spHideConnBanner(); }

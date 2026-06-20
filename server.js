@@ -1242,6 +1242,19 @@ function startTurn(p){
 
   // （根の呪縛カウントダウンはend_turnで行う）
 
+  // ★フィールドスペル（機甲要塞都市）を先に処理（オートマトンファクトリーより優先）
+  {
+    const fsPre=game.fieldSpell[p];
+    if(fsPre&&cards[fsPre.name]?.effect==="PERM_SPELL_IRON_FACTORY"){
+      if(game.board[p].length<3){
+        const gigToken={name:"ギギギアトークン",atk:3,hp:3,attacked:false,attr:"steel",isToken:true};
+        game.board[p].push(gigToken);
+        applyFieldSpellOnSummon(gigToken, p);
+        addLog(p,`「${fsPre.name}」：ギギギアトークンを召喚`);
+      }
+    }
+  }
+
   // START_TOKEN1（オートマトンファクトリー）
   game.board[p].forEach(u=>{
     const c=cards[u.name];
@@ -1251,7 +1264,7 @@ function startTurn(p){
     }
   });
 
-  // END_A+1（フォレストビースト）はターン終了時に処理
+  // END_A+1（フォレストビースト）はターン終了時に処理
 
   // ★フィールドスペル：ターン開始時効果
   const fs=game.fieldSpell[p];
@@ -1268,15 +1281,7 @@ function startTurn(p){
       game.life[p]+=3;
       addLog(p,`「${fs.name}」：ライフ+3`);
     }
-    // 機甲要塞都市：ギギギアトークン召喚
-    if(fsEff==="PERM_SPELL_IRON_FACTORY"){
-      if(game.board[p].length<3){
-        const gigToken={name:"ギギギアトークン",atk:3,hp:3,attacked:false,attr:"steel",isToken:true};
-        game.board[p].push(gigToken);
-        applyFieldSpellOnSummon(gigToken, p);
-        addLog(p,`「${fs.name}」：ギギギアトークンを召喚`);
-      }
-    }
+    // 機甲要塞都市：ギギギアトークン召喚は上で優先処理済み
   }
 }
 
@@ -2835,7 +2840,8 @@ function roomSend(room){
       currentTurnLogs:room.turnLogs[room.turn]||[],
       playerRole:id===room.player1?"p1":"p2",
       roomId:room.roomId,
-      spectateId:room.spectateId
+      spectateId:room.spectateId,
+      spectatorCount:(room.spectators||[]).length
     });
   });
   // 観戦者送信（手札は枚数のみ）
@@ -2866,7 +2872,8 @@ function roomSend(room){
       currentTurnLogs:room.turnLogs[room.turn]||[],
       playerRole:"spectator",
       roomId:room.roomId,
-      spectateId:room.spectateId
+      spectateId:room.spectateId,
+      spectatorCount:(room.spectators||[]).length
     });
   });
 }
@@ -3101,13 +3108,20 @@ function roomStartTurn(room, p){
   else{ room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+2); }
   room.energy[p]=room.maxEnergy[p];
   room.board[p].forEach(u=>{u.attacked=false;u.denkoAttackedThisTurn=false;u.rollbackAttack=false;});
+  {
+    const fsPre=room.fieldSpell[p];
+    if(fsPre&&cards[fsPre.name]?.effect==="PERM_SPELL_IRON_FACTORY"&&room.board[p].length<3){
+      const gt={name:"ギギギアトークン",atk:3,hp:3,attacked:false,attr:"steel",isToken:true};
+      room.board[p].push(gt);roomApplyFieldSpellOnSummon(room,gt,p);roomAddLog(room,p,`「${fsPre.name}」：ギギギアトークンを召喚`);
+    }
+  }
   room.board[p].forEach(u=>{const c=cards[u.name];if(c&&c.effect==="START_TOKEN1"){roomShowEffect(room,u.name);roomSummonToken(room,p,"ギアトークン",1);}});
   const fs=room.fieldSpell[p];
   if(fs){
     const fe=cards[fs.name]?.effect||"";
     if(fe==="PERM_SPELL_WATER_ENERGY"){room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+1);room.energy[p]=Math.min(room.maxEnergy[p],room.energy[p]+1);roomAddLog(room,p,`「${fs.name}」：エネルギー+1`);}
     if(fe==="PERM_SPELL_HERB_HEAL"){room.life[p]+=3;roomAddLog(room,p,`「${fs.name}」：ライフ+3`);}
-    if(fe==="PERM_SPELL_IRON_FACTORY"){if(room.board[p].length<3){const gt={name:"ギギギアトークン",atk:3,hp:3,attacked:false,attr:"steel",isToken:true};room.board[p].push(gt);roomApplyFieldSpellOnSummon(room,gt,p);roomAddLog(room,p,`「${fs.name}」：ギギギアトークン召喚`);}}
+    // 機甲要塞都市のギギギアトークンは上で優先処理済み
   }
 }
 
@@ -3622,6 +3636,7 @@ io.on("connection",(socket)=>{
       // 観戦者の切断
       if(room.spectators&&room.spectators.includes(socket.id)){
         room.spectators=room.spectators.filter(s=>s!==socket.id);
+        roomSend(room);
       }
     }
   });
@@ -4145,13 +4160,20 @@ function csStartTurn(cs,p){
   else cs.maxEnergy[p]=Math.min(10,cs.maxEnergy[p]+2);
   cs.energy[p]=cs.maxEnergy[p];
   cs.board[p].forEach(u=>{u.attacked=false;u.denkoAttackedThisTurn=false;u.rollbackAttack=false;});
+  {
+    const fsPre=cs.fieldSpell[p];
+    if(fsPre&&cards[fsPre.name]?.effect==="PERM_SPELL_IRON_FACTORY"&&cs.board[p].length<3){
+      const gt={name:"ギギギアトークン",atk:3,hp:3,attacked:false,attr:"steel",isToken:true};
+      cs.board[p].push(gt);csApplyFSOnSummon(cs,gt,p);csLog(cs,p,`「${fsPre.name}」：ギギギアトークンを召喚`);
+    }
+  }
   cs.board[p].forEach(u=>{const c=cards[u.name];if(c&&c.effect==="START_TOKEN1"){csShowEffect(cs,u.name);csSummonToken(cs,p,"ギアトークン",1);}});
   const fs=cs.fieldSpell[p];
   if(fs){
     const fe=cards[fs.name]?.effect||"";
     if(fe==="PERM_SPELL_WATER_ENERGY"){cs.maxEnergy[p]=Math.min(10,cs.maxEnergy[p]+1);cs.energy[p]=Math.min(cs.maxEnergy[p],cs.energy[p]+1);csLog(cs,p,`「${fs.name}」：エネルギー+1`);}
     if(fe==="PERM_SPELL_HERB_HEAL"){cs.life[p]+=3;csLog(cs,p,`「${fs.name}」：ライフ+3`);}
-    if(fe==="PERM_SPELL_IRON_FACTORY"){if(cs.board[p].length<3){const gt={name:"ギギギアトークン",atk:3,hp:3,attacked:false,attr:"steel",isToken:true};cs.board[p].push(gt);csApplyFSOnSummon(cs,gt,p);csLog(cs,p,`「${fs.name}」：ギギギアトークンを召喚`);}}
+    // 機甲要塞都市のギギギアトークンは上で優先処理済み
   }
 }
 

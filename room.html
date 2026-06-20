@@ -277,7 +277,7 @@ body{
         <button id="seToggleBtn" onclick="toggleSE()" style="background:linear-gradient(135deg,#0a1a2a,#1a2a3a);color:#88aacc;border:1px solid #2a4a6a;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:bold;cursor:pointer;">🔊 SE</button>
       </div>
     </div>
-    <div id="spectateBanner" style="display:none;">👁 観戦モード（手札は非公開）</div>
+    <div id="spectateBanner" style="display:none;">👁 観戦モード</div>
     <div id="spectateIdBadge" style="display:none;position:fixed;bottom:8px;right:8px;background:rgba(0,0,0,0.7);border:1px solid rgba(255,200,0,0.4);border-radius:6px;padding:4px 10px;font-size:11px;color:#ffe066;z-index:200;pointer-events:none;">👁 観戦ID: <span id="spectateIdBadgeVal">----</span></div>
     <div class="pm-wrapper">
       <div class="pm-half">
@@ -946,6 +946,18 @@ socket.on("roomUpdate",(g)=>{
   _lastUpdateTime=Date.now();
   _gameStarted=true;
   _disconnected=false;
+  if(g.spectatorCount!==undefined){
+    const sb=document.getElementById("spectateBanner");
+    if(sb&&playerRole==="spectator")sb.innerText="👁 観戦モード　観戦者 "+g.spectatorCount+"人";
+    if(playerRole!=="spectator"){
+      let cntEl=document.getElementById("spectateCountInBadge");
+      const badge=document.getElementById("spectateIdBadge");
+      if(badge){
+        if(!cntEl){cntEl=document.createElement("span");cntEl.id="spectateCountInBadge";badge.appendChild(cntEl);}
+        cntEl.innerText="　観戦者 "+g.spectatorCount+"人";
+      }
+    }
+  }
   { const f=document.getElementById("freezeHelp"); if(f)f.remove(); _hideConnBanner(); }
 
   if(_prevTurn!==null&&_prevTurn!==g.turn&&!g.winner)showTurnChangeAnim();
