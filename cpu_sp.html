@@ -773,8 +773,12 @@ function spSelectPlayer(num){
 function cpuStartGame(){
   if(!_cpuPlayerDeck||!_cpuPlayerDeck.length){alert("あなたのデッキを選択してください");return;}
   if(!_cpuCpuDeck||!_cpuCpuDeck.length){alert("CPUのデッキを選択してください");return;}
+  spResultShown=false;
+  // ★STARTのクリック操作の文脈を保ったまま即座にBGMを開始（自動再生制限の回避）
+  spStopBGM();
+  _bgmPlaying=false;
+  spStartBGM();
   socket.emit("cpuStart",{playerDeck:_cpuPlayerDeck,cpuDeck:_cpuCpuDeck});
-  spResultShown=false; _bgmPlaying=false; spStopBGM(); setTimeout(()=>spStartBGM(),200);
 }
 
 // ===== ゲーム操作 =====
