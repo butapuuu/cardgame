@@ -578,28 +578,24 @@ let _bgmCtx=null, _bgmGain=null, _bgmBuf=null, _bgmSrc=null, _bgmPlaying=false;
 let _spBgmEnabled=true,_spSeEnabled=true;
 
 async function spStartBGM(){
-  // ★デバッグ
-  const _dbg=document.createElement("div");
-  _dbg.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,140,0.97);color:#fff;padding:20px;border-radius:12px;z-index:999999;font-size:15px;text-align:center;max-width:90vw;border:3px solid #4af;cursor:pointer;";
-  _dbg.innerText="spStartBGM呼出\n_bgmPlaying="+_bgmPlaying+"\n_spBgmEnabled="+_spBgmEnabled+"\nctx="+(_bgmCtx?_bgmCtx.state:"null")+"\nbuf="+(_bgmBuf?"あり":"なし");
-  _dbg.style.whiteSpace="pre";
-  _dbg.onclick=()=>_dbg.remove();
-  document.body.appendChild(_dbg);
-  setTimeout(()=>{try{_dbg.remove();}catch(e){}},6000);
   if(_bgmPlaying||!_spBgmEnabled) return;
   try{
+    // ★Contextの生成とresumeは「await前」に同期実行（クリック文脈を保つ）
     if(!_bgmCtx){
       _bgmCtx=new(window.AudioContext||window.webkitAudioContext)();
       _bgmGain=_bgmCtx.createGain();
       _bgmGain.gain.value=0.12;
       _bgmGain.connect(_bgmCtx.destination);
     }
-    // BGMバッファが未ロードなら取得
+    // クリック文脈が生きているうちにresumeを発火（awaitしない＝文脈を消費しない）
+    if(_bgmCtx.state==="suspended") _bgmCtx.resume();
+    // BGMバッファが未ロードなら取得（ここで初めてawait）
     if(!_bgmBuf){
       const res=await fetch("sounds/BGM.mp3");
       const ab=await res.arrayBuffer();
       _bgmBuf=await _bgmCtx.decodeAudioData(ab);
     }
+    // ロード完了後、念のため再度resume（awaitで確実に）
     if(_bgmCtx.state==="suspended") await _bgmCtx.resume();
     _bgmSrc=_bgmCtx.createBufferSource();
     _bgmSrc.buffer=_bgmBuf;
