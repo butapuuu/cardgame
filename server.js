@@ -3175,11 +3175,13 @@ function roomHandleSelectTarget(room, socket, data){
   }
 
   if(eff==="SUM_L_SELF-X_A+X"||eff==="SUM_L_SELF-X_DRAWX"){
-    const amount=data.lifeAmount;
-    const maxA=eff==="SUM_L_SELF-X_DRAWX"?Math.min(3,room.life[p]-1):room.life[p]-1;
-    if(!amount||amount<=0||amount>maxA){socket.emit("message",`有効なライフ量を入力してください`);room.pendingTarget=pt;socket.emit("selectTarget",{type:"lifeInput",message:`支払うライフを入力（現在:${room.life[p]}）`});roomSend(room);return;}
+    const amount=(data.lifeAmount===undefined||data.lifeAmount===null||isNaN(data.lifeAmount))?0:data.lifeAmount;
+    const isDraw=eff==="SUM_L_SELF-X_DRAWX";
+    const maxA=isDraw?Math.min(3,room.life[p]-1):room.life[p]-1;
+    const minA=isDraw?1:0;
+    if(amount<minA||amount>maxA){socket.emit("message",isDraw?`1〜${maxA}の範囲で入力してください`:`0〜${maxA}の範囲で入力（0で支払わない）`);room.pendingTarget=pt;socket.emit("selectTarget",{type:"lifeInput",message:isDraw?`支払うライフを入力（現在:${room.life[p]}）`:`支払うライフを入力（0で支払わない・現在:${room.life[p]}）`});roomSend(room);return;}
     room.life[p]-=amount;
-    if(eff==="SUM_L_SELF-X_A+X"){const cv=room.board[p].find(u=>u.name===pt.card);if(cv)cv.atk+=amount;roomAddLog(room,p,`「${pt.card}」：ライフ${amount}→ATK+${amount}`);}
+    if(eff==="SUM_L_SELF-X_A+X"){const cv=room.board[p].find(u=>u.name===pt.card);if(cv)cv.atk+=amount;if(amount>0)roomAddLog(room,p,`「${pt.card}」：ライフ${amount}→ATK+${amount}`);else roomAddLog(room,p,`「${pt.card}」：ライフを支払わず着地`);}
     else{roomDrawN(room,p,amount);roomAddLog(room,p,`「${pt.card}」：ライフ${amount}→${amount}枚ドロー`);}
     if(room.life[p]<=0)room.winner=op;
     room.pendingTarget=null;roomSend(room);return;
@@ -4355,11 +4357,13 @@ function csPlayerSelectTarget(cs,data){
 
   // ライフ入力
   if(eff==="SUM_L_SELF-X_A+X"||eff==="SUM_L_SELF-X_DRAWX"){
-    const amount=data.lifeAmount;
-    const maxA=eff==="SUM_L_SELF-X_DRAWX"?Math.min(3,cs.life[p]-1):cs.life[p]-1;
-    if(!amount||amount<=0||amount>maxA){csEmit(cs,"message","有効なライフ量を入力してください");cs.pendingTarget=pt;csEmit(cs,"selectTarget",{type:"lifeInput",message:`支払うライフを入力（現在:${cs.life[p]}）`});csSend(cs);return;}
+    const amount=(data.lifeAmount===undefined||data.lifeAmount===null||isNaN(data.lifeAmount))?0:data.lifeAmount;
+    const isDraw=eff==="SUM_L_SELF-X_DRAWX";
+    const maxA=isDraw?Math.min(3,cs.life[p]-1):cs.life[p]-1;
+    const minA=isDraw?1:0;
+    if(amount<minA||amount>maxA){csEmit(cs,"message",isDraw?`1〜${maxA}の範囲で入力してください`:`0〜${maxA}の範囲で入力（0で支払わない）`);cs.pendingTarget=pt;csEmit(cs,"selectTarget",{type:"lifeInput",message:isDraw?`支払うライフを入力（現在:${cs.life[p]}）`:`支払うライフを入力（0で支払わない・現在:${cs.life[p]}）`});csSend(cs);return;}
     cs.life[p]-=amount;
-    if(eff==="SUM_L_SELF-X_A+X"){const cv=cs.board[p].find(u=>u.name===pt.card);if(cv)cv.atk+=amount;csLog(cs,p,`「${pt.card}」：ライフ${amount}→ATK+${amount}`);}
+    if(eff==="SUM_L_SELF-X_A+X"){const cv=cs.board[p].find(u=>u.name===pt.card);if(cv)cv.atk+=amount;if(amount>0)csLog(cs,p,`「${pt.card}」：ライフ${amount}→ATK+${amount}`);else csLog(cs,p,`「${pt.card}」：ライフを支払わず着地`);}
     else{csDrawN(cs,p,amount);csLog(cs,p,`「${pt.card}」：ライフ${amount}→${amount}枚ドロー`);}
     if(cs.life[p]<=0)cs.winner=op;
     cs.pendingTarget=null; csSend(cs); return;
