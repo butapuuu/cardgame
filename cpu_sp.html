@@ -592,7 +592,6 @@ function spStartBGM(){
 }
 
 function spStopBGM(){const a=document.getElementById("spBgmAudio");if(a){try{a.pause();a.currentTime=0;}catch(e){}}_bgmPlaying=false;}
-}
 function spToggleBGM(){_spBgmEnabled=!_spBgmEnabled;const btn=document.getElementById("spBgmBtn");if(_spBgmEnabled){btn.style.color="#88aacc";btn.style.opacity="1";btn.innerText="🎵";spStartBGM();}else{btn.style.color="#666";btn.style.opacity="0.5";btn.innerText="🔇";spStopBGM();}}
 function spToggleSE(){_spSeEnabled=!_spSeEnabled;const btn=document.getElementById("spSeBtn");if(_spSeEnabled){btn.style.color="#88aacc";btn.style.opacity="1";btn.innerText="🔊";}else{btn.style.color="#666";btn.style.opacity="0.5";btn.innerText="🔇";}}
 
