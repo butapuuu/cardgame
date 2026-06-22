@@ -356,6 +356,8 @@ img{
 </head>
 <body>
 
+<audio id="spBgmAudio" src="sounds/BGM.mp3" loop preload="auto"></audio>
+
 <!-- ドローアニメーション -->
 <img id="spDrawCardAnim" src="images/card_back.png">
 <img id="spDrawCardAnimFront" src="images/card_back.png">
@@ -577,48 +579,19 @@ let spResultShown=false;
 let _bgmCtx=null, _bgmGain=null, _bgmBuf=null, _bgmSrc=null, _bgmPlaying=false;
 let _spBgmEnabled=true,_spSeEnabled=true;
 
-async function spStartBGM(){
-  if(_bgmPlaying||!_spBgmEnabled) return;
-  try{
-    // ★Contextの生成とresumeは「await前」に同期実行（クリック文脈を保つ）
-    if(!_bgmCtx){
-      _bgmCtx=new(window.AudioContext||window.webkitAudioContext)();
-      _bgmGain=_bgmCtx.createGain();
-      _bgmGain.gain.value=0.12;
-      _bgmGain.connect(_bgmCtx.destination);
-    }
-    // クリック文脈が生きているうちにresumeを発火（awaitしない＝文脈を消費しない）
-    if(_bgmCtx.state==="suspended") _bgmCtx.resume();
-    // BGMバッファが未ロードなら取得（ここで初めてawait）
-    if(!_bgmBuf){
-      const res=await fetch("sounds/BGM.mp3");
-      const ab=await res.arrayBuffer();
-      _bgmBuf=await _bgmCtx.decodeAudioData(ab);
-    }
-    // ロード完了後、念のため再度resume（awaitで確実に）
-    if(_bgmCtx.state==="suspended") await _bgmCtx.resume();
-    _bgmSrc=_bgmCtx.createBufferSource();
-    _bgmSrc.buffer=_bgmBuf;
-    _bgmSrc.loop=true;
-    _bgmSrc.connect(_bgmGain);
-    _bgmSrc.start(0);
-    _bgmPlaying=true;
-  }catch(e){
-    // フォールバック：Audio要素
-    try{
-      window._bgmFallback=window._bgmFallback||new Audio("sounds/BGM.mp3");
-      window._bgmFallback.volume=0.12;
-      window._bgmFallback.loop=true;
-      window._bgmFallback.play().catch(()=>{});
-      _bgmPlaying=true;
-    }catch(e2){}
-  }
+function spStartBGM(){
+  if(!_spBgmEnabled) return;
+  const a=document.getElementById("spBgmAudio");
+  if(!a) return;
+  a.volume=0.12;
+  a.loop=true;
+  try{ a.currentTime=0; }catch(e){}
+  const pr=a.play();
+  if(pr&&pr.catch){ pr.catch(()=>{}); }
+  _bgmPlaying=true;
 }
 
-function spStopBGM(){
-  if(_bgmSrc){try{_bgmSrc.stop();}catch(e){} _bgmSrc=null;}
-  if(window._bgmFallback){_bgmFallback.pause();_bgmFallback.currentTime=0;}
-  _bgmPlaying=false;
+function spStopBGM(){const a=document.getElementById("spBgmAudio");if(a){try{a.pause();a.currentTime=0;}catch(e){}}_bgmPlaying=false;}
 }
 function spToggleBGM(){_spBgmEnabled=!_spBgmEnabled;const btn=document.getElementById("spBgmBtn");if(_spBgmEnabled){btn.style.color="#88aacc";btn.style.opacity="1";btn.innerText="🎵";spStartBGM();}else{btn.style.color="#666";btn.style.opacity="0.5";btn.innerText="🔇";spStopBGM();}}
 function spToggleSE(){_spSeEnabled=!_spSeEnabled;const btn=document.getElementById("spSeBtn");if(_spSeEnabled){btn.style.color="#88aacc";btn.style.opacity="1";btn.innerText="🔊";}else{btn.style.color="#666";btn.style.opacity="0.5";btn.innerText="🔇";}}
@@ -778,11 +751,7 @@ function cpuStartGame(){
   if(!_cpuPlayerDeck||!_cpuPlayerDeck.length){alert("あなたのデッキを選択してください");return;}
   if(!_cpuCpuDeck||!_cpuCpuDeck.length){alert("CPUのデッキを選択してください");return;}
   spResultShown=false;
-  // ★クリック文脈のうちにContextを生成し、無音を鳴らして確実に起こす（自動再生制限回避）
-  spStopBGM();
-  _bgmPlaying=false;
-  _spPrimeAudio();   // ← 同期でContext起動
-  spStartBGM();      // ← バッファ読込→再生（Contextは既にrunning）
+  spStartBGM();
   socket.emit("cpuStart",{playerDeck:_cpuPlayerDeck,cpuDeck:_cpuCpuDeck});
 }
 
