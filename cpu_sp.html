@@ -778,11 +778,31 @@ function cpuStartGame(){
   if(!_cpuPlayerDeck||!_cpuPlayerDeck.length){alert("あなたのデッキを選択してください");return;}
   if(!_cpuCpuDeck||!_cpuCpuDeck.length){alert("CPUのデッキを選択してください");return;}
   spResultShown=false;
-  // ★STARTのクリック操作の文脈を保ったまま即座にBGMを開始（自動再生制限の回避）
+  // ★クリック文脈のうちにContextを生成し、無音を鳴らして確実に起こす（自動再生制限回避）
   spStopBGM();
   _bgmPlaying=false;
-  spStartBGM();
+  _spPrimeAudio();   // ← 同期でContext起動
+  spStartBGM();      // ← バッファ読込→再生（Contextは既にrunning）
   socket.emit("cpuStart",{playerDeck:_cpuPlayerDeck,cpuDeck:_cpuCpuDeck});
+}
+
+// ★クリック操作の同期処理内でAudioContextを起こすプリウォーム
+function _spPrimeAudio(){
+  try{
+    if(!_bgmCtx){
+      _bgmCtx=new(window.AudioContext||window.webkitAudioContext)();
+      _bgmGain=_bgmCtx.createGain();
+      _bgmGain.gain.value=0.12;
+      _bgmGain.connect(_bgmCtx.destination);
+    }
+    // 無音1サンプルを即座に再生してContextをrunningにする
+    const buf=_bgmCtx.createBuffer(1,1,22050);
+    const src=_bgmCtx.createBufferSource();
+    src.buffer=buf;
+    src.connect(_bgmCtx.destination);
+    src.start(0);
+    if(_bgmCtx.state==="suspended") _bgmCtx.resume();
+  }catch(e){}
 }
 
 // ===== ゲーム操作 =====
