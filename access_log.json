@@ -5127,5 +5127,30 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-06-23": {
+    "total": 2,
+    "hours": {
+      "9": 2
+    },
+    "pages": {
+      "room.html": 2
+    },
+    "visitors": [
+      {
+        "time": "2026-06-23 00:55:20",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-06-23 00:55:22",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }
