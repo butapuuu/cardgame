@@ -667,8 +667,17 @@ socket.on("selectTarget",(data)=>{
     selectTargetMode=null;return;
   }
   if(data.type==="painUpkeep"){
-    const pay=confirm(data.message+"\n\n【OK】ライフ2を支払う\n【キャンセル】破壊する");
-    socket.emit("cpuAction",{type:"select_target",painPay:pay});
+    const old=document.getElementById("painDlg"); if(old)old.remove();
+    const d=document.createElement("div"); d.id="painDlg";
+    d.style.cssText="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e2e1e;border:2px solid #8a2222;border-radius:12px;padding:24px;z-index:5000;text-align:center;min-width:320px;max-width:90vw;box-shadow:0 0 30px rgba(0,0,0,0.9);";
+    d.innerHTML=`<div style="color:#ffaaaa;font-size:15px;font-weight:bold;margin-bottom:16px;line-height:1.6;white-space:pre-wrap;">${data.message}</div>
+      <div style="display:flex;gap:10px;">
+        <button id="painPayBtn" style="flex:1;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;">ライフ2を支払う</button>
+        <button id="painDesBtn" style="flex:1;background:linear-gradient(135deg,#2a0808,#4a1212);color:#ff8888;border:1px solid #8a2222;border-radius:8px;padding:11px;font-size:13px;font-weight:bold;cursor:pointer;">破壊する</button>
+      </div>`;
+    document.body.appendChild(d);
+    document.getElementById("painPayBtn").onclick=()=>{d.remove();socket.emit("cpuAction",{type:"select_target",painPay:true});};
+    document.getElementById("painDesBtn").onclick=()=>{d.remove();socket.emit("cpuAction",{type:"select_target",painPay:false});};
     selectTargetMode=null;return;
   }
   if(data.type==="altCost"){

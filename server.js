@@ -2971,6 +2971,10 @@ function roomSend(room){
 function roomNotifyPendingTarget(room){
   if(!room.pendingTarget) return;
   const pt=room.pendingTarget;
+  if(pt.effect==="PAIN_UPKEEP"){
+    const s=io.sockets.sockets.get(pt.player);
+    if(s) s.emit("selectTarget",{type:"painUpkeep",message:`「${pt.card}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${room.life[pt.player]}）`});
+  }
   if(pt.effect==="DES_SUMMON_C2_HAND"){
     const s=io.sockets.sockets.get(pt.player);
     if(s) s.emit("selectTarget",{type:"handUnit_cost2",message:"グロウコア破壊時効果：コスト2以下のユニットを召喚してください"});
@@ -3274,8 +3278,6 @@ function roomStartTurn(room, p){
     });
     if(_ask.length>0){
       room.pendingTarget={player:p,effect:"PAIN_UPKEEP",card:_ask[0].name,unit:_ask[0],queue:_ask.slice(1)};
-      const s=io.sockets.sockets.get(p);
-      if(s) s.emit("selectTarget",{type:"painUpkeep",message:`「${_ask[0].name}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${room.life[p]}）`});
     }
   }
   room.board[p].forEach(u=>{const c=cardOf(u);if(c&&c.effect==="START_TOKEN1"){roomShowEffect(room,u.name);roomSummonToken(room,p,"ギアトークン",1);}});
@@ -3356,7 +3358,7 @@ function roomHandleSelectTarget(room, socket, data){
     const q=(pt.queue||[]).filter(x=>room.board[p].includes(x));
     if(q.length>0&&room.life[p]>=3){
       room.pendingTarget={player:p,effect:"PAIN_UPKEEP",card:q[0].name,unit:q[0],queue:q.slice(1)};
-      socket.emit("selectTarget",{type:"painUpkeep",message:`「${q[0].name}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${room.life[p]}）`});
+      roomNotifyPendingTarget(room);
     }
     roomSend(room);return;
   }
@@ -4614,7 +4616,7 @@ function csStartTurn(cs,p){
     });
     if(_ask.length>0){
       cs.pendingTarget={player:p,effect:"PAIN_UPKEEP",card:_ask[0].name,unit:_ask[0],queue:_ask.slice(1)};
-      csEmit(cs,"selectTarget",{type:"painUpkeep",message:`「${_ask[0].name}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${cs.life[p]}）`});
+      cs._notifyPain=true;
     }
   }
   cs.board[p].forEach(u=>{const c=cardOf(u);if(c&&c.effect==="START_TOKEN1"){csShowEffect(cs,u.name);csSummonToken(cs,p,"ギアトークン",1);}});
@@ -4652,6 +4654,13 @@ function csPassTurn(cs){
   cs.turn=csOpp(cs,cur);
   csStartTurn(cs,cs.turn);
   csSend(cs);
+  if(cs._notifyPain){
+    cs._notifyPain=false;
+    const _pt=cs.pendingTarget;
+    if(_pt&&_pt.effect==="PAIN_UPKEEP"&&_pt.player===cs.player){
+      csEmit(cs,"selectTarget",{type:"painUpkeep",message:`「${_pt.card}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${cs.life[cs.player]}）`});
+    }
+  }
   // CPUのターンなら思考開始
   if(cs.turn===CPU_ID&&!cs.winner){
     cs.cpuBusy=true;
