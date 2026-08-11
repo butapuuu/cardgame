@@ -155,6 +155,7 @@ body{
 .status-badge.restrain{ background:radial-gradient(circle at 35% 30%,#5eff7d,#1a9a3a); color:#fff; text-shadow:0 0 3px #0a5a1a; }
 .status-badge.crystal{ background:radial-gradient(circle at 35% 30%,#7dewff,#1a9aca); background:radial-gradient(circle at 35% 30%,#7de4ff,#1a9aca); color:#fff; text-shadow:0 0 3px #0a5a7a; }
 .status-badge.denko{ background:radial-gradient(circle at 35% 30%,#fff27d,#e0a800); color:#7a5a00; text-shadow:none; position:relative; }
+.status-badge.void{ background:radial-gradient(circle at 35% 30%,#4a4a55,#080810); color:#ccccdd; text-shadow:0 0 3px #000; border-color:rgba(180,180,200,0.9); }
 .status-badge.denko .denko-count{ position:absolute; bottom:-3px; right:-3px; background:#222; color:#ffe066; font-size:8px; font-weight:bold; width:11px; height:11px; border-radius:50%; display:flex; align-items:center; justify-content:center; border:1px solid #ffe066; }
 #enemyPlayerZone{ background:linear-gradient(135deg,rgba(80,0,0,0.25),rgba(120,0,0,0.15)); border:1px solid rgba(180,60,60,0.4); border-radius:6px; height:36px; display:flex; align-items:center; justify-content:center; color:rgba(220,100,100,0.7); font-size:11px; font-weight:bold; letter-spacing:3px; cursor:pointer; transition:all 0.2s; }
 #enemyPlayerZone:hover{ background:linear-gradient(135deg,rgba(160,20,20,0.4),rgba(100,0,0,0.3)); border-color:rgba(255,80,80,0.7); color:rgba(255,150,150,0.95); }
@@ -470,9 +471,9 @@ let _prevTurn=null,_turnChangeFinishTime=0;
 
 // ===== 属性カラー =====
 const attrColors={fire:{body:"#2a1010",fieldBg:"rgba(180,40,0,0.25)",fieldBorder:"#8a3a2a",enemyBg:"rgba(120,0,0,0.25)",enemyBorder:"#6a2020"},water:{body:"#0e1a2a",fieldBg:"rgba(0,60,150,0.25)",fieldBorder:"#2a4a8a",enemyBg:"rgba(0,30,100,0.25)",enemyBorder:"#1a3060"},thunder:{body:"#1a1a10",fieldBg:"rgba(150,130,0,0.25)",fieldBorder:"#7a7020",enemyBg:"rgba(100,80,0,0.25)",enemyBorder:"#605010"},forest:{body:"#0e1e0e",fieldBg:"rgba(0,100,0,0.30)",fieldBorder:"#2a6a2a",enemyBg:"rgba(0,60,0,0.25)",enemyBorder:"#1a4a1a"},dark:{body:"#12091a",fieldBg:"rgba(60,0,100,0.28)",fieldBorder:"#4a2a7a",enemyBg:"rgba(40,0,70,0.25)",enemyBorder:"#301a5a"},poison:{body:"#071a00",fieldBg:"rgba(150,255,50,0.25)",fieldBorder:"#aaff33",enemyBg:"rgba(100,220,20,0.25)",enemyBorder:"#88dd22"},steel:{body:"#18181e",fieldBg:"rgba(130,130,150,0.30)",fieldBorder:"#707088",enemyBg:"rgba(90,90,110,0.28)",enemyBorder:"#505068"},neutral:{body:"#1a2a1a",fieldBg:"rgba(0,80,0,0.35)",fieldBorder:"#2d6a2d",enemyBg:"rgba(80,0,0,0.25)",enemyBorder:"#6a2d2d"}};
-const _clientAttrMap={"フレイムスパーク":"fire","ファイアウルフ":"fire","ブレイズリザード":"fire","マグマウルフ":"fire","フレイムナイト":"fire","アッシュソルジャー":"fire","フレイムレオン":"fire","ボルケーノタートル":"fire","インフェルノドラゴン":"fire","バーンアウト":"fire","フレイムパージャー":"fire","ブレイズフェニックス":"fire","フレイムエンペラー":"fire","メガフレアドラゴン":"fire","ウォータードロップ":"water","アクアフィッシュ":"water","アイスウォリアー":"water","エナジーカラパス":"water","クリスタルシェル":"water","フロストビースト":"water","アイスガーディアン":"water","バーストパファー":"water","トレントサーペント":"water","アクアドラゴン":"water","オーシャンナイト":"water","テンペストシャーク":"water","タイダルリヴァイアサン":"water","フローズンキング":"water","サンダービート":"thunder","スパークマウス":"thunder","ライトニングラプター":"thunder","ボルトウォリアー":"thunder","ボルトホーク":"thunder","ライトニングウルフ":"thunder","スパークレパード":"thunder","エレキドラゴン":"thunder","プラズマメイジ":"thunder","ボルトチェンジャー":"thunder","サンダーランページ":"thunder","サンダーロード":"thunder","ストームタイタン":"thunder","ボルトエンペラー":"thunder","フォレストラビット":"forest","グリーンナイト":"forest","ウッドゴーレム":"forest","グロウコア":"forest","アーマードライノス":"forest","フォレストビースト":"forest","モスストーン":"forest","フォレストエルフ":"forest","フォレストスイーパー":"forest","エンシェントツリー":"forest","ジャングルタイラント":"forest","ワイルドベア":"forest","グリーンドラゴン":"forest","ネイチャーロード":"forest","シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark","ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison","ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel","ギアトークン":"steel","ギギアトークン":"steel","ギギギアトークン":"steel","シードトークン":"forest"};
+const _clientAttrMap={"フレイムスパーク":"fire","ファイアウルフ":"fire","ブレイズリザード":"fire","マグマウルフ":"fire","フレイムナイト":"fire","アッシュソルジャー":"fire","フレイムレオン":"fire","ボルケーノタートル":"fire","インフェルノドラゴン":"fire","バーンアウト":"fire","フレイムパージャー":"fire","ブレイズフェニックス":"fire","フレイムエンペラー":"fire","メガフレアドラゴン":"fire","ウォータードロップ":"water","アクアフィッシュ":"water","アイスウォリアー":"water","エナジーカラパス":"water","クリスタルシェル":"water","フロストビースト":"water","アイスガーディアン":"water","バーストパファー":"water","トレントサーペント":"water","アクアドラゴン":"water","オーシャンナイト":"water","テンペストシャーク":"water","タイダルリヴァイアサン":"water","フローズンキング":"water","サンダービート":"thunder","スパークマウス":"thunder","ライトニングラプター":"thunder","ボルトウォリアー":"thunder","ボルトホーク":"thunder","ライトニングウルフ":"thunder","スパークレパード":"thunder","エレキドラゴン":"thunder","プラズマメイジ":"thunder","ボルトチェンジャー":"thunder","サンダーランページ":"thunder","サンダーロード":"thunder","ストームタイタン":"thunder","ボルトエンペラー":"thunder","フォレストラビット":"forest","グリーンナイト":"forest","ウッドゴーレム":"forest","グロウコア":"forest","アーマードライノス":"forest","フォレストビースト":"forest","モスストーン":"forest","フォレストエルフ":"forest","フォレストスイーパー":"forest","エンシェントツリー":"forest","ジャングルタイラント":"forest","ワイルドベア":"forest","グリーンドラゴン":"forest","ネイチャーロード":"forest","シャドウバット":"dark","ダークスライム":"dark","シャドウアサシン":"dark","ダークナイト":"dark","ナイトメアビースト":"dark","アビスナイト":"dark","ナイトリカー":"dark","ダークサイフォナー":"dark","カースドラゴン":"dark","ヘルハウンド":"dark","ナイトテラー":"dark","ダークロード":"dark","シャドウキング":"dark","アビスウォール":"dark","ポイズンインプ":"poison","トキシックスライム":"poison","トキシックビースト":"poison","プラーグハウンド":"poison","ブライトレッチ":"poison","ポイズンドレイン":"poison","マッドサイエンティスト":"poison","ヴェノムアルケミスト":"poison","マイアズマウォーカー":"poison","ヴェノムロード":"poison","ベインブリンガー":"poison","ポイズンナイト":"poison","コラプトジャイアント":"poison","トキシックドラゴン":"poison","ギアスカウト":"steel","プロトタイプユニット":"steel","メタルブルート":"steel","ギアコンバーター":"steel","スチールブレイバー":"steel","スチールビースト":"steel","オートマトンファクトリー":"steel","メカニカルアーチャー":"steel","ヘビィタンク":"steel","ギアドレイク":"steel","ギアタイタン":"steel","フェルムマスター":"steel","アイアンレイダー":"steel","メガコンストラクト":"steel","フレアヘッジホッグ":"fire","レッドバイソン":"fire","ミストセイレーン":"water","アビスホエール":"water","サージボア":"thunder","チャージフォックス":"thunder","スプリングドライアド":"forest","グロウバインダー":"forest","シャドウイーター":"dark","ブラックデーモン":"dark","ペインゴーレム":"poison","プラーグキング":"poison","スクラップゴーレム":"steel","メタルナイト":"steel","ギアトークン":"steel","ギギアトークン":"steel","ギギギアトークン":"steel","シードトークン":"forest"};
 function getClientAttr(name){return _clientAttrMap[name]||"neutral";}
-const _baseAtkMap={"フレイムスパーク":2,"ファイアウルフ":3,"ブレイズリザード":2,"マグマウルフ":3,"フレイムナイト":3,"アッシュソルジャー":3,"フレイムレオン":4,"ボルケーノタートル":3,"インフェルノドラゴン":5,"バーンアウト":5,"フレイムパージャー":4,"ブレイズフェニックス":4,"フレイムエンペラー":5,"メガフレアドラゴン":8,"ウォータードロップ":1,"アクアフィッシュ":2,"アイスウォリアー":3,"エナジーカラパス":2,"クリスタルシェル":1,"フロストビースト":4,"アイスガーディアン":3,"バーストパファー":2,"トレントサーペント":2,"アクアドラゴン":4,"オーシャンナイト":5,"テンペストシャーク":6,"タイダルリヴァイアサン":5,"フローズンキング":3,"サンダービート":2,"スパークマウス":1,"ライトニングラプター":3,"ボルトウォリアー":6,"ボルトホーク":3,"ライトニングウルフ":3,"スパークレパード":4,"エレキドラゴン":5,"プラズマメイジ":4,"ボルトチェンジャー":3,"サンダーランページ":3,"サンダーロード":6,"ストームタイタン":7,"ボルトエンペラー":5,"フォレストラビット":1,"グリーンナイト":3,"ウッドゴーレム":1,"グロウコア":2,"アーマードライノス":2,"フォレストビースト":3,"モスストーン":4,"フォレストエルフ":4,"フォレストスイーパー":3,"エンシェントツリー":3,"ジャングルタイラント":5,"ワイルドベア":4,"グリーンドラゴン":6,"ネイチャーロード":3,"シャドウバット":2,"ダークスライム":1,"シャドウアサシン":4,"ダークナイト":3,"ナイトメアビースト":2,"アビスナイト":4,"ナイトリカー":4,"ダークサイフォナー":3,"カースドラゴン":4,"ヘルハウンド":6,"ナイトテラー":5,"ダークロード":7,"シャドウキング":4,"アビスウォール":2,"ポイズンインプ":4,"トキシックスライム":2,"トキシックビースト":5,"プラーグハウンド":3,"ブライトレッチ":4,"ポイズンドレイン":3,"マッドサイエンティスト":3,"ヴェノムアルケミスト":0,"マイアズマウォーカー":5,"ヴェノムロード":4,"ベインブリンガー":4,"ポイズンナイト":6,"コラプトジャイアント":5,"トキシックドラゴン":0,"ギアスカウト":1,"プロトタイプユニット":1,"メタルブルート":2,"ギアコンバーター":2,"スチールブレイバー":3,"スチールビースト":5,"オートマトンファクトリー":2,"メカニカルアーチャー":4,"ヘビィタンク":4,"ギアドレイク":5,"ギアタイタン":4,"フェルムマスター":4,"アイアンレイダー":4,"メガコンストラクト":0,"ギアトークン":1,"ギギアトークン":2,"ギギギアトークン":3,"シードトークン":1};
+const _baseAtkMap={"フレイムスパーク":2,"ファイアウルフ":3,"ブレイズリザード":2,"マグマウルフ":3,"フレイムナイト":3,"アッシュソルジャー":3,"フレイムレオン":4,"ボルケーノタートル":3,"インフェルノドラゴン":5,"バーンアウト":6,"フレイムパージャー":4,"ブレイズフェニックス":4,"フレイムエンペラー":5,"メガフレアドラゴン":8,"ウォータードロップ":1,"アクアフィッシュ":2,"アイスウォリアー":3,"エナジーカラパス":2,"クリスタルシェル":1,"フロストビースト":4,"アイスガーディアン":3,"バーストパファー":2,"トレントサーペント":2,"アクアドラゴン":4,"オーシャンナイト":5,"テンペストシャーク":6,"タイダルリヴァイアサン":5,"フローズンキング":3,"サンダービート":2,"スパークマウス":1,"ライトニングラプター":3,"ボルトウォリアー":6,"ボルトホーク":3,"ライトニングウルフ":3,"スパークレパード":4,"エレキドラゴン":5,"プラズマメイジ":4,"ボルトチェンジャー":3,"サンダーランページ":3,"サンダーロード":6,"ストームタイタン":7,"ボルトエンペラー":5,"フォレストラビット":1,"グリーンナイト":3,"ウッドゴーレム":1,"グロウコア":2,"アーマードライノス":2,"フォレストビースト":3,"モスストーン":4,"フォレストエルフ":4,"フォレストスイーパー":3,"エンシェントツリー":3,"ジャングルタイラント":5,"ワイルドベア":4,"グリーンドラゴン":6,"ネイチャーロード":3,"シャドウバット":2,"ダークスライム":1,"シャドウアサシン":4,"ダークナイト":3,"ナイトメアビースト":2,"アビスナイト":4,"ナイトリカー":4,"ダークサイフォナー":3,"カースドラゴン":4,"ヘルハウンド":6,"ナイトテラー":5,"ダークロード":7,"シャドウキング":4,"アビスウォール":2,"ポイズンインプ":4,"トキシックスライム":2,"トキシックビースト":5,"プラーグハウンド":3,"ブライトレッチ":4,"ポイズンドレイン":3,"マッドサイエンティスト":3,"ヴェノムアルケミスト":0,"マイアズマウォーカー":5,"ヴェノムロード":4,"ベインブリンガー":4,"ポイズンナイト":6,"コラプトジャイアント":5,"トキシックドラゴン":0,"ギアスカウト":1,"プロトタイプユニット":1,"メタルブルート":2,"ギアコンバーター":2,"スチールブレイバー":3,"スチールビースト":5,"オートマトンファクトリー":2,"メカニカルアーチャー":4,"ヘビィタンク":4,"ギアドレイク":5,"ギアタイタン":4,"フェルムマスター":4,"アイアンレイダー":4,"メガコンストラクト":0,"フレアヘッジホッグ":3,"レッドバイソン":4,"ミストセイレーン":2,"アビスホエール":4,"サージボア":2,"チャージフォックス":2,"スプリングドライアド":2,"グロウバインダー":3,"シャドウイーター":4,"ブラックデーモン":3,"ペインゴーレム":6,"プラーグキング":7,"スクラップゴーレム":2,"メタルナイト":6,"ギアトークン":1,"ギギアトークン":2,"ギギギアトークン":3,"シードトークン":1};
 function getBaseAtk(name){return _baseAtkMap[name]??null;}
 
 function applyAttrColor(attr){const c=attrColors[attr]||attrColors.neutral;document.body.style.background=c.body;const r=document.documentElement;r.style.setProperty("--field-bg",c.fieldBg);r.style.setProperty("--field-border",c.fieldBorder);r.style.setProperty("--enemy-field-bg",c.enemyBg);r.style.setProperty("--enemy-field-border",c.enemyBorder);}
@@ -927,6 +928,20 @@ socket.on("selectTarget",(data)=>{
     socket.emit("roomAction",{type:"select_target",fieldSpellTarget:choice?"op":"my"});
     selectTargetMode=null;return;
   }
+  if(data.type==="painUpkeep"){
+    const pay=confirm(data.message+"\n\n【OK】ライフ2を支払う\n【キャンセル】破壊する");
+    socket.emit("roomAction",{type:"select_target",painPay:pay});
+    selectTargetMode=null;return;
+  }
+  if(data.type==="altCost"){
+    let msg=data.message+"\n\n";
+    if(data.optNormal) msg+="【OK】"+data.optNormal+"\n";
+    msg+="【キャンセル】"+data.optAlt;
+    const useNormal=data.optNormal?confirm(msg):false;
+    if(!data.optNormal) alert(data.optAlt+" で召喚します");
+    socket.emit("roomAction",{type:"select_target",altChoice:useNormal?"normal":"alt"});
+    selectTargetMode=null;return;
+  }
   if(data.type==="lifeInput"){
     const input=prompt(data.message);
     const amount=parseInt(input,10);
@@ -1073,7 +1088,16 @@ socket.on("roomUpdate",(g)=>{
       div.appendChild(img);div.appendChild(stat);ef.appendChild(div);
     });
     const es=ef.querySelectorAll(".unit-slot-empty"),cc=ef.querySelectorAll(".card").length;
-    es.forEach((s,i)=>{s.style.display=i<(3-cc)?"flex":"none";});
+    const _enLim=(g.enemySlotLimit!==undefined)?g.enemySlotLimit:3;
+    es.forEach((s,i)=>{
+      s.style.display=i<(3-cc)?"flex":"none";
+      const locked=i<(3-_enLim);
+      s.style.borderColor=locked?"rgba(255,60,60,0.7)":"";
+      s.style.background=locked?"rgba(80,0,0,0.35)":"";
+      let x=s.querySelector(".slot-lock-x");
+      if(locked&&!x){x=document.createElement("div");x.className="slot-lock-x";x.innerText="✕";x.style.cssText="position:absolute;font-size:34px;color:rgba(255,80,80,0.85);font-weight:bold;pointer-events:none;text-shadow:0 0 8px #000;";s.style.position="relative";s.appendChild(x);}
+      else if(!locked&&x){x.remove();}
+    });
   };
   if(hitEffectActiveEnemy)setTimeout(_renderEnemyField,400);else _renderEnemyField();
 
@@ -1132,7 +1156,17 @@ socket.on("roomUpdate",(g)=>{
       div.appendChild(img);div.appendChild(stat);myUnits.appendChild(div);
     });
     const mes=myUnits.querySelectorAll(".unit-slot-empty"),mc=myUnits.querySelectorAll(".card").length;
-    mes.forEach((s,i)=>{s.style.display=i<(3-mc)?"flex":"none";});
+    const _myLim=(g.mySlotLimit!==undefined)?g.mySlotLimit:3;
+    mes.forEach((s,i)=>{
+      s.style.display=i<(3-mc)?"flex":"none";
+      const locked=i<(3-_myLim);
+      s.style.borderColor=locked?"rgba(255,60,60,0.7)":"";
+      s.style.background=locked?"rgba(80,0,0,0.35)":"";
+      s.dataset.locked=locked?"1":"";
+      let x=s.querySelector(".slot-lock-x");
+      if(locked&&!x){x=document.createElement("div");x.className="slot-lock-x";x.innerText="✕";x.style.cssText="position:absolute;font-size:34px;color:rgba(255,80,80,0.85);font-weight:bold;pointer-events:none;text-shadow:0 0 8px #000;";s.style.position="relative";s.appendChild(x);}
+      else if(!locked&&x){x.remove();}
+    });
     if(pendingAttackerIndex!==null){const cards=myUnits.querySelectorAll(".card");const di=g.myBoard.length-1-pendingAttackerIndex;if(cards[di]){selectedUnitIndex=pendingAttackerIndex;selectedUnitName=g.myBoard[pendingAttackerIndex]?.name||"";cards[di].classList.add("selected");}pendingAttackerIndex=null;}
   };
   if(hitEffectActiveMy)setTimeout(_renderMyField,550);else _renderMyField();
@@ -1158,6 +1192,7 @@ function _appendStatusBadges(div,c){
   if(c.disabled&&c.disabledCount!==undefined){const b=document.createElement("div");b.className="status-badge restrain";b.innerText="⛓";b.title="拘束";wrap.appendChild(b);has=true;}
   else if(c.disabled){const b=document.createElement("div");b.className="status-badge brainwash";b.innerText="✦";b.title="洗脳";wrap.appendChild(b);has=true;}
   if(c.barrier){const b=document.createElement("div");b.className="status-badge crystal";b.innerText="◆";b.title="結晶";wrap.appendChild(b);has=true;}
+  if(c.voided){const b=document.createElement("div");b.className="status-badge void";b.innerText="✖";b.title="虚無（効果無効）";wrap.appendChild(b);has=true;}
   let denkoLeft=0;
   if(c.denko&&!c.attacked)denkoLeft=2;else if(c.denko&&c.attacked&&!c.denkoAttackedThisTurn)denkoLeft=1;
   if(denkoLeft>0){const b=document.createElement("div");b.className="status-badge denko";b.innerHTML="⚡<span class='denko-count'>"+denkoLeft+"</span>";b.title="電光石火 残り"+denkoLeft+"回";wrap.appendChild(b);has=true;}
@@ -1220,6 +1255,7 @@ function _renderHand(handCards,g){
     div.onclick=()=>{
       if(playerRole==="spectator")return;
       if(g.pendingDiscard&&g.pendingDiscard>0){if(confirm(card+" を捨てますか？"))socket.emit("roomAction",{type:"discard_hand",card});return;}
+      if(selectTargetMode&&selectTargetMode.type==="handAny"){const hi2=g.myHand.indexOf(card);if(confirm(card+" を捨てますか？")){socket.emit("roomAction",{type:"select_target",targetSide:"hand",handIndex:hi2,card:card});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";}return;}
       if(selectTargetMode&&(selectTargetMode.type==="handUnit_steel_cost3"||selectTargetMode.type==="handUnit_cost2"||selectTargetMode.type==="handUnit_cost3"||selectTargetMode.type==="handUnit_steel")){const hi2=g.myHand.indexOf(card);socket.emit("roomAction",{type:"select_target",targetIndex:hi2,targetSide:"hand",handIndex:hi2});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
       if(selectTargetMode&&selectTargetMode.type==="soulTrade"){if(confirm(card+" を捨てますか？")){const hi2=g.myHand.indexOf(card);socket.emit("roomAction",{type:"select_target",targetSide:"soulTrade",handIndex:hi2,card:card});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";}return;}
       if(confirm(card+" を使用しますか？"))socket.emit("roomAction",{type:"play_card",card});

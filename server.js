@@ -136,9 +136,11 @@ const cards = {
 "フレイムナイト":{cost:2,atk:3,hp:2,type:"unit",attr:"fire",attackEffect:"L_DMG1"},
 "アッシュソルジャー":{cost:2,atk:3,hp:3,type:"unit",attr:"fire"},
 "フレイムレオン":{cost:2,atk:4,hp:2,type:"unit",attr:"fire"},
+"フレアヘッジホッグ":{cost:2,atk:3,hp:2,type:"unit",attr:"fire",effect:"FULL_COUNTER"},
+"レッドバイソン":{cost:2,atk:4,hp:1,type:"unit",attr:"fire",effect:"ATK_OVERKILL_DMG"},
 "ボルケーノタートル":{cost:3,atk:3,hp:5,type:"unit",attr:"fire"},
 "インフェルノドラゴン":{cost:3,atk:5,hp:3,type:"unit",attr:"fire"},
-"バーンアウト":{cost:3,atk:5,hp:4,type:"unit",attr:"fire",effect:"SUM_BURNOUT"},
+"バーンアウト":{cost:3,atk:6,hp:4,type:"unit",attr:"fire",effect:"SUM_BURNOUT"},
 "フレイムパージャー":{cost:3,atk:4,hp:3,type:"unit",attr:"fire",effect:"SUM_DES_COST1_ALL"},
 "ブレイズフェニックス":{cost:4,atk:4,hp:4,type:"unit",attr:"fire",destroyEffect:"L_DMG3"},
 "フレイムエンペラー":{cost:4,atk:5,hp:4,type:"unit",attr:"fire",effect:"FIELD_A+1_F"},
@@ -161,6 +163,8 @@ const cards = {
 "アクアフィッシュ":{cost:1,atk:2,hp:2,type:"unit",attr:"water",effect:"SUM_L+1"},
 "アイスウォリアー":{cost:2,atk:3,hp:3,type:"unit",attr:"water"},
 "エナジーカラパス":{cost:2,atk:2,hp:2,type:"unit",attr:"water",effect:"SUM_E+1"},
+"ミストセイレーン":{cost:2,atk:2,hp:3,type:"unit",attr:"water",effect:"SUM_MAX_E-1_DRAW3"},
+"アビスホエール":{cost:4,atk:4,hp:4,type:"unit",attr:"water",effect:"SUM_MAX_E-1_SKIP_DRAW"},
 "クリスタルシェル":{cost:2,atk:1,hp:6,type:"unit",attr:"water"},
 "フロストビースト":{cost:3,atk:4,hp:4,type:"unit",attr:"water"},
 "アイスガーディアン":{cost:3,atk:3,hp:5,type:"unit",attr:"water"},
@@ -189,6 +193,8 @@ const cards = {
 "ライトニングラプター":{cost:2,atk:3,hp:3,type:"unit",attr:"thunder"},
 "ボルトウォリアー":{cost:4,atk:6,hp:4,type:"unit",attr:"thunder"},
 "ボルトホーク":{cost:2,atk:3,hp:2,type:"unit",attr:"thunder",effect:"DENKOUSEKKA"},
+"サージボア":{cost:2,atk:2,hp:3,type:"unit",attr:"thunder",effect:"SUM_DISCARD1_A+3"},
+"チャージフォックス":{cost:2,atk:2,hp:2,type:"unit",attr:"thunder",effect:"SUM_HAND_UNDER_DRAW2"},
 "ライトニングウルフ":{cost:2,atk:3,hp:3,type:"unit",attr:"thunder"},
 "スパークレパード":{cost:2,atk:4,hp:2,type:"unit",attr:"thunder"},
 "エレキドラゴン":{cost:3,atk:5,hp:3,type:"unit",attr:"thunder"},
@@ -214,6 +220,8 @@ const cards = {
 "フォレストラビット":{cost:1,atk:1,hp:2,type:"unit",attr:"forest",effect:"SUM_UNIT_A_PERM+1"},
 "グリーンナイト":{cost:2,atk:3,hp:3,type:"unit",attr:"forest"},
 "ウッドゴーレム":{cost:2,atk:1,hp:4,type:"unit",attr:"forest",effect:"SUM_A_PERM-2"},
+"スプリングドライアド":{cost:2,atk:2,hp:3,type:"unit",attr:"forest",effect:"SUM_S_TOKEN1"},
+"グロウバインダー":{cost:4,atk:3,hp:7,type:"unit",attr:"forest",effect:"SUM_LOCK_OPP_SLOT"},
 "グロウコア":{cost:2,atk:2,hp:2,type:"unit",attr:"forest",destroyEffect:"DES_SUMMON_C3"},
 "アーマードライノス":{cost:3,atk:2,hp:4,type:"unit",attr:"forest",effect:"DAMAGE_REDUCE_1"},
 "フォレストビースト":{cost:3,atk:3,hp:4,type:"unit",attr:"forest",effect:"END_A+1"},
@@ -252,7 +260,8 @@ const cards = {
 "ダークロード":{cost:5,atk:7,hp:5,type:"unit",attr:"dark",effect:"SUM_R_HAN1"},
 "シャドウキング":{cost:4,atk:4,hp:4,type:"unit",attr:"dark",effect:"FIELD_H+2_D"},
 "アビスウォール":{cost:2,atk:2,hp:5,type:"unit",attr:"dark"},
-
+"ブラックデーモン":{cost:3,atk:3,hp:3,type:"unit",attr:"dark",effect:"SUM_OPP_BOUNCE1"},
+"シャドウイーター":{cost:3,atk:4,hp:4,type:"unit",attr:"dark",effect:"SUM_VOID1"},
 "ダークブラスト":{cost:2,type:"spell",attr:"dark",effect:"UNIT_DMG3"},
 "マインドコントロール":{cost:2,type:"spell",attr:"dark",effect:"DISABLE1"},
 "ソウルトレード":{cost:2,type:"spell",attr:"dark",effect:"SOUL_TRADE"},
@@ -277,6 +286,8 @@ const cards = {
 "ヴェノムロード":{cost:4,atk:4,hp:5,type:"unit",attr:"poison",effect:"SUM_L_SELF-X_DRAWX"},
 "ベインブリンガー":{cost:4,atk:4,hp:5,type:"unit",attr:"poison",effect:"FIELD_A+1_P"},
 "ポイズンナイト":{cost:4,atk:6,hp:4,type:"unit",attr:"poison"},
+"ペインゴーレム":{cost:3,atk:6,hp:4,type:"unit",attr:"poison",effect:"START_L_SELF-2_OR_DES"},
+"プラーグキング":{cost:4,atk:7,hp:3,type:"unit",attr:"poison",effect:"SUMMON_COST_OR_LIFE4"},
 "コラプトジャイアント":{cost:4,atk:5,hp:5,type:"unit",attr:"poison"},
 "トキシックドラゴン":{cost:5,atk:0,hp:0,type:"unit",attr:"poison",effect:"SUM_A_H_LOST_LIFE"},
 
@@ -299,6 +310,8 @@ const cards = {
 "スチールブレイバー":{cost:2,atk:3,hp:3,type:"unit",attr:"steel"},
 "スチールビースト":{cost:3,atk:5,hp:3,type:"unit",attr:"steel"},
 "オートマトンファクトリー":{cost:3,atk:2,hp:7,type:"unit",attr:"steel",effect:"START_TOKEN1"},
+"スクラップゴーレム":{cost:2,atk:2,hp:5,type:"unit",attr:"steel",effect:"END_TOKEN1"},
+"メタルナイト":{cost:4,atk:6,hp:4,type:"unit",attr:"steel",effect:"SUMMON_IRON2_DES_COST0"},
 "メカニカルアーチャー":{cost:3,atk:4,hp:3,type:"unit",attr:"steel",effect:"SUM_TOKEN_DES_UNIT_DMG2"},
 "ヘビィタンク":{cost:3,atk:4,hp:4,type:"unit",attr:"steel"},
 "ギアドレイク":{cost:4,atk:5,hp:5,type:"unit",attr:"steel"},
@@ -325,6 +338,66 @@ const cards = {
 "崩壊":{cost:1,type:"spell",attr:"neutral",effect:"DES_PERM_SPELL"}
 };
 
+
+// ★★★【虚無システムの土台】★★★
+// 効果を読む唯一の窓口。虚無状態のユニットはステータスのみ返し、
+// 全ての効果キー(effect/attackEffect/destroyEffect等)を落とす。
+// ホワイトリスト方式なので、将来どんな効果キーを追加しても自動的に無効化される。
+function cardOf(unit){
+  if(!unit) return null;
+  const c=cards[unit.name];
+  if(!c) return null;
+  if(!unit.voided) return c;
+  return {cost:c.cost, atk:c.atk, hp:c.hp, type:c.type, attr:c.attr, durability:c.durability};
+}
+// 虚無を付与（効果由来のユニット内プロパティを退避して剥がす）
+function applyVoid(unit){
+  if(!unit||unit.voided) return;
+  unit.voided=true;
+  unit._voidBak={denko:unit.denko, damageReduce:unit.damageReduce};
+  delete unit.denko; delete unit.damageReduce; delete unit.denkoAttackedThisTurn;
+}
+// ★★★【代替コスト召喚の土台】★★★
+// エネルギー以外の方法で召喚できるカードを一元管理する。
+// 新カードを追加する場合はこのテーブルに1行足すだけでよい。
+const ALT_COST={
+  "SUMMON_COST_OR_LIFE4":{
+    label:"ライフ4を支払って召喚（コスト0）",
+    can:(board,life)=>life>=5,               // 払って生き残れる場合のみ
+    need:"life"
+  },
+  "SUMMON_IRON2_DES_COST0":{
+    label:"場の鉄ユニット2体を破壊して召喚（コスト0）",
+    can:(board,life)=>board.filter(u=>(u.attr||"")==="steel"||["ギアトークン","ギギアトークン","ギギギアトークン"].includes(u.name)).length>=2,
+    need:"iron2"
+  }
+};
+function altCostOf(cardName){
+  const e=cards[cardName]?.effect;
+  return e&&ALT_COST[e]?{key:e,...ALT_COST[e]}:null;
+}
+function isSteelUnit(u){
+  return (u.attr||"")==="steel"||["ギアトークン","ギギアトークン","ギギギアトークン"].includes(u.name);
+}
+
+// ★グロウバインダー：boardOwnerの使用可能枠数を返す（相手のロック数だけ減る）
+// 位置ではなく本数で管理するため、前詰めやバウンスでも破綻しない。
+// 虚無・破壊・バウンスで自動的に解除される（数える対象から消えるだけ）。
+function slotLimit(boardOwner, oppBoard){
+  const locks=(oppBoard||[]).filter(u=>u.lockSlot&&!u.voided).length;
+  return Math.max(1, 3-locks);
+}
+
+// 虚無を解除（退避したプロパティを戻す）
+function removeVoid(unit){
+  if(!unit||!unit.voided) return;
+  unit.voided=false;
+  if(unit._voidBak){
+    if(unit._voidBak.denko) unit.denko=unit._voidBak.denko;
+    if(unit._voidBak.damageReduce) unit.damageReduce=unit._voidBak.damageReduce;
+    delete unit._voidBak;
+  }
+}
 
 function shuffle(deck){
   for(let i=deck.length-1;i>0;i--){
@@ -639,6 +712,10 @@ function triggerSummonEffect(unit, p, socket, io){
     case "SUM_TOKEN1":
       summonToken(p,"ギアトークン",1);
       addLog(p,`「${unit.name}」召喚時効果：ギアトークン1体召喚`);
+      break;
+    case "SUM_S_TOKEN1":
+      summonToken(p,"シードトークン",1);
+      addLog(p,`「${unit.name}」召喚時効果：シードトークン1体召喚`);
       break;
     case "SUM_BURNOUT":
       unit.burnout=true;
@@ -1774,6 +1851,14 @@ const op=getOpponent(socket.id);
               addLog(socket.id,`「${game.fieldSpell[socket.id].name}」：自ATK${atkPower}-相手ATK${def.atk}=${overflow}ダメージが相手ライフに`);
             }
           }
+          // ★レッドバイソン（OVERFLOW_SELF）：破壊時、自ATKが相手ATKを超えた分を相手ライフに
+          if(atkCard&&atkCard.effect==="ATK_OVERKILL_DMG"){
+            const ovSelf=atkPower-def.atk;
+            if(ovSelf>0){
+              damageLife(op,ovSelf);
+              addLog(socket.id,`「${atk.name}」効果：自ATK${atkPower}-相手ATK${def.atk}=${ovSelf}ダメージが相手ライフに`);
+            }
+          }
           game.board[op].splice(data.t,1);
           if(!def.isToken) game.graves[op].push(def);
           addLog(socket.id,`→「${def.name}」を撃破`);
@@ -2839,6 +2924,8 @@ function roomSend(room){
       isHandLimit:room.pendingHandLimitDiscard===id,
       myFieldSpell:room.fieldSpell[id]||null,
       enemyFieldSpell:room.fieldSpell[op]||null,
+      mySlotLimit:slotLimit(id,room.board[op]),
+      enemySlotLimit:slotLimit(op,room.board[id]),
       allLogs:[...room.allLogs],
       currentTurnLogs:room.turnLogs[room.turn]||[],
       playerRole:id===room.player1?"p1":"p2",
@@ -2895,8 +2982,9 @@ function roomNotifyPendingTarget(room){
 }
 
 function roomSummonToken(room, p, tokenName, n){
+  const _lim=slotLimit(p,room.board[roomGetOpponent(room,p)]);
   for(let i=0;i<n;i++){
-    if(room.board[p].length>=3) break;
+    if(room.board[p].length>=_lim) break;
     const tokenAttr=tokenName==="ギアトークン"?"steel":"forest";
     let tokenAtk=1, tokenHp=1;
     if(tokenName==="ギアトークン"&&room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_IRON_FACTORY") tokenAtk+=1;
@@ -2949,7 +3037,7 @@ function roomDamageAllUnits(room, targetPlayer, amount, attackerPlayer){
 }
 
 function roomTriggerDestroyEffect(room, unit, ownerPlayer){
-  const c=cards[unit.name];
+  const c=cardOf(unit);
   if(!c||!c.destroyEffect) return;
   const op=roomGetOpponent(room,ownerPlayer);
   roomShowEffect(room,unit.name);
@@ -2995,6 +3083,50 @@ function roomTriggerSummonEffect(room, unit, p, socket){
     case "SUM_ALL_UNIT_DMG1": roomDamageAllUnits(room,op,1,p); roomAddLog(room,p,`「${unit.name}」召喚時：相手全体1ダメージ`); break;
     case "SUM_DES_COST1_ALL":{ const td=[]; room.board[op].forEach((u,i)=>{if((cards[u.name]?.cost||0)<=1)td.push(i);}); td.reverse().forEach(i=>{const d=room.board[op].splice(i,1)[0];room.graves[op].push(d);roomTriggerDestroyEffect(room,d,op);}); roomAddLog(room,p,`「${unit.name}」召喚時：相手コスト1以下全破壊`); break; }
     case "SUM_TOKEN1": roomSummonToken(room,p,"ギアトークン",1); roomAddLog(room,p,`「${unit.name}」召喚時：ギアトークン1体召喚`); break;
+    case "SUM_S_TOKEN1": roomSummonToken(room,p,"シードトークン",1); roomAddLog(room,p,`「${unit.name}」召喚時：シードトークン1体召喚`); break;
+    case "SUM_MAX_E-1_SKIP_DRAW":
+      room.maxEnergy[p]=Math.max(0,room.maxEnergy[p]-2);
+      room.energy[p]=Math.max(0,Math.min(room.energy[p]-2,room.maxEnergy[p]));
+      if(!room.skipDraw) room.skipDraw={};
+      room.skipDraw[op]=true;
+      roomAddLog(room,p,`「${unit.name}」召喚時：最大エネルギー-2（最大${room.maxEnergy[p]}/現在${room.energy[p]}）、相手の次のドローをスキップ`);
+      break;
+    case "SUM_MAX_E-1_DRAW3":
+      room.maxEnergy[p]=Math.max(0,room.maxEnergy[p]-1);
+      room.energy[p]=Math.max(0,Math.min(room.energy[p]-1,room.maxEnergy[p]));
+      roomDrawN(room,p,3);
+      roomAddLog(room,p,`「${unit.name}」召喚時：最大エネルギー-1（最大${room.maxEnergy[p]}/現在${room.energy[p]}）、3枚ドロー`);
+      break;
+    case "SUM_LOCK_OPP_SLOT":{
+      const lim=slotLimit(op,room.board[p]);
+      if(room.board[op].length>=lim){ roomAddLog(room,p,`「${unit.name}」召喚時：相手の場に空き枠がないため不発`); break; }
+      unit.lockSlot=true;
+      roomAddLog(room,p,`「${unit.name}」召喚時：相手の場の1枠を使用不可にした`);
+      break;
+    }
+    case "SUM_VOID1":
+      if(room.board[op].length===0){ roomAddLog(room,p,`「${unit.name}」召喚時：相手ユニットがいないため不発`); break; }
+      room.pendingTarget={player:p,effect:"SUM_VOID1",card:unit.name};
+      socket.emit("selectTarget",{type:"enemyUnit",message:`「${unit.name}」召喚時効果：虚無状態にする相手ユニットを選択してください`});
+      break;
+    case "SUM_OPP_BOUNCE1":
+      if(room.board[op].length===0){ roomAddLog(room,p,`「${unit.name}」召喚時：相手ユニットがいないため不発`); break; }
+      room.pendingTarget={player:p,effect:"SUM_OPP_BOUNCE1",card:unit.name};
+      socket.emit("selectTarget",{type:"enemyUnit",message:`「${unit.name}」召喚時効果：手札に戻す相手ユニットを選択してください`});
+      break;
+    case "SUM_HAND_UNDER_DRAW2":
+      if(room.hands[p].length<room.hands[op].length){
+        roomDrawN(room,p,2);
+        roomAddLog(room,p,`「${unit.name}」召喚時：手札が相手より少ないため2枚ドロー（自分${room.hands[p].length-2}枚→相手${room.hands[op].length}枚）`);
+      }else{
+        roomAddLog(room,p,`「${unit.name}」召喚時：手札が相手より少なくないため不発`);
+      }
+      break;
+    case "SUM_DISCARD1_A+3":
+      if(room.hands[p].length===0){ roomAddLog(room,p,`「${unit.name}」召喚時：手札がないため不発`); break; }
+      room.pendingTarget={player:p,effect:"SUM_DISCARD1_A+3",card:unit.name,unit:unit};
+      socket.emit("selectTarget",{type:"handAny",message:`「${unit.name}」召喚時効果：捨てる手札を1枚選んでください（このユニットのATK+3）`});
+      break;
     case "SUM_BURNOUT": unit.burnout=true; roomAddLog(room,p,`「${unit.name}」召喚時：ターン終了時自壊`); break;
     case "SUM_LIFE_8_A+4": if(room.life[p]<=8){unit.atk+=4;roomAddLog(room,p,`「${unit.name}」召喚時：ライフ8以下のためATK+4`);} break;
     case "SUM_A_H_LOST_LIFE":{ const lost=15-room.life[p]; unit.atk=lost;unit.hp=lost; roomAddLog(room,p,`「${unit.name}」召喚時：ATK/HP=${lost}`); break; }
@@ -3018,7 +3150,7 @@ function roomTriggerSummonEffect(room, unit, p, socket){
       break;
     case "SUM_IRON_DES_A+":{ const iu=room.board[p].filter(u=>roomGetAttr(u.name)==="steel"&&u.name!==unit.name); if(iu.length===0){roomAddLog(room,p,`「${unit.name}」召喚時：対象なし`);break;} room.pendingTarget={player:p,effect:"SUM_IRON_DES_A+",card:unit.name}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊する鉄ユニットを選択`}); break; }
     case "SUM_TOKEN_DES_UNIT_DMG2":{ const tk=room.board[p].filter(u=>u.isToken&&roomGetAttr(u.name)==="steel"); if(tk.length===0){roomAddLog(room,p,`「${unit.name}」召喚時：ギアトークンなし`);break;} if(room.board[op].length===0){roomAddLog(room,p,`「${unit.name}」召喚時：相手ユニットなし`);break;} room.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2",card:unit.name}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊するギアトークンを選択`}); break; }
-    case "SUM_DES_SUM_C2":{ if(room.board[p].length<=1){roomAddLog(room,p,`「${unit.name}」召喚時：他にユニットなし`);break;} room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2",card:unit.name}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊するユニットを選択`}); break; }
+    case "SUM_DES_SUM_C2":{ if(room.board[p].length<=1){roomAddLog(room,p,`「${unit.name}」召喚時：他にユニットなし`);break;} room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2",card:unit.name,unit:unit};socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊するユニットを選択`}); break; }
     case "SUM_L_SELF-X_A+X": room.pendingTarget={player:p,effect:"SUM_L_SELF-X_A+X",card:unit.name,unit:unit}; socket.emit("selectTarget",{type:"lifeInput",message:`「${unit.name}」：支払うライフを入力（現在:${room.life[p]}）`}); break;
     case "SUM_L_SELF-X_DRAWX": room.pendingTarget={player:p,effect:"SUM_L_SELF-X_DRAWX",card:unit.name}; socket.emit("selectTarget",{type:"lifeInput",message:`「${unit.name}」：支払うライフを入力（現在:${room.life[p]}）`}); break;
     case "DENKOUSEKKA": unit.denko=true; roomAddLog(room,p,`「${unit.name}」：電光石火を持って召喚`); break;
@@ -3106,7 +3238,13 @@ function roomProcessSpellEffect(room, cardName, p, socket){
 
 function roomStartTurn(room, p){
   room.turnBuffs[p]={atk:0};
-  roomDraw(room,p,true);
+  // ★アビスホエール：ドローフェイズスキップ
+  if(room.skipDraw&&room.skipDraw[p]){
+    room.skipDraw[p]=false;
+    roomAddLog(room,p,`ドローフェイズがスキップされました`);
+  }else{
+    roomDraw(room,p,true);
+  }
   if(room.maxEnergy[p]===0){ room.maxEnergy[p]=(p===room.firstPlayer)?1:2; }
   else{ room.maxEnergy[p]=Math.min(10,room.maxEnergy[p]+2); }
   room.energy[p]=room.maxEnergy[p];
@@ -3118,7 +3256,29 @@ function roomStartTurn(room, p){
       room.board[p].push(gt);roomApplyFieldSpellOnSummon(room,gt,p);roomAddLog(room,p,`「${fsPre.name}」：ギギギアトークンを召喚`);
     }
   }
-  room.board[p].forEach(u=>{const c=cards[u.name];if(c&&c.effect==="START_TOKEN1"){roomShowEffect(room,u.name);roomSummonToken(room,p,"ギアトークン",1);}});
+  // ★ペインゴーレム：ターン開始時、ライフ2支払いか破壊かを選択（払えない場合は強制破壊）
+  {
+    const _pg=room.board[p].filter(u=>{const c=cardOf(u);return c&&c.effect==="START_L_SELF-2_OR_DES";});
+    const _ask=[];
+    _pg.forEach(u=>{
+      if(room.life[p]>=3){ _ask.push(u); }
+      else{
+        const i=room.board[p].indexOf(u);
+        if(i!==-1){
+          room.board[p].splice(i,1);
+          if(!u.isToken) room.graves[p].push(u);
+          roomAddLog(room,p,`「${u.name}」維持コスト：ライフ不足のため破壊された`);
+          roomTriggerDestroyEffect(room,u,p);
+        }
+      }
+    });
+    if(_ask.length>0){
+      room.pendingTarget={player:p,effect:"PAIN_UPKEEP",card:_ask[0].name,unit:_ask[0],queue:_ask.slice(1)};
+      const s=io.sockets.sockets.get(p);
+      if(s) s.emit("selectTarget",{type:"painUpkeep",message:`「${_ask[0].name}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${room.life[p]}）`});
+    }
+  }
+  room.board[p].forEach(u=>{const c=cardOf(u);if(c&&c.effect==="START_TOKEN1"){roomShowEffect(room,u.name);roomSummonToken(room,p,"ギアトークン",1);}});
   const fs=room.fieldSpell[p];
   if(fs){
     const fe=cards[fs.name]?.effect||"";
@@ -3133,6 +3293,7 @@ function roomResetGame(room){
   room.energy={};room.maxEnergy={};room.life={};room.winner=null;
   room.noAttack={};room.pendingDiscard={};room.turnBuffs={};
   room.pendingHandLimitDiscard=null;room.pendingNext=null;room.fieldSpell={};
+  room.skipDraw={};
   room.allLogs=[];room.turnLogs={};room.prevLogs={};
   [room.player1,room.player2].forEach(p=>{
     room.decks[p]=shuffle([...(room.customDeck[p]||[])]);
@@ -3172,6 +3333,107 @@ function roomHandleSelectTarget(room, socket, data){
     roomAddLog(room,p,`ソウルトレード：相手「${dST||"なし"}」破棄、相手1ドロー`);
     const ss=io.sockets.sockets.get(p);if(ss&&dST)ss.emit("message",`相手の手札「${dST}」が捨て場に送られました`);
     room.pendingTarget=null;roomSend(room);return;
+  }
+
+  // ★ペインゴーレム：維持コストの選択結果
+  if(eff==="PAIN_UPKEEP"){
+    const u=pt.unit;
+    room.pendingTarget=null;
+    if(data.painPay&&room.life[p]>=3){
+      room.life[p]-=2;
+      roomShowEffect(room,u.name);
+      roomAddLog(room,p,`「${u.name}」維持コスト：ライフ2を支払った（残り${room.life[p]}）`);
+    }else{
+      const i=room.board[p].indexOf(u);
+      if(i!==-1){
+        room.board[p].splice(i,1);
+        if(!u.isToken) room.graves[p].push(u);
+        roomAddLog(room,p,`「${u.name}」維持コスト：支払わず破壊された`);
+        roomTriggerDestroyEffect(room,u,p);
+      }
+    }
+    // 複数体いる場合は次を問う
+    const q=(pt.queue||[]).filter(x=>room.board[p].includes(x));
+    if(q.length>0&&room.life[p]>=3){
+      room.pendingTarget={player:p,effect:"PAIN_UPKEEP",card:q[0].name,unit:q[0],queue:q.slice(1)};
+      socket.emit("selectTarget",{type:"painUpkeep",message:`「${q[0].name}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${room.life[p]}）`});
+    }
+    roomSend(room);return;
+  }
+
+  // ★代替コスト：召喚方法の選択結果
+  if(eff==="ALT_COST_CHOICE"){
+    const cardName=pt.card; const cc=cards[cardName];
+    room.pendingTarget=null;
+    if(data.altChoice==="normal"){
+      if(room.energy[p]<cc.cost){socket.emit("message","エネルギーが不足しています");roomSend(room);return;}
+      room.energy[p]-=cc.cost;
+      roomAltSummon(room,p,cardName,socket);
+      roomSend(room);return;
+    }
+    if(pt.altKey==="SUMMON_COST_OR_LIFE4"){
+      if(room.life[p]<5){socket.emit("message","ライフが足りません");roomSend(room);return;}
+      room.life[p]-=4;
+      roomAddLog(room,p,`「${cardName}」：ライフ4を支払って召喚`);
+      roomAltSummon(room,p,cardName,socket);
+      roomSend(room);return;
+    }
+    if(pt.altKey==="SUMMON_IRON2_DES_COST0"){
+      room.pendingTarget={player:p,effect:"ALT_IRON2_STEP1",card:cardName,selected:[]};
+      socket.emit("selectTarget",{type:"myUnit",message:"破壊する鉄ユニット1体目を選択してください"});
+      roomSend(room);return;
+    }
+    roomSend(room);return;
+  }
+  // ★メタルナイト：鉄2体選択
+  if(eff==="ALT_IRON2_STEP1"||eff==="ALT_IRON2_STEP2"){
+    const tu=room.board[p][data.targetIndex];
+    if(!tu||!isSteelUnit(tu)){
+      socket.emit("message","鉄属性ユニットを選択してください");
+      room.pendingTarget=pt;
+      socket.emit("selectTarget",{type:"myUnit",message:eff==="ALT_IRON2_STEP1"?"破壊する鉄ユニット1体目を選択してください":"破壊する鉄ユニット2体目を選択してください"});
+      roomSend(room);return;
+    }
+    if(eff==="ALT_IRON2_STEP1"){
+      room.pendingTarget={player:p,effect:"ALT_IRON2_STEP2",card:pt.card,selected:[data.targetIndex]};
+      socket.emit("selectTarget",{type:"myUnit",message:"破壊する鉄ユニット2体目を選択してください"});
+      roomSend(room);return;
+    }
+    if(pt.selected.includes(data.targetIndex)){
+      socket.emit("message","同じユニットは選択できません");
+      room.pendingTarget=pt;
+      socket.emit("selectTarget",{type:"myUnit",message:"別の鉄ユニットを選択してください"});
+      roomSend(room);return;
+    }
+    const idxs=[...pt.selected,data.targetIndex].sort((a,b)=>b-a);
+    const cardName=pt.card;
+    room.pendingTarget=null;
+    idxs.forEach(i=>{
+      const d=room.board[p].splice(i,1)[0];
+      if(!d.isToken) room.graves[p].push(d);
+      roomAddLog(room,p,`「${cardName}」召喚コスト：「${d.name}」を破壊`);
+      roomTriggerDestroyEffect(room,d,p);
+    });
+    roomAltSummon(room,p,cardName,socket);
+    roomSend(room);return;
+  }
+
+  if(eff==="SUM_DISCARD1_A+3"){
+    const hi=data.handIndex;
+    const dc=room.hands[p][hi];
+    if(dc===undefined||dc===null){
+      socket.emit("message","捨てる手札を選んでください");
+      room.pendingTarget=pt;
+      socket.emit("selectTarget",{type:"handAny",message:`「${pt.card}」召喚時効果：捨てる手札を1枚選んでください（ATK+3）`});
+      roomSend(room);return;
+    }
+    room.hands[p].splice(hi,1);
+    room.graves[p].push({name:dc});
+    const sv=room.board[p].find(u=>u===pt.unit)||room.board[p].find(u=>u.name===pt.card);
+    if(sv) sv.atk+=3;
+    roomAddLog(room,p,`「${pt.card}」召喚時：「${dc}」を捨ててATK+3`);
+    room.pendingTarget=null;
+    roomSend(room);return;
   }
 
   if(eff==="SUM_L_SELF-X_A+X"||eff==="SUM_L_SELF-X_DRAWX"){
@@ -3268,7 +3530,7 @@ function roomHandleSelectTarget(room, socket, data){
     case "DISABLE1":targetUnit.disabled=true;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」行動不能`);break;
     case "UNIT_DENKOUSEKKA":targetUnit.denko=true;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」電光石火付与`);break;
     case "UNIT_FULL_HEAL":{const mh=cards[targetUnit.name]?.hp||targetUnit.hp;targetUnit.hp=mh;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」HP全回復`);break;}
-    case "PURIFY":targetUnit.disabled=false;delete targetUnit.disabledCount;targetUnit.barrier=false;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」特殊状態解除`);break;
+    case "PURIFY":targetUnit.disabled=false;delete targetUnit.disabledCount;targetUnit.barrier=false;removeVoid(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」特殊状態解除`);break;
     case "CRYSTAL_BARRIER":targetUnit.barrier=true;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」バリア付与`);break;
     case "BOUNCE_UNIT":{const oot=targetSide==="my"?p:op;if(targetUnit.isToken){targetBoard.splice(targetIndex,1);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」消滅`);}else{targetBoard.splice(targetIndex,1);room.hands[oot].push(targetUnit.name);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」手札へ`);}break;}
     case "FLAME_BURN":room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);roomDamageLife(room,op,1);roomAddLog(room,p,`フレイムバーン：相手ライフ-1`);break;
@@ -3277,6 +3539,17 @@ function roomHandleSelectTarget(room, socket, data){
     case "UNIT_DES_COST_L_DMG":{const cost=cards[targetUnit.name]?.cost||0;room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」（コスト${cost}）破壊`);roomTriggerDestroyEffect(room,targetUnit,op);roomDamageLife(room,op,cost);roomAddLog(room,p,`→相手ライフ-${cost}`);if(room.pendingTarget){roomNotifyPendingTarget(room);if(room.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");roomSend(room);return;}break;}
     case "UNIT_DES_COST_LHEAL":{const cost=cards[targetUnit.name]?.cost||0;room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,op);room.life[p]+=cost;roomAddLog(room,p,`→自分ライフ+${cost}`);if(room.pendingTarget){roomNotifyPendingTarget(room);if(room.pendingTarget.effect==="DES_SUMMON_C2_HAND")socket.emit("message","相手がグロウコアの効果でユニットを選択中です...");roomSend(room);return;}break;}
     case "UNIT_DES_L_HEAL":{const cost=cards[targetUnit.name]?.cost||0;room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.life[p]+=cost;roomAddLog(room,p,`→自分ライフ+${cost}`);break;}
+    case "SUM_VOID1":{
+      applyVoid(targetUnit);
+      roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」を虚無状態にした（効果無効）`);
+      break;
+    }
+    case "SUM_OPP_BOUNCE1":{
+      room.board[op].splice(targetIndex,1);
+      if(targetUnit.isToken){ roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」はトークンのため消滅`); }
+      else { room.hands[op].push(targetUnit.name); roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」を手札に戻した`); }
+      break;
+    }
     case "SUM_A_PERM-2":targetUnit.atk=Math.max(0,targetUnit.atk-2);roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」ATK-2`);if(pt.pendingNext)room.pendingNext=pt.pendingNext;break;
     case "SUM_UNIT_A_PERM+1":targetUnit.atk+=1;roomAddLog(room,p,`「${pt.card}」召喚時：「${targetUnit.name}」ATK+1`);if(pt.pendingNext)room.pendingNext=pt.pendingNext;break;
     case "L_SELF-1_A+3":targetUnit.atk+=3;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」ATK+3`);break;
@@ -3286,7 +3559,7 @@ function roomHandleSelectTarget(room, socket, data){
     case "SUM_IRON_DES_A+":{if(roomGetAttr(targetUnit.name)!=="steel"||targetUnit.name===pt.card){socket.emit("message","自分以外の鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"SUM_IRON_DES_A+",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"鉄ユニットを選択"});roomSend(room);return;}const ga=targetUnit.atk;room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊（ATK${ga}獲得）`);roomTriggerDestroyEffect(room,targetUnit,p);const cv=room.board[p].find(u=>u.name===pt.card);if(cv)cv.atk+=ga;break;}
     case "SUM_TOKEN_DES_UNIT_DMG2":case "SUM_TOKEN_DES_UNIT_DMG2_STEP1":{if(!targetUnit.isToken||roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","ギアトークンを選択してください");room.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"ギアトークンを選択"});roomSend(room);return;}room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」：ギアトークンを破壊`);room.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2_STEP2",card:pt.card};socket.emit("selectTarget",{type:"enemyUnit",message:"2ダメージを与える相手ユニットを選択"});roomSend(room);return;}
     case "SUM_TOKEN_DES_UNIT_DMG2_STEP2":{const ad2=targetUnit.damageReduce?1:2;targetUnit.hp-=ad2;roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」に${ad2}ダメージ`);if(targetUnit.hp<=0){room.board[op].splice(targetIndex,1);room.graves[op].push(targetUnit);roomAddLog(room,p,`→「${targetUnit.name}」を破壊`);roomTriggerDestroyEffect(room,targetUnit,op);}break;}
-    case "SUM_DES_SUM_C2":{if(targetUnit.name===pt.card){socket.emit("message","自分自身は選択できません");room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"破壊するユニットを選択（自分以外）"});roomSend(room);return;}room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2_HAND",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを召喚"});roomSend(room);return;}
+    case "SUM_DES_SUM_C2":{if(pt.unit&&targetUnit===pt.unit){socket.emit("message","自分自身は選択できません");room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2",card:pt.card};socket.emit("selectTarget",{type:"myUnit",message:"破壊するユニットを選択（自分以外）"});roomSend(room);return;}room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.pendingTarget={player:p,effect:"SUM_DES_SUM_C2_HAND",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを召喚"});roomSend(room);return;}
     case "UNIT_DES_SUM_C2":room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);roomTriggerDestroyEffect(room,targetUnit,p);room.pendingTarget={player:p,effect:"UNIT_DES_SUM_C2_HAND",card:pt.card};socket.emit("selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを召喚"});roomSend(room);return;
     case "UNIT_DES_SUM_C3":{room.board[p].splice(targetIndex,1);room.graves[p].push(targetUnit);roomAddLog(room,p,`「${pt.card}」→「${targetUnit.name}」破壊`);const lc=pt.card;roomTriggerDestroyEffect(room,targetUnit,p);if(room.pendingTarget&&room.pendingTarget.effect==="DES_SUMMON_C2_HAND"){room.pendingTarget.pendingNext={effect:"UNIT_DES_SUM_C3_HAND",card:lc,player:p};roomNotifyPendingTarget(room);roomSend(room);return;}room.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3_HAND",card:lc};roomNotifyPendingTarget(room);roomSend(room);return;}
     case "FUSION_IRON2_STEP1":{if(roomGetAttr(targetUnit.name)!=="steel"){socket.emit("message","鉄ユニットを選択してください");room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP1",card:pt.card,selected:[]};socket.emit("selectTarget",{type:"myUnit",message:"1体目の鉄ユニットを選択"});roomSend(room);return;}room.pendingTarget={player:p,effect:"FUSION_IRON2_STEP2",card:pt.card,selected:[targetIndex]};socket.emit("selectTarget",{type:"myUnit",message:"2体目の鉄ユニットを選択"});roomSend(room);return;}
@@ -3307,6 +3580,43 @@ socket.emit("selectTarget",{type:"handUnit_cost3",message:`${sn}体目：コス�
   roomSend(room);
 }
 
+// ★反撃基礎値：防御側がフレアヘッジホッグ(FULL_COUNTER)なら半減せず全額
+function counterBaseDmg(def){
+  const c=cardOf(def);
+  if(c&&c.effect==="FULL_COUNTER") return def.atk;
+  return Math.floor(def.atk/2);
+}
+
+// ★代替コスト召喚：手札から抜いて着地させる共通処理
+function roomAltSummon(room,p,cardName,socket){
+  const c=cards[cardName];
+  const idx=room.hands[p].indexOf(cardName);
+  if(idx===-1) return;
+  const lim=slotLimit(p,room.board[roomGetOpponent(room,p)]);
+  if(room.board[p].length>=lim){ socket.emit("message","場に空きがありません"); return; }
+  room.hands[p].splice(idx,1);
+  const unit={name:cardName,atk:c.atk,hp:c.hp,attacked:false,attr:c.attr||"neutral",damageReduce:c.effect==="DAMAGE_REDUCE_1"};
+  room.board[p].push(unit);
+  roomAddLog(room,p,`「${cardName}」を召喚（ATK${unit.atk}/HP${unit.hp}）`);
+  roomApplyFieldSpellOnSummon(room,unit,p);
+  roomTriggerSummonEffect(room,unit,p,socket);
+}
+
+// ★代替コスト召喚：手札から抜いて着地させる共通処理
+function roomAltSummon(room,p,cardName,socket){
+  const c=cards[cardName];
+  const idx=room.hands[p].indexOf(cardName);
+  if(idx===-1) return;
+  const lim=slotLimit(p,room.board[roomGetOpponent(room,p)]);
+  if(room.board[p].length>=lim){ socket.emit("message","場に空きがありません"); return; }
+  room.hands[p].splice(idx,1);
+  const unit={name:cardName,atk:c.atk,hp:c.hp,attacked:false,attr:c.attr||"neutral",damageReduce:c.effect==="DAMAGE_REDUCE_1"};
+  room.board[p].push(unit);
+  roomAddLog(room,p,`「${cardName}」を召喚（ATK${unit.atk}/HP${unit.hp}）`);
+  roomApplyFieldSpellOnSummon(room,unit,p);
+  roomTriggerSummonEffect(room,unit,p,socket);
+}
+
 // ルーム対戦のattack処理
 function roomHandleAttack(room, socket, data){
   const p=socket.id;
@@ -3319,7 +3629,7 @@ function roomHandleAttack(room, socket, data){
   if(atk.disabled){socket.emit("message","このユニットは行動不能です");return;}
   const hasDenko=atk.denko===true;
   if(atk.attacked){if(hasDenko&&!atk.denkoAttackedThisTurn){}else{socket.emit("message","このユニットはすでに攻撃済みです");return;}}
-  const atkCard=cards[atk.name];
+  const atkCard=cardOf(atk);
   const isAllAttack=atkCard&&atkCard.effect==="ALL_ATTACK";
   if(isAllAttack&&room.board[op].length>0){
     const isSecA=atk.attacked&&hasDenko&&!atk.denkoAttackedThisTurn;
@@ -3330,7 +3640,7 @@ function roomHandleAttack(room, socket, data){
     room.board[op].forEach((def,i)=>{
       const ad=def.damageReduce?Math.min(1,ap):ap;const bb=def.barrier;const rd=bb?0:ad;def.hp-=rd;
       const nr=!!(room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
-      if(!isDFirst&&!nr){const cd=atk.damageReduce?Math.min(1,Math.floor(def.atk/2)):Math.floor(def.atk/2);tc+=cd;}
+      if(!isDFirst&&!nr){const _cb=counterBaseDmg(def);const cd=atk.damageReduce?Math.min(1,_cb):_cb;tc+=cd;}
       if(def.hp<=0)td.push(i);
       roomAddLog(room,p,`「${atk.name}」が「${def.name}」に全体攻撃（${rd}ダメージ）`);
     });
@@ -3385,7 +3695,7 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
     const ap=isSecond?Math.floor(atk.atk/2):atk.atk;
     let aad=def.damageReduce?Math.min(1,ap):ap;if(def.barrier)aad=0;
     const nr=!!(room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
-    const cb=(isDFirst||nr)?0:Math.floor(def.atk/2);const add=atk.damageReduce?Math.min(1,cb):cb;
+    const cb=(isDFirst||nr)?0:counterBaseDmg(def);const add=atk.damageReduce?Math.min(1,cb):cb;
     def.hp-=aad;atk.hp-=add;
     if(aad>0)roomSendDamagePop(room,op,aad,false,data.t);
     if(add>0)roomSendDamagePopAttacker(room,p,add,data.a);
@@ -3396,6 +3706,7 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
     (room.spectators||[]).forEach(sid=>{const ss=io.sockets.sockets.get(sid);if(ss)ss.emit("hitEffect",{targetIdx:data.t,attr:aa2,attackerIdx:data.a,hasAttackAnim:true,attackerIsP1:socket.id===room.player1});});
     if(def.hp<=0){
       if(room.fieldSpell[p]&&cards[room.fieldSpell[p].name]?.effect==="PERM_SPELL_FIRE_OVERFLOW"){const ov=ap-def.atk;if(ov>0){roomDamageLife(room,op,ov);roomAddLog(room,p,`灼熱地獄：${ov}ダメ`);}}
+      if(atkCard&&atkCard.effect==="ATK_OVERKILL_DMG"){const ovs=ap-def.atk;if(ovs>0){roomDamageLife(room,op,ovs);roomAddLog(room,p,`「${atk.name}」効果：${ovs}ダメージが相手ライフに`);}}
       room.board[op].splice(data.t,1);if(!def.isToken)room.graves[op].push(def);roomAddLog(room,p,`→「${def.name}」を撃破`);roomTriggerDestroyEffect(room,def,op);
       if(room.pendingTarget&&room.pendingTarget.effect==="DES_SUMMON_C2_HAND"){const os2=io.sockets.sockets.get(room.pendingTarget.player);if(os2){os2.emit("selectTarget",{type:"handUnit_cost2",message:"グロウコア：コスト2以下のユニットを召喚"});socket.emit("message","相手がグロウコアの効果を処理中...");}}
     }
@@ -3520,8 +3831,26 @@ io.on("connection",(socket)=>{
     if(data.type==="select_target"){roomHandleSelectTarget(room,socket,data);return;}
     if(data.type==="play_card"){
       const c=cards[data.card];
+      // ★代替コスト召喚：選択肢を提示（altChoice未指定かつ選択肢がある場合）
+      {
+        const alt=altCostOf(data.card);
+        if(alt&&data.altChoice===undefined){
+          const canAlt=alt.can(room.board[socket.id],room.life[socket.id]);
+          const canNormal=room.energy[socket.id]>=c.cost;
+          if(!canAlt&&!canNormal){socket.emit("message","エネルギーが不足しています");return;}
+          if(canAlt){
+            room.pendingTarget={player:socket.id,effect:"ALT_COST_CHOICE",card:data.card,altKey:alt.key,canNormal};
+            socket.emit("selectTarget",{type:"altCost",card:data.card,message:`「${data.card}」の召喚方法を選択してください`,
+              optNormal:canNormal?`通常召喚（コスト${c.cost}）`:null, optAlt:alt.label});
+            return;
+          }
+        }
+      }
       if(room.energy[socket.id]<c.cost){socket.emit("message","エネルギーが不足しています");return;}
-      if(c.type==="unit"&&room.board[socket.id].length>=3){socket.emit("message","場に出せるユニットは3体までです");return;}
+      if(c.type==="unit"){
+        const _lim=slotLimit(socket.id,room.board[op]);
+        if(room.board[socket.id].length>=_lim){socket.emit("message",_lim<3?`相手の効果で場が封鎖されています（${_lim}体まで）`:"場に出せるユニットは3体までです");return;}
+      }
       room.energy[socket.id]-=c.cost;
       const idx=room.hands[socket.id].indexOf(data.card);room.hands[socket.id].splice(idx,1);
       if(c.type==="unit"){
@@ -3543,7 +3872,8 @@ io.on("connection",(socket)=>{
       room.board[socket.id].forEach(u=>{if(u.disabledCount!==undefined&&u.disabledCount>0){u.disabledCount--;if(u.disabledCount<=0){u.disabled=false;delete u.disabledCount;}}});
       room.board[op].forEach(u=>{if(u.barrier)u.barrier=false;});
       const bo=room.board[socket.id].filter(u=>u.burnout);bo.forEach(u=>{const i=room.board[socket.id].indexOf(u);room.board[socket.id].splice(i,1);if(!u.isToken)room.graves[socket.id].push(u);roomTriggerDestroyEffect(room,u,socket.id);});
-      room.board[socket.id].forEach(u=>{const c=cards[u.name];if(c&&c.effect==="END_A+1"){roomShowEffect(room,u.name);u.atk+=1;}});
+      room.board[socket.id].forEach(u=>{const c=cardOf(u);if(c&&c.effect==="END_A+1"){roomShowEffect(room,u.name);u.atk+=1;}});
+      room.board[socket.id].forEach(u=>{const c=cardOf(u);if(c&&c.effect==="END_TOKEN1"){roomShowEffect(room,u.name);roomSummonToken(room,socket.id,"ギアトークン",1);roomAddLog(room,socket.id,`「${u.name}」ターン終了時：ギアトークン1体召喚`);}});
       if(room.hands[socket.id].length>7){const ex=room.hands[socket.id].length-7;room.pendingDiscard[socket.id]=(room.pendingDiscard[socket.id]||0)+ex;room.pendingHandLimitDiscard=socket.id;const s=io.sockets.sockets.get(socket.id);if(s)s.emit("message",`手札が7枚を超えています。${ex}枚捨ててください`);roomNotifyPendingTarget(room);roomSend(room);return;}
       room.pendingHandLimitDiscard=null;
       room.noAttack[socket.id]=false;room.prevLogs[socket.id]=[...(room.turnLogs[socket.id]||[])];room.turnLogs[socket.id]=[];room.turn=op;
@@ -3699,6 +4029,7 @@ function csSend(cs){
     isSoulTrade:!!(cs.pendingTarget&&cs.pendingTarget.effect==="SOUL_TRADE_AFTER"&&cs.pendingTarget.player===p),
     isHandLimit:cs.pendingHandLimitDiscard===p,
     myFieldSpell:cs.fieldSpell[p]||null, enemyFieldSpell:cs.fieldSpell[op]||null,
+    mySlotLimit:slotLimit(p,cs.board[op]), enemySlotLimit:slotLimit(op,cs.board[p]),
     allLogs:[...cs.allLogs], currentTurnLogs:cs.turnLogs[cs.turn]||[],
     cpuTurn:cs.turn===CPU_ID, firstPlayer:cs.firstPlayer
   });
@@ -3770,8 +4101,9 @@ function csApplyFSOnSummon(cs,unit,owner){
   if(cs.fieldSpell[op]&&cards[cs.fieldSpell[op].name]?.effect==="PERM_SPELL_DARK_DEBUFF"){ unit.atk=Math.max(0,unit.atk-1); }
 }
 function csSummonToken(cs,p,tokenName,n){
+  const _lim=slotLimit(p,cs.board[csOpp(cs,p)]);
   for(let i=0;i<n;i++){
-    if(cs.board[p].length>=3)break;
+    if(cs.board[p].length>=_lim)break;
     const ta=tokenName==="ギアトークン"?"steel":"forest";
     let tatk=1,thp=1;
     if(tokenName==="ギアトークン"&&cs.fieldSpell[p]&&cards[cs.fieldSpell[p].name]?.effect==="PERM_SPELL_IRON_FACTORY")tatk+=1;
@@ -3794,7 +4126,7 @@ function csDestroyFS(cs,owner){
 
 // ===== 破壊時効果 =====
 function csTriggerDestroy(cs,unit,owner){
-  const c=cards[unit.name]; if(!c||!c.destroyEffect)return;
+  const c=cardOf(unit); if(!c||!c.destroyEffect)return;
   const op=csOpp(cs,owner); const lp=cs.turn||owner;
   csShowEffect(cs,unit.name);
   switch(c.destroyEffect){
@@ -3859,6 +4191,76 @@ function csTriggerSummon(cs,unit,p){
     case "SUM_ALL_UNIT_DMG1": csDamageAllUnits(cs,op,1); csLog(cs,p,`「${unit.name}」召喚時：相手全体1ダメージ`); break;
     case "SUM_DES_COST1_ALL":{ const td=[]; cs.board[op].forEach((u,i)=>{if((cards[u.name]?.cost||0)<=1)td.push(i);}); td.reverse().forEach(i=>{const d=cs.board[op].splice(i,1)[0];cs.graves[op].push(d);csTriggerDestroy(cs,d,op);}); csLog(cs,p,`「${unit.name}」召喚時：相手コスト1以下全破壊`); break; }
     case "SUM_TOKEN1": csSummonToken(cs,p,"ギアトークン",1); csLog(cs,p,`「${unit.name}」召喚時：ギアトークン1体召喚`); break;
+    case "SUM_S_TOKEN1": csSummonToken(cs,p,"シードトークン",1); csLog(cs,p,`「${unit.name}」召喚時：シードトークン1体召喚`); break;
+    case "SUM_MAX_E-1_SKIP_DRAW":
+      cs.maxEnergy[p]=Math.max(0,cs.maxEnergy[p]-2);
+      cs.energy[p]=Math.max(0,Math.min(cs.energy[p]-2,cs.maxEnergy[p]));
+      if(!cs.skipDraw) cs.skipDraw={};
+      cs.skipDraw[op]=true;
+      csLog(cs,p,`「${unit.name}」召喚時：最大エネルギー-2（最大${cs.maxEnergy[p]}/現在${cs.energy[p]}）、相手の次のドローをスキップ`);
+      break;
+    case "SUM_MAX_E-1_DRAW3":
+      cs.maxEnergy[p]=Math.max(0,cs.maxEnergy[p]-1);
+      cs.energy[p]=Math.max(0,Math.min(cs.energy[p]-1,cs.maxEnergy[p]));
+      csDrawN(cs,p,3);
+      csLog(cs,p,`「${unit.name}」召喚時：最大エネルギー-1（最大${cs.maxEnergy[p]}/現在${cs.energy[p]}）、3枚ドロー`);
+      break;
+    case "SUM_LOCK_OPP_SLOT":{
+      const lim=slotLimit(op,cs.board[p]);
+      if(cs.board[op].length>=lim){ csLog(cs,p,`「${unit.name}」召喚時：相手の場に空き枠がないため不発`); break; }
+      unit.lockSlot=true;
+      csLog(cs,p,`「${unit.name}」召喚時：相手の場の1枠を使用不可にした`);
+      break;
+    }
+    case "SUM_VOID1":
+      if(cs.board[op].length===0){ csLog(cs,p,`「${unit.name}」召喚時：相手ユニットがいないため不発`); break; }
+      if(isCpu){
+        // CPU：効果を持つユニットの中で最も脅威の高いものを虚無化
+        const withEff=cs.board[op].filter(u=>{const c=cards[u.name];return c&&(c.effect||c.attackEffect||c.destroyEffect);});
+        const pool=withEff.length?withEff:cs.board[op];
+        const vt=pool.reduce((b,u)=>csThreat(u)>csThreat(b)?u:b,pool[0]);
+        applyVoid(vt);
+        csLog(cs,p,`「${unit.name}」召喚時：「${vt.name}」を虚無状態にした`);
+      } else {
+        cs.pendingTarget={player:p,effect:"SUM_VOID1",card:unit.name};
+        csEmit(cs,"selectTarget",{type:"enemyUnit",message:`「${unit.name}」召喚時効果：虚無状態にする相手ユニットを選択してください`});
+      }
+      break;
+    case "SUM_OPP_BOUNCE1":
+      if(cs.board[op].length===0){ csLog(cs,p,`「${unit.name}」召喚時：相手ユニットがいないため不発`); break; }
+      if(isCpu){
+        // CPU：最も脅威の高い相手ユニットを手札に戻す
+        const bt=cs.board[op].reduce((b,u)=>csThreat(u)>csThreat(b)?u:b,cs.board[op][0]);
+        const bi=cs.board[op].indexOf(bt);
+        cs.board[op].splice(bi,1);
+        if(bt.isToken){ csLog(cs,p,`「${unit.name}」召喚時：「${bt.name}」はトークンのため消滅`); }
+        else { cs.hands[op].push(bt.name); csLog(cs,p,`「${unit.name}」召喚時：「${bt.name}」を手札に戻した`); }
+      } else {
+        cs.pendingTarget={player:p,effect:"SUM_OPP_BOUNCE1",card:unit.name};
+        csEmit(cs,"selectTarget",{type:"enemyUnit",message:`「${unit.name}」召喚時効果：手札に戻す相手ユニットを選択してください`});
+      }
+      break;
+    case "SUM_HAND_UNDER_DRAW2":
+      if(cs.hands[p].length<cs.hands[op].length){
+        csDrawN(cs,p,2);
+        csLog(cs,p,`「${unit.name}」召喚時：手札が相手より少ないため2枚ドロー`);
+      }else{
+        csLog(cs,p,`「${unit.name}」召喚時：手札が相手より少なくないため不発`);
+      }
+      break;
+    case "SUM_DISCARD1_A+3":
+      if(cs.hands[p].length===0){ csLog(cs,p,`「${unit.name}」召喚時：手札がないため不発`); break; }
+      if(isCpu){
+        // CPU：最もコストの低い手札を捨ててATK+3
+        const wk=cs.hands[p].reduce((w,n)=>(cards[n]?.cost||0)<(cards[w]?.cost||0)?n:w,cs.hands[p][0]);
+        const wi=cs.hands[p].indexOf(wk); cs.hands[p].splice(wi,1); cs.graves[p].push({name:wk});
+        unit.atk+=3;
+        csLog(cs,p,`「${unit.name}」召喚時：「${wk}」を捨ててATK+3`);
+      } else {
+        cs.pendingTarget={player:p,effect:"SUM_DISCARD1_A+3",card:unit.name,unit:unit};
+        csEmit(cs,"selectTarget",{type:"handAny",message:`「${unit.name}」召喚時効果：捨てる手札を1枚選んでください（このユニットのATK+3）`});
+      }
+      break;
     case "SUM_BURNOUT": unit.burnout=true; csLog(cs,p,`「${unit.name}」召喚時：ターン終了時自壊`); break;
     case "SUM_LIFE_8_A+4": if(cs.life[p]<=8){unit.atk+=4;csLog(cs,p,`「${unit.name}」召喚時：ライフ8以下ATK+4`);} break;
     case "SUM_A_H_LOST_LIFE":{ const lost=15-cs.life[p]; unit.atk=lost;unit.hp=lost; csLog(cs,p,`「${unit.name}」召喚時：ATK/HP=${lost}`); break; }
@@ -3922,7 +4324,7 @@ function csTriggerSummon(cs,unit,p){
           cs.board[p].push(nu); csApplyFSOnSummon(cs,nu,p); csLog(cs,p,`「${unit.name}」効果：「${pick}」召喚`); csTriggerSummon(cs,nu,p);
         }
       } else {
-        cs.pendingTarget={player:p,effect:"SUM_DES_SUM_C2",card:unit.name};
+        cs.pendingTarget={player:p,effect:"SUM_DES_SUM_C2",card:unit.name,unit:unit};
         csEmit(cs,"selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時効果：破壊するユニットを選択（コスト2以下を手札から召喚）`});
       }
       break;
@@ -4160,7 +4562,13 @@ function csSpell(cs,cardName,p){
 // ===== ターン開始 =====
 function csStartTurn(cs,p){
   cs.turnBuffs[p]={atk:0};
-  csDraw(cs,p,true);
+  // ★アビスホエール：ドローフェイズスキップ
+  if(cs.skipDraw&&cs.skipDraw[p]){
+    cs.skipDraw[p]=false;
+    csLog(cs,p,`ドローフェイズがスキップされました`);
+  }else{
+    csDraw(cs,p,true);
+  }
   if(cs.maxEnergy[p]===0)cs.maxEnergy[p]=(p===cs.firstPlayer)?1:2;
   else cs.maxEnergy[p]=Math.min(10,cs.maxEnergy[p]+2);
   cs.energy[p]=cs.maxEnergy[p];
@@ -4172,7 +4580,44 @@ function csStartTurn(cs,p){
       cs.board[p].push(gt);csApplyFSOnSummon(cs,gt,p);csLog(cs,p,`「${fsPre.name}」：ギギギアトークンを召喚`);
     }
   }
-  cs.board[p].forEach(u=>{const c=cards[u.name];if(c&&c.effect==="START_TOKEN1"){csShowEffect(cs,u.name);csSummonToken(cs,p,"ギアトークン",1);}});
+  // ★ペインゴーレム：ターン開始時、ライフ2支払いか破壊かを選択（払えない場合は強制破壊）
+  {
+    const _pg=cs.board[p].filter(u=>{const c=cardOf(u);return c&&c.effect==="START_L_SELF-2_OR_DES";});
+    const _ask=[];
+    _pg.forEach(u=>{
+      if(cs.life[p]>=3){
+        if(p===CPU_ID){
+          // CPU：ライフ7以上なら払う、それ未満なら破壊を選ぶ
+          if(cs.life[p]>=7){
+            cs.life[p]-=2;
+            csShowEffect(cs,u.name);
+            csLog(cs,p,`「${u.name}」維持コスト：ライフ2を支払った（残り${cs.life[p]}）`);
+          }else{
+            const i=cs.board[p].indexOf(u);
+            if(i!==-1){
+              cs.board[p].splice(i,1);
+              if(!u.isToken) cs.graves[p].push(u);
+              csLog(cs,p,`「${u.name}」維持コスト：支払わず破壊された`);
+              csTriggerDestroy(cs,u,p);
+            }
+          }
+        }else{ _ask.push(u); }
+      }else{
+        const i=cs.board[p].indexOf(u);
+        if(i!==-1){
+          cs.board[p].splice(i,1);
+          if(!u.isToken) cs.graves[p].push(u);
+          csLog(cs,p,`「${u.name}」維持コスト：ライフ不足のため破壊された`);
+          csTriggerDestroy(cs,u,p);
+        }
+      }
+    });
+    if(_ask.length>0){
+      cs.pendingTarget={player:p,effect:"PAIN_UPKEEP",card:_ask[0].name,unit:_ask[0],queue:_ask.slice(1)};
+      csEmit(cs,"selectTarget",{type:"painUpkeep",message:`「${_ask[0].name}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${cs.life[p]}）`});
+    }
+  }
+  cs.board[p].forEach(u=>{const c=cardOf(u);if(c&&c.effect==="START_TOKEN1"){csShowEffect(cs,u.name);csSummonToken(cs,p,"ギアトークン",1);}});
   const fs=cs.fieldSpell[p];
   if(fs){
     const fe=cards[fs.name]?.effect||"";
@@ -4194,7 +4639,8 @@ function csEndTurnProcess(cs,p){
   cs.board[op].forEach(u=>{if(u.barrier)u.barrier=false;});
   const burnouts=cs.board[p].filter(u=>u.burnout);
   burnouts.forEach(u=>{const i=cs.board[p].indexOf(u);cs.board[p].splice(i,1);if(!u.isToken)cs.graves[p].push(u);csTriggerDestroy(cs,u,p);});
-  cs.board[p].forEach(u=>{const c=cards[u.name];if(c&&c.effect==="END_A+1"){csShowEffect(cs,u.name);u.atk+=1;}});
+  cs.board[p].forEach(u=>{const c=cardOf(u);if(c&&c.effect==="END_A+1"){csShowEffect(cs,u.name);u.atk+=1;}});
+  cs.board[p].forEach(u=>{const c=cardOf(u);if(c&&c.effect==="END_TOKEN1"){csShowEffect(cs,u.name);csSummonToken(cs,p,"ギアトークン",1);csLog(cs,p,`「${u.name}」ターン終了時：ギアトークン1体召喚`);}});
 }
 
 // ===== ターン委譲 =====
@@ -4223,7 +4669,7 @@ function csPlayerAttack(cs,data){
   if(atk.disabled){ csEmit(cs,"message","このユニットは行動不能です"); return; }
   const hasDenko=atk.denko===true;
   if(atk.attacked){ if(hasDenko&&!atk.denkoAttackedThisTurn){}else{csEmit(cs,"message","このユニットはこのターンすでに攻撃済みです");return;} }
-  const atkCard=cards[atk.name];
+  const atkCard=cardOf(atk);
   const isAllAttack=atkCard&&atkCard.effect==="ALL_ATTACK";
   const atkAttr=csAttr(atk.name)||"neutral";
   csEmit(cs,"playSound","atk_"+atkAttr);
@@ -4241,7 +4687,7 @@ function csPlayerAttack(cs,data){
     cs.board[op].forEach((def,i)=>{
       const ad=def.damageReduce?Math.min(1,atkPow):atkPow; const rd=def.barrier?0:ad; def.hp-=rd;
       if(rd>0)csDamagePop(cs,op,rd,false,i);
-      if(!isDenkoFirst&&!noReflect){const cd=atk.damageReduce?Math.min(1,Math.floor(def.atk/2)):Math.floor(def.atk/2);totalCounter+=cd;}
+      if(!isDenkoFirst&&!noReflect){const _cb=counterBaseDmg(def);const cd=atk.damageReduce?Math.min(1,_cb):_cb;totalCounter+=cd;}
       if(def.hp<=0)toDestroy.push(i);
       csLog(cs,p,`「${atk.name}」が「${def.name}」に全体攻撃（${rd}ダメージ）`);
     });
@@ -4287,7 +4733,7 @@ function csPlayerAttack(cs,data){
     const atkPow=isSecond?Math.floor(atk.atk/2):atk.atk;
     let actualAtk=def.damageReduce?Math.min(1,atkPow):atkPow; if(def.barrier)actualAtk=0;
     const noReflect=!!(cs.fieldSpell[p]&&cards[cs.fieldSpell[p].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
-    const counterBase=(isDenkoFirst||noReflect)?0:Math.floor(def.atk/2);
+    const counterBase=(isDenkoFirst||noReflect)?0:counterBaseDmg(def);
     const actualDef=atk.damageReduce?Math.min(1,counterBase):counterBase;
     def.hp-=actualAtk; atk.hp-=actualDef;
     if(actualAtk>0)csDamagePop(cs,op,actualAtk,false,data.t);
@@ -4296,6 +4742,7 @@ function csPlayerAttack(cs,data){
     csEmit(cs,"hitEffect",{targetIdx:data.t,attr:atkAttr,isEnemy:true});
     if(def.hp<=0){
       if(cs.fieldSpell[p]&&cards[cs.fieldSpell[p].name]?.effect==="PERM_SPELL_FIRE_OVERFLOW"){const ov=atkPow-def.atk;if(ov>0){csDamageLife(cs,op,ov);csLog(cs,p,`「${cs.fieldSpell[p].name}」：${ov}ダメージが相手ライフに`);}}
+      if(atkCard&&atkCard.effect==="ATK_OVERKILL_DMG"){const ovs=atkPow-def.atk;if(ovs>0){csDamageLife(cs,op,ovs);csLog(cs,p,`「${atk.name}」効果：${ovs}ダメージが相手ライフに`);}}
       cs.board[op].splice(data.t,1); if(!def.isToken)cs.graves[op].push(def); csLog(cs,p,`→「${def.name}」を撃破`); csTriggerDestroy(cs,def,op);
     }
     if(atk.hp<=0){const ai=cs.board[p].indexOf(atk);if(ai!==-1){csEmit(cs,"hitEffect",{targetIdx:ai,attr:csAttr(def.name)||"neutral",isEnemy:false});cs.board[p].splice(ai,1);if(!atk.isToken)cs.graves[p].push(atk);csLog(cs,p,`→「${atk.name}」が反撃で倒れた`);csTriggerDestroy(cs,atk,p);}}
@@ -4311,7 +4758,7 @@ function csPlayerAttack(cs,data){
 }
 
 function csPlayerAttackEffect(cs,atk,op,atkPow){
-  const c=cards[atk.name]; if(!c||!c.attackEffect)return;
+  const c=cardOf(atk); if(!c||!c.attackEffect)return;
   const p=cs.player;
   csShowEffect(cs,atk.name);
   if(c.attackEffect==="L_DMG1"){csDamageLife(cs,op,1);csLog(cs,p,`「${atk.name}」攻撃時効果：相手ライフ-1`);}
@@ -4320,12 +4767,45 @@ function csPlayerAttackEffect(cs,atk,op,atkPow){
   if(c.attackEffect==="ALL_UNIT_DMG1"){csDamageAllUnits(cs,op,1);csLog(cs,p,`「${atk.name}」攻撃時効果：相手全体1ダメージ`);}
 }
 
+// ★代替コスト召喚：手札から抜いて着地させる共通処理
+function csAltSummon(cs,p,cardName){
+  const c=cards[cardName];
+  const idx=cs.hands[p].indexOf(cardName);
+  if(idx===-1) return;
+  const lim=slotLimit(p,cs.board[csOpp(cs,p)]);
+  if(cs.board[p].length>=lim){ if(p===cs.player)csEmit(cs,"message","場に空きがありません"); return; }
+  cs.hands[p].splice(idx,1);
+  const unit={name:cardName,atk:c.atk,hp:c.hp,attacked:false,attr:c.attr||"neutral",damageReduce:c.effect==="DAMAGE_REDUCE_1"};
+  cs.board[p].push(unit);
+  csLog(cs,p,`「${cardName}」を召喚（ATK${unit.atk}/HP${unit.hp}）`);
+  csApplyFSOnSummon(cs,unit,p);
+  csTriggerSummon(cs,unit,p);
+}
+
 // ===== プレイヤー：カード使用 =====
 function csPlayerPlayCard(cs,data){
   const p=cs.player;
   const c=cards[data.card]; if(!c)return;
+  // ★代替コスト召喚：選択肢を提示
+  {
+    const alt=altCostOf(data.card);
+    if(alt&&data.altChoice===undefined){
+      const canAlt=alt.can(cs.board[p],cs.life[p]);
+      const canNormal=cs.energy[p]>=c.cost;
+      if(!canAlt&&!canNormal){csEmit(cs,"message","エネルギーが不足しています");return;}
+      if(canAlt){
+        cs.pendingTarget={player:p,effect:"ALT_COST_CHOICE",card:data.card,altKey:alt.key,canNormal};
+        csEmit(cs,"selectTarget",{type:"altCost",card:data.card,message:`「${data.card}」の召喚方法を選択してください`,
+          optNormal:canNormal?`通常召喚（コスト${c.cost}）`:null, optAlt:alt.label});
+        return;
+      }
+    }
+  }
   if(cs.energy[p]<c.cost){csEmit(cs,"message","エネルギーが不足しています");return;}
-  if(c.type==="unit"&&cs.board[p].length>=3){csEmit(cs,"message","場に出せるユニットは3体までです");return;}
+  if(c.type==="unit"){
+    const _lim=slotLimit(p,cs.board[CPU_ID]);
+    if(cs.board[p].length>=_lim){csEmit(cs,"message",_lim<3?`相手の効果で場が封鎖されています（${_lim}体まで）`:"場に出せるユニットは3体までです");return;}
+  }
   cs.energy[p]-=c.cost;
   const idx=cs.hands[p].indexOf(data.card); if(idx===-1){cs.energy[p]+=c.cost;return;}
   cs.hands[p].splice(idx,1);
@@ -4354,6 +4834,108 @@ function csPlayerSelectTarget(cs,data){
   if(cs.pendingTarget.player!==cs.player)return;
   const pt=cs.pendingTarget; const p=pt.player; const op=csOpp(cs,p); const eff=pt.effect;
   const targetIndex=data.targetIndex; const targetSide=data.targetSide;
+
+  // ライフ入力
+  // ★ペインゴーレム：維持コストの選択結果
+  if(eff==="PAIN_UPKEEP"){
+    const u=pt.unit;
+    cs.pendingTarget=null;
+    if(data.painPay&&cs.life[p]>=3){
+      cs.life[p]-=2;
+      csShowEffect(cs,u.name);
+      csLog(cs,p,`「${u.name}」維持コスト：ライフ2を支払った（残り${cs.life[p]}）`);
+    }else{
+      const i=cs.board[p].indexOf(u);
+      if(i!==-1){
+        cs.board[p].splice(i,1);
+        if(!u.isToken) cs.graves[p].push(u);
+        csLog(cs,p,`「${u.name}」維持コスト：支払わず破壊された`);
+        csTriggerDestroy(cs,u,p);
+      }
+    }
+    const q=(pt.queue||[]).filter(x=>cs.board[p].includes(x));
+    if(q.length>0&&cs.life[p]>=3){
+      cs.pendingTarget={player:p,effect:"PAIN_UPKEEP",card:q[0].name,unit:q[0],queue:q.slice(1)};
+      csEmit(cs,"selectTarget",{type:"painUpkeep",message:`「${q[0].name}」の維持コスト：ライフ2を支払いますか？（現在ライフ:${cs.life[p]}）`});
+    }
+    csSend(cs);return;
+  }
+
+  // ★代替コスト：召喚方法の選択結果
+  if(eff==="ALT_COST_CHOICE"){
+    const cardName=pt.card; const cc=cards[cardName];
+    cs.pendingTarget=null;
+    if(data.altChoice==="normal"){
+      if(cs.energy[p]<cc.cost){csEmit(cs,"message","エネルギーが不足しています");csSend(cs);return;}
+      cs.energy[p]-=cc.cost;
+      csAltSummon(cs,p,cardName);
+      csSend(cs);return;
+    }
+    if(pt.altKey==="SUMMON_COST_OR_LIFE4"){
+      if(cs.life[p]<5){csEmit(cs,"message","ライフが足りません");csSend(cs);return;}
+      cs.life[p]-=4;
+      csLog(cs,p,`「${cardName}」：ライフ4を支払って召喚`);
+      csAltSummon(cs,p,cardName);
+      csSend(cs);return;
+    }
+    if(pt.altKey==="SUMMON_IRON2_DES_COST0"){
+      cs.pendingTarget={player:p,effect:"ALT_IRON2_STEP1",card:cardName,selected:[]};
+      csEmit(cs,"selectTarget",{type:"myUnit",message:"破壊する鉄ユニット1体目を選択してください"});
+      csSend(cs);return;
+    }
+    csSend(cs);return;
+  }
+  // ★メタルナイト：鉄2体選択
+  if(eff==="ALT_IRON2_STEP1"||eff==="ALT_IRON2_STEP2"){
+    const tu=cs.board[p][data.targetIndex];
+    if(!tu||!isSteelUnit(tu)){
+      csEmit(cs,"message","鉄属性ユニットを選択してください");
+      cs.pendingTarget=pt;
+      csEmit(cs,"selectTarget",{type:"myUnit",message:eff==="ALT_IRON2_STEP1"?"破壊する鉄ユニット1体目を選択してください":"破壊する鉄ユニット2体目を選択してください"});
+      csSend(cs);return;
+    }
+    if(eff==="ALT_IRON2_STEP1"){
+      cs.pendingTarget={player:p,effect:"ALT_IRON2_STEP2",card:pt.card,selected:[data.targetIndex]};
+      csEmit(cs,"selectTarget",{type:"myUnit",message:"破壊する鉄ユニット2体目を選択してください"});
+      csSend(cs);return;
+    }
+    if(pt.selected.includes(data.targetIndex)){
+      csEmit(cs,"message","同じユニットは選択できません");
+      cs.pendingTarget=pt;
+      csEmit(cs,"selectTarget",{type:"myUnit",message:"別の鉄ユニットを選択してください"});
+      csSend(cs);return;
+    }
+    const idxs=[...pt.selected,data.targetIndex].sort((a,b)=>b-a);
+    const cardName=pt.card;
+    cs.pendingTarget=null;
+    idxs.forEach(i=>{
+      const d=cs.board[p].splice(i,1)[0];
+      if(!d.isToken) cs.graves[p].push(d);
+      csLog(cs,p,`「${cardName}」召喚コスト：「${d.name}」を破壊`);
+      csTriggerDestroy(cs,d,p);
+    });
+    csAltSummon(cs,p,cardName);
+    csSend(cs);return;
+  }
+
+  // サージボア：手札1枚捨ててATK+3
+  if(eff==="SUM_DISCARD1_A+3"){
+    const hi=data.handIndex;
+    const dc=cs.hands[p][hi];
+    if(dc===undefined||dc===null){
+      csEmit(cs,"message","捨てる手札を選んでください");
+      cs.pendingTarget=pt;
+      csEmit(cs,"selectTarget",{type:"handAny",message:`「${pt.card}」召喚時効果：捨てる手札を1枚選んでください（ATK+3）`});
+      csSend(cs);return;
+    }
+    cs.hands[p].splice(hi,1);
+    cs.graves[p].push({name:dc});
+    const sv=cs.board[p].find(u=>u===pt.unit)||cs.board[p].find(u=>u.name===pt.card);
+    if(sv) sv.atk+=3;
+    csLog(cs,p,`「${pt.card}」召喚時：「${dc}」を捨ててATK+3`);
+    cs.pendingTarget=null;
+    csSend(cs);return;
+  }
 
   // ライフ入力
   if(eff==="SUM_L_SELF-X_A+X"||eff==="SUM_L_SELF-X_DRAWX"){
@@ -4457,7 +5039,7 @@ function csPlayerSelectTarget(cs,data){
     case "DISABLE1": targetUnit.disabled=true; csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」を行動不能`); break;
     case "UNIT_DENKOUSEKKA": targetUnit.denko=true; csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」に電光石火付与`); break;
     case "UNIT_FULL_HEAL":{ const mh=cards[targetUnit.name]?.hp||targetUnit.hp; targetUnit.hp=mh; csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」HP全回復`); break; }
-    case "PURIFY": targetUnit.disabled=false; delete targetUnit.disabledCount; targetUnit.barrier=false; csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」特殊状態解除`); break;
+    case "PURIFY": targetUnit.disabled=false; delete targetUnit.disabledCount; targetUnit.barrier=false; removeVoid(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」特殊状態解除`); break;
     case "CRYSTAL_BARRIER": targetUnit.barrier=true; csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」バリア付与`); break;
     case "BOUNCE_UNIT":{ const oot=targetSide==="my"?p:op; if(targetUnit.isToken){targetBoard.splice(targetIndex,1);csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」消滅`);}else{targetBoard.splice(targetIndex,1);cs.hands[oot].push(targetUnit.name);csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」手札へ`);} break; }
     case "FLAME_BURN":{ cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); csDamageLife(cs,op,1); csLog(cs,p,`フレイムバーン：相手ライフ-1`); break; }
@@ -4467,12 +5049,23 @@ function csPlayerSelectTarget(cs,data){
     case "UNIT_DES_COST_LHEAL":{ const cost=cards[targetUnit.name]?.cost||0; cs.board[op].splice(targetIndex,1); if(!targetUnit.isToken)cs.graves[op].push(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,op); cs.life[p]+=cost; csLog(cs,p,`→自分ライフ+${cost}`); break; }
     case "UNIT_DES_L_HEAL":{ const cost=cards[targetUnit.name]?.cost||0; cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.life[p]+=cost; csLog(cs,p,`→自分ライフ+${cost}`); break; }
     case "L_SELF-1_A+3": targetUnit.atk+=3; csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」ATK+3`); break;
+    case "SUM_VOID1":{
+      applyVoid(targetUnit);
+      csLog(cs,p,`「${pt.card}」召喚時：「${targetUnit.name}」を虚無状態にした（効果無効）`);
+      break;
+    }
+    case "SUM_OPP_BOUNCE1":{
+      cs.board[op].splice(targetIndex,1);
+      if(targetUnit.isToken){ csLog(cs,p,`「${pt.card}」召喚時：「${targetUnit.name}」はトークンのため消滅`); }
+      else { cs.hands[op].push(targetUnit.name); csLog(cs,p,`「${pt.card}」召喚時：「${targetUnit.name}」を手札に戻した`); }
+      break;
+    }
     case "SUM_A_PERM-2": targetUnit.atk=Math.max(0,targetUnit.atk-2); csLog(cs,p,`「${pt.card}」召喚時：「${targetUnit.name}」ATK-2`); break;
     case "SUM_UNIT_A_PERM+1": targetUnit.atk+=1; csLog(cs,p,`「${pt.card}」召喚時：「${targetUnit.name}」ATK+1`); break;
     case "SUM_IRON_DES_A+":{ if(csAttr(targetUnit.name)!=="steel"||targetUnit.name===pt.card){csEmit(cs,"message","自分以外の鉄ユニットを選択してください");cs.pendingTarget={player:p,effect:eff,card:pt.card};csEmit(cs,"selectTarget",{type:"myUnit",message:"破壊する鉄ユニットを選択"});csSend(cs);return;} const g=targetUnit.atk; cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」：「${targetUnit.name}」破壊（ATK${g}獲得）`); csTriggerDestroy(cs,targetUnit,p); const conv=cs.board[p].find(u=>u.name===pt.card); if(conv)conv.atk+=g; break; }
     case "SUM_TOKEN_DES_UNIT_DMG2":{ if(!targetUnit.isToken||csAttr(targetUnit.name)!=="steel"){csEmit(cs,"message","ギアトークンを選択してください");cs.pendingTarget={player:p,effect:eff,card:pt.card};csEmit(cs,"selectTarget",{type:"myUnit",message:"破壊するギアトークンを選択"});csSend(cs);return;} cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」：ギアトークン破壊`); cs.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2_STEP2",card:pt.card}; csEmit(cs,"selectTarget",{type:"enemyUnit",message:"2ダメージを与える相手ユニットを選択"}); csSend(cs); return; }
     case "SUM_TOKEN_DES_UNIT_DMG2_STEP2":{ const ad=targetUnit.damageReduce?1:2; targetUnit.hp-=ad; if(ad>0)csDamagePop(cs,op,ad,false,targetIndex); csLog(cs,p,`「${pt.card}」：「${targetUnit.name}」に${ad}ダメージ`); if(targetUnit.hp<=0){cs.board[op].splice(targetIndex,1);if(!targetUnit.isToken)cs.graves[op].push(targetUnit);csLog(cs,p,`→「${targetUnit.name}」を破壊`);csTriggerDestroy(cs,targetUnit,op);} break; }
-    case "SUM_DES_SUM_C2":{ if(targetUnit.name===pt.card){csEmit(cs,"message","自分自身は選択できません");cs.pendingTarget={player:p,effect:eff,card:pt.card};csEmit(cs,"selectTarget",{type:"myUnit",message:"破壊するユニットを選択（自分以外）"});csSend(cs);return;} cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」：「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"SUM_DES_SUM_C2_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを手札から召喚"}); csSend(cs); return; }
+    case "SUM_DES_SUM_C2":{ if(pt.unit&&targetUnit===pt.unit){csEmit(cs,"message","自分自身は選択できません");cs.pendingTarget={player:p,effect:eff,card:pt.card};csEmit(cs,"selectTarget",{type:"myUnit",message:"破壊するユニットを選択（自分以外）"});csSend(cs);return;} cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」：「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"SUM_DES_SUM_C2_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを手札から召喚"}); csSend(cs); return; }
     case "UNIT_DES_SUM_C2":{ cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"UNIT_DES_SUM_C2_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_cost2",message:"コスト2以下のユニットを手札から召喚"}); csSend(cs); return; }
     case "UNIT_DES_SUM_C3":{ cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_cost3",message:"コスト3以下のユニットを手札から召喚"}); csSend(cs); return; }
     case "SCRAP_BUILD_C3":{ if(csAttr(targetUnit.name)!=="steel"){csEmit(cs,"message","鉄属性ユニットを選択してください");cs.pendingTarget={player:p,effect:"SCRAP_BUILD_C3",card:pt.card};csEmit(cs,"selectTarget",{type:"myUnit",message:"鉄ユニットを選択"});csSend(cs);return;} const vh=cs.hands[p].filter(n=>csAttr(n)==="steel"&&(cards[n]?.cost||0)<=3&&cards[n]?.type==="unit"); if(vh.length===0){csEmit(cs,"message","手札にコスト3以下の鉄ユニットがいません");csSend(cs);return;} cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`スクラップ：「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"SCRAP_BUILD_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_steel_cost3",message:"召喚するコスト3以下の鉄ユニットを選択"}); csSend(cs); return; }
@@ -4572,6 +5165,9 @@ function csCpuOneAction(cs){
   // 5) 攻撃
   if(csCpuTryAttack(cs,canKill))return true;
 
+  // 6) 攻撃を終えた後に代替コスト召喚（鉄ユニットは攻撃後に生贄にする）
+  if(csCpuTryAltSummon(cs))return true;
+
   return false;
 }
 
@@ -4643,7 +5239,7 @@ function csCpuTrySpell(cs,energy,canKill,attr){
 
 function csCpuTryUnit(cs,energy,attr){
   const p=CPU_ID, op=cs.player;
-  if(cs.board[p].length>=3)return false;
+  if(cs.board[p].length>=slotLimit(p,cs.board[op]))return false;
   const hand=cs.hands[p];
   const fieldBuffUnits=["フレイムエンペラー","ボルトエンペラー","フローズンキング","シャドウキング","ベインブリンガー","フェルムマスター","エンシェントツリー"];
   const prio={water:["エナジーカラパス","アクアドラゴン"],steel:["ギアスカウト","プロトタイプユニット","ギアタイタン"],forest:["フォレストラビット","ネイチャーロード"],dark:["シャドウバット","ダークサイフォナー"]};
@@ -4674,6 +5270,7 @@ function csCpuTryUnit(cs,energy,attr){
     const c=cards[name]; if(!c||c.type!=="unit"||energy<(c.cost||0))return false;
     if(name==="マッドサイエンティスト"&&cs.life[p]>8)return false;
     if(name==="メガコンストラクト")return false; // 上で専用判定済み
+    if(altCostOf(name))return false; // ★代替コスト持ちは攻撃後に別途判断
     if(name==="トキシックドラゴン"&&cs.life[p]>8)return false; // ライフ高い時は弱いので出さない
     return true;
   }).sort((a,b)=>{
@@ -4684,6 +5281,38 @@ function csCpuTryUnit(cs,energy,attr){
   });
   if(cands.length===0)return false;
   return csCpuSummon(cs,cands[0].name);
+}
+
+// ★CPU：代替コスト召喚の判断（攻撃後に呼ばれる）
+function csCpuTryAltSummon(cs){
+  const p=CPU_ID, op=cs.player;
+  if(cs.board[p].length>=slotLimit(p,cs.board[op]))return false;
+  for(const name of cs.hands[p]){
+    const alt=altCostOf(name); if(!alt)continue;
+    const c=cards[name]; if(!c||c.type!=="unit")continue;
+    const canNormal=cs.energy[p]>=c.cost;
+    if(alt.key==="SUMMON_COST_OR_LIFE4"){
+      // ライフに余裕がある時のみライフ払い（払って6以上残る）。無ければ通常召喚。
+      if(cs.life[p]>=10){ cs.life[p]-=4; csLog(cs,p,`「${name}」：ライフ4を支払って召喚`); csAltSummon(cs,p,name); return true; }
+      if(canNormal){ cs.energy[p]-=c.cost; csAltSummon(cs,p,name); return true; }
+      continue;
+    }
+    if(alt.key==="SUMMON_IRON2_DES_COST0"){
+      // 攻撃済み（or攻撃不能）の鉄ユニットのみを生贄候補にする
+      const sacri=cs.board[p].filter(u=>isSteelUnit(u)&&(u.attacked||u.disabled));
+      if(!canNormal&&sacri.length>=2){
+        const ss=[...sacri].sort((a,b)=>(a.atk+a.hp)-(b.atk+b.hp)).slice(0,2);
+        ss.forEach(s=>{
+          const i=cs.board[p].indexOf(s);
+          if(i!==-1){ cs.board[p].splice(i,1); if(!s.isToken)cs.graves[p].push(s); csLog(cs,p,`「${name}」召喚コスト：「${s.name}」を破壊`); csTriggerDestroy(cs,s,p); }
+        });
+        csAltSummon(cs,p,name); return true;
+      }
+      if(canNormal){ cs.energy[p]-=c.cost; csAltSummon(cs,p,name); return true; }
+      continue;
+    }
+  }
+  return false;
 }
 
 function csCpuSummon(cs,name){
@@ -4823,7 +5452,7 @@ function csCpuExecuteAttack(cs,attacker,target){
   const isSecond=attacker.attacked&&hasDenko&&!attacker.denkoAttackedThisTurn;
   const isDenkoFirst=hasDenko&&!isSecond;
   const atkAttr=csAttr(attacker.name)||"neutral";
-  const atkCard=cards[attacker.name];
+  const atkCard=cardOf(attacker);
   const isAllAttack=atkCard&&atkCard.effect==="ALL_ATTACK";
   csEmit(cs,"playSound","atk_"+atkAttr);
 
@@ -4874,7 +5503,7 @@ function csCpuExecuteAttack(cs,attacker,target){
     cs.board[op].forEach((def,i)=>{
       const ad=def.damageReduce?Math.min(1,atkPow):atkPow; const rd=def.barrier?0:ad; def.hp-=rd;
       if(rd>0)csDamagePop(cs,op,rd,false,i);
-      if(!isDenkoFirst&&!noReflect){const cd=attacker.damageReduce?Math.min(1,Math.floor(def.atk/2)):Math.floor(def.atk/2);totalCounter+=cd;}
+      if(!isDenkoFirst&&!noReflect){const _cb=counterBaseDmg(def);const cd=attacker.damageReduce?Math.min(1,_cb):_cb;totalCounter+=cd;}
       if(def.hp<=0)toDestroy.push(i);
       csLog(cs,p,`「${attacker.name}」が「${def.name}」に全体攻撃（${rd}ダメージ）`);
     });
@@ -4892,7 +5521,7 @@ function csCpuExecuteAttack(cs,attacker,target){
   if(target&&cs.board[op].length>0){
     const tIdx=cs.board[op].indexOf(target);
     const noReflect=!!(cs.fieldSpell[p]&&cards[cs.fieldSpell[p].name]?.effect==="PERM_SPELL_THUNDER_NOREFLECT");
-    const counterBase=(isDenkoFirst||noReflect)?0:Math.floor(target.atk/2);
+    const counterBase=(isDenkoFirst||noReflect)?0:counterBaseDmg(target);
     let actualAtk=target.damageReduce?Math.min(1,atkPow):atkPow; if(target.barrier)actualAtk=0;
     const actualDef=attacker.damageReduce?Math.min(1,counterBase):counterBase;
     target.hp-=actualAtk; attacker.hp-=actualDef;
@@ -4902,6 +5531,7 @@ function csCpuExecuteAttack(cs,attacker,target){
     csEmit(cs,"hitEffect",{targetIdx:tIdx,attr:atkAttr,isEnemy:false,hasAttackAnim:true,attackerIdx:atkIdx,cpuAttacker:true});
     if(target.hp<=0){
       if(cs.fieldSpell[p]&&cards[cs.fieldSpell[p].name]?.effect==="PERM_SPELL_FIRE_OVERFLOW"){const ov=atkPow-target.atk;if(ov>0){csDamageLife(cs,op,ov);csLog(cs,p,`「${cs.fieldSpell[p].name}」：${ov}ダメージが相手ライフに`);}}
+      if(atkCard&&atkCard.effect==="ATK_OVERKILL_DMG"){const ovs=atkPow-target.atk;if(ovs>0){csDamageLife(cs,op,ovs);csLog(cs,p,`「${attacker.name}」効果：${ovs}ダメージが相手ライフに`);}}
       cs.board[op].splice(tIdx,1); if(!target.isToken)cs.graves[op].push(target); csLog(cs,p,`→「${target.name}」を撃破`); csTriggerDestroy(cs,target,op);
     }
     if(attacker.hp<=0){const ai=cs.board[p].indexOf(attacker);if(ai!==-1){cs.board[p].splice(ai,1);if(!attacker.isToken)cs.graves[p].push(attacker);csLog(cs,p,`→「${attacker.name}」が反撃で倒れた`);csTriggerDestroy(cs,attacker,p);}}
@@ -4915,7 +5545,7 @@ function csCpuExecuteAttack(cs,attacker,target){
 }
 
 function csCpuAttackEffect(cs,atk,atkPow){
-  const c=cards[atk.name]; if(!c||!c.attackEffect)return;
+  const c=cardOf(atk); if(!c||!c.attackEffect)return;
   const p=CPU_ID, op=cs.player;
   csShowEffect(cs,atk.name);
   if(c.attackEffect==="L_DMG1"){csDamageLife(cs,op,1);csLog(cs,p,`「${atk.name}」攻撃時効果：相手ライフ-1`);}
@@ -4959,6 +5589,7 @@ function csResetGame(cs,playerDeck,cpuDeck){
   cs.board={};cs.hands={};cs.decks={};cs.graves={};cs.energy={};cs.maxEnergy={};cs.life={};
   cs.winner=null;cs.noAttack={};cs.pendingDiscard={};cs.turnBuffs={};
   cs.pendingTarget=null;cs.pendingHandLimitDiscard=null;cs.pendingNext=null;cs.fieldSpell={};
+  cs.skipDraw={};
   cs.allLogs=[];cs.turnLogs={};cs.prevLogs={};
   [pid,CPU_ID].forEach(p=>{
     const deck=p===pid?playerDeck:cpuDeck;
