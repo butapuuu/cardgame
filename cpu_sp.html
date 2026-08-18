@@ -1599,7 +1599,7 @@ function _spRenderHand(handCards,g){
         });
         return;
       }
-      if(spSelectTargetMode&&(spSelectTargetMode.type==="handUnit_steel_cost3"||spSelectTargetMode.type==="handUnit_cost2"||spSelectTargetMode.type==="handUnit_cost3"||spSelectTargetMode.type==="handUnit_steel")){
+      if(spSelectTargetMode&&(spSelectTargetMode.type==="handUnit_steel_cost3"||spSelectTargetMode.type==="handUnit_cost2"||spSelectTargetMode.type==="handUnit_cost3"||spSelectTargetMode.type==="handUnit_cost4"||spSelectTargetMode.type==="handUnit_steel")){
         const hi2=g.myHand.indexOf(card);
         socket.emit("cpuAction",{type:"select_target",targetIndex:hi2,targetSide:"hand",handIndex:hi2});
         spSelectTargetMode=null;

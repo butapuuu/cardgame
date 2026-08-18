@@ -936,7 +936,7 @@ function _renderHand(handCards,g){
     img.draggable=true;
     div.onclick=()=>{
       if(g.pendingDiscard&&g.pendingDiscard>0){if(confirm(card+" を捨てますか？"))socket.emit("cpuAction",{type:"discard_hand",card});return;}
-      if(selectTargetMode&&(selectTargetMode.type==="handUnit_steel_cost3"||selectTargetMode.type==="handUnit_cost2"||selectTargetMode.type==="handUnit_cost3"||selectTargetMode.type==="handUnit_steel")){const hi2=g.myHand.indexOf(card);socket.emit("cpuAction",{type:"select_target",targetIndex:hi2,targetSide:"hand",handIndex:hi2});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
+      if(selectTargetMode&&(selectTargetMode.type==="handUnit_steel_cost3"||selectTargetMode.type==="handUnit_cost2"||selectTargetMode.type==="handUnit_cost3"||selectTargetMode.type==="handUnit_cost4"||selectTargetMode.type==="handUnit_steel")){const hi2=g.myHand.indexOf(card);socket.emit("cpuAction",{type:"select_target",targetIndex:hi2,targetSide:"hand",handIndex:hi2});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
       if(selectTargetMode&&selectTargetMode.type==="soulTrade"){if(confirm(card+" を捨てますか？")){const hi2=g.myHand.indexOf(card);socket.emit("cpuAction",{type:"select_target",targetSide:"soulTrade",handIndex:hi2,card:card});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";}return;}
       if(confirm(card+" を使用しますか？"))socket.emit("cpuAction",{type:"play_card",card});
     };

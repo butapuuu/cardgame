@@ -5706,5 +5706,31 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-08-15": {
+    "total": 2,
+    "hours": {
+      "0": 2
+    },
+    "pages": {
+      "index.html": 1,
+      "room.html": 1
+    },
+    "visitors": [
+      {
+        "time": "2026-08-15 15:42:14",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-08-15 15:42:19",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }
