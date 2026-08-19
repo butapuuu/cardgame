@@ -5732,5 +5732,67 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-08-18": {
+    "total": 7,
+    "hours": {
+      "8": 7
+    },
+    "pages": {
+      "index.html": 1,
+      "room.html": 5,
+      "deck1.html": 1
+    },
+    "visitors": [
+      {
+        "time": "2026-08-18 23:02:41",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-08-18 23:02:48",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-08-18 23:02:52",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-08-18 23:04:31",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-08-18 23:04:33",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-08-18 23:05:36",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-08-18 23:05:37",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }
