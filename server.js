@@ -4557,7 +4557,7 @@ function csSpell(cs,cardName,p){
     }
     case "DES_PERM_SPELL":{
       if(!cs.fieldSpell[p]&&!cs.fieldSpell[op])return false;
-      if(isCpu){ if(cs.fieldSpell[op]){csDestroyFS(cs,op);}else{csDestroyFS(cs,p);} return true; }
+      if(isCpu){ if(cs.fieldSpell[op]){csDestroyFS(cs,op);return true;} return false; }
       cs.pendingTarget={player:p,effect:"DES_PERM_SPELL",card:cardName}; csEmit(cs,"selectTarget",{type:"fieldSpell",message:"崩壊：破壊するフィールドスペルを選択"}); return "pending";
     }
     default: return false;
@@ -5238,6 +5238,7 @@ function csCpuTrySpell(cs,energy,canKill,attr){
   for(const sp of ["マインドコントロール","根の呪縛","ディスカード","カースシャドウ","エナジーカース","プラズマバースト","稲妻の速攻","エレキサーキット","リンカーネーション","シードバースト","フレイムバーン","クリスタルバリア","解放の光","リバース","崩壊","リサイクル","自爆装置","メガギアフュージョン","フェニックスリバース","インジェクション","解毒剤","禁断の秘薬","トキシックアポカリプス","緊急生産","ギアリペア","ソウルトレード","スクラップ&ビルド","ヴェノムハーベスト","サクリファイス","フリーズショット","ファイアボール","ダークブラスト","サンダーストライク"]){
     if(!hand.includes(sp)||!cards[sp]||energy<(cards[sp]?.cost||0))continue;
     if(sp==="トキシックアポカリプス"&&cs.life[p]>5)continue;
+    if(sp==="崩壊"&&!cs.fieldSpell[op])continue;
     if(sp==="マインドコントロール"&&opB.length===0)continue;
     if(sp==="シードバースト"&&myB.length>0)continue;
     if(sp==="緊急生産"&&myB.length>1)continue;
