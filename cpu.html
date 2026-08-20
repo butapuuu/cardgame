@@ -730,7 +730,6 @@ socket.on("cpuUpdate",(g)=>{
   prevMyBoardCount=g.myBoard.length;prevEnemyBoardCount=g.enemyBoard.length;
 
   const newLogs=(g.allLogs||[]).slice(prevAllLogsLen);
-  newLogs.forEach(log=>{if(log.includes("に攻撃（")||log.includes("でプレイヤーに直接攻撃")||log.includes("に全体攻撃")){const m=log.match(/「(.+?)」(?:で|が)/);if(m)playSE(SE.atk[getClientAttr(m[1])]||SE.atk.neutral);if(log.includes("でプレイヤーに直接攻撃")){document.body.classList.remove("shaking");void document.body.offsetWidth;document.body.classList.add("shaking");setTimeout(()=>document.body.classList.remove("shaking"),460);}}});
   prevAllLogsLen=(g.allLogs||[]).length;
 
   if(!selectTargetMode){
