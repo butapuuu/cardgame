@@ -3074,7 +3074,7 @@ function roomTriggerSummonEffect(room, unit, p, socket){
   if(!c||!c.effect) return;
   const op=roomGetOpponent(room,p);
   const eff=c.effect;
-  const silent=["DAMAGE_REDUCE_1","END_A+1","START_TOKEN1","DES_SUMMON_C2","DENKOUSEKKA","ALL_ATTACK"];
+  const silent=["DAMAGE_REDUCE_1","END_A+1","START_TOKEN1","DES_SUMMON_C2","DENKOUSEKKA","ALL_ATTACK","ATK_OVERKILL_DMG","FULL_COUNTER","END_TOKEN1","START_L_SELF-2_OR_DES","SUMMON_COST_OR_LIFE4","SUMMON_IRON2_DES_COST0"];
   if(!silent.includes(eff)) roomShowEffect(room,unit.name);
   switch(eff){
     case "SUM_L_DMG1": roomDamageLife(room,op,1); roomAddLog(room,p,`「${unit.name}」召喚時：相手ライフ-1`); break;
@@ -4181,7 +4181,7 @@ function csTriggerSummon(cs,unit,p){
   const c=cards[unit.name]; if(!c||!c.effect)return;
   const op=csOpp(cs,p); const eff=c.effect;
   const isCpu = (p===CPU_ID);
-  const silent=["DAMAGE_REDUCE_1","END_A+1","START_TOKEN1","DES_SUMMON_C2","DENKOUSEKKA","ALL_ATTACK"];
+    const silent=["DAMAGE_REDUCE_1","END_A+1","START_TOKEN1","DES_SUMMON_C2","DENKOUSEKKA","ALL_ATTACK","ATK_OVERKILL_DMG","FULL_COUNTER","END_TOKEN1","START_L_SELF-2_OR_DES","SUMMON_COST_OR_LIFE4","SUMMON_IRON2_DES_COST0"];
   if(!silent.includes(eff))csShowEffect(cs,unit.name);
   switch(eff){
     case "SUM_L_DMG1": csDamageLife(cs,op,1); csLog(cs,p,`「${unit.name}」召喚時：相手ライフ-1`); break;
@@ -5082,7 +5082,7 @@ function csPlayerSelectTarget(cs,data){
     case "SUM_TOKEN_DES_UNIT_DMG2":{ if(!targetUnit.isToken||csAttr(targetUnit.name)!=="steel"){csEmit(cs,"message","ギアトークンを選択してください");cs.pendingTarget={player:p,effect:eff,card:pt.card};csEmit(cs,"selectTarget",{type:"myUnit",message:"破壊するギアトークンを選択"});csSend(cs);return;} cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」：ギアトークン破壊`); cs.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2_STEP2",card:pt.card}; csEmit(cs,"selectTarget",{type:"enemyUnit",message:"2ダメージを与える相手ユニットを選択"}); csSend(cs); return; }
     case "SUM_TOKEN_DES_UNIT_DMG2_STEP2":{ const ad=targetUnit.damageReduce?1:2; targetUnit.hp-=ad; if(ad>0)csDamagePop(cs,op,ad,false,targetIndex); csLog(cs,p,`「${pt.card}」：「${targetUnit.name}」に${ad}ダメージ`); if(targetUnit.hp<=0){cs.board[op].splice(targetIndex,1);if(!targetUnit.isToken)cs.graves[op].push(targetUnit);csLog(cs,p,`→「${targetUnit.name}」を破壊`);csTriggerDestroy(cs,targetUnit,op);} break; }
     case "SUM_DES_SUM_C4":{ cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」：「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"SUM_DES_SUM_C4_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_cost4",message:"コスト4以下のユニットを手札から召喚"}); csSend(cs); return; }
-    case "_DES_SUM_C3":{ cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_cost3",message:"コスト3以下のユニットを手札から召喚"}); csSend(cs); return; }
+        case "UNIT_DES_SUM_C3_E":{ cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_cost3",message:"コスト3以下のユニットを手札から召喚"}); csSend(cs); return; }
     case "UNIT_DES_SUM_C3":{ cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`「${pt.card}」で「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"UNIT_DES_SUM_C3_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_cost3",message:"コスト3以下のユニットを手札から召喚"}); csSend(cs); return; }
     case "SCRAP_BUILD_C3":{ if(csAttr(targetUnit.name)!=="steel"){csEmit(cs,"message","鉄属性ユニットを選択してください");cs.pendingTarget={player:p,effect:"SCRAP_BUILD_C3",card:pt.card};csEmit(cs,"selectTarget",{type:"myUnit",message:"鉄ユニットを選択"});csSend(cs);return;} const vh=cs.hands[p].filter(n=>csAttr(n)==="steel"&&(cards[n]?.cost||0)<=3&&cards[n]?.type==="unit"); if(vh.length===0){csEmit(cs,"message","手札にコスト3以下の鉄ユニットがいません");csSend(cs);return;} cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`スクラップ：「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"SCRAP_BUILD_HAND",card:pt.card}; csEmit(cs,"selectTarget",{type:"handUnit_steel_cost3",message:"召喚するコスト3以下の鉄ユニットを選択"}); csSend(cs); return; }
     case "IRON_DES_UNIT_DES_STEP1":{ if(csAttr(targetUnit.name)!=="steel"){csEmit(cs,"message","鉄属性ユニットを選択してください");cs.pendingTarget={player:p,effect:"IRON_DES_UNIT_DES_STEP1",card:pt.card};csEmit(cs,"selectTarget",{type:"myUnit",message:"鉄ユニットを選択"});csSend(cs);return;} cs.board[p].splice(targetIndex,1); cs.graves[p].push(targetUnit); csLog(cs,p,`自爆：「${targetUnit.name}」破壊`); csTriggerDestroy(cs,targetUnit,p); cs.pendingTarget={player:p,effect:"IRON_DES_UNIT_DES_STEP2",card:pt.card}; csEmit(cs,"selectTarget",{type:"enemyUnit",message:"破壊する相手ユニットを選択"}); csSend(cs); return; }
