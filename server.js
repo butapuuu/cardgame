@@ -3684,13 +3684,15 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
       const tbef=room.board[op][data.t];
       roomDamageAllUnits(room,op,1,p);
       roomAddLog(room,p,`「${atk.name}」攻撃時効果：相手全体1ダメ`);
-      const still=tbef&&room.board[op].includes(tbef);
+            const still=tbef&&room.board[op].includes(tbef);
       if(!still){
         socket.emit("attackRollback",{attackerIndex:data.a});
         atk.rollbackAttack=true;
         if(isSecond){atk.attacked=true;atk.denkoAttackedThisTurn=false;}else if(isDFirst){atk.attacked=false;}else{atk.attacked=false;}
         roomNotifyPendingTarget(room);roomSend(room);return;
       }
+      // ★他のユニットが死んで前詰めされると対象のindexがずれるので取り直す
+      data.t=room.board[op].indexOf(tbef);
     }
     const def=room.board[op][data.t];if(!def){roomSend(room);return;}
     const ap=isSecond?Math.floor(atk.atk/2):atk.atk;
@@ -4732,7 +4734,7 @@ function csPlayerAttack(cs,data){
       const targetBefore=cs.board[op][data.t];
       csDamageAllUnits(cs,op,1);
       csLog(cs,p,`「${atk.name}」攻撃時効果：相手全体1ダメージ`);
-      const still=targetBefore&&cs.board[op].includes(targetBefore);
+            const still=targetBefore&&cs.board[op].includes(targetBefore);
       if(!still){
         csLog(cs,p,`攻撃対象が攻撃時効果で破壊されたため戦闘を巻き戻します`);
         csEmit(cs,"attackRollback",{attackerIndex:data.a});
@@ -4740,6 +4742,8 @@ function csPlayerAttack(cs,data){
         if(isSecond){atk.attacked=true;atk.denkoAttackedThisTurn=false;}else{atk.attacked=false;}
         csSend(cs); return;
       }
+      // ★他のユニットが死んで前詰めされると対象のindexがずれるので取り直す
+      data.t=cs.board[op].indexOf(targetBefore);
     }
     const def=cs.board[op][data.t]; if(!def){csSend(cs);return;}
     const atkPow=isSecond?Math.floor(atk.atk/2):atk.atk;
