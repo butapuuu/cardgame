@@ -287,7 +287,7 @@ const cards = {
 "ベインブリンガー":{cost:4,atk:4,hp:5,type:"unit",attr:"poison",effect:"FIELD_A+1_P"},
 "ポイズンナイト":{cost:4,atk:6,hp:4,type:"unit",attr:"poison"},
 "ペインゴーレム":{cost:3,atk:6,hp:4,type:"unit",attr:"poison",effect:"START_L_SELF-2_OR_DES"},
-"プラーグキング":{cost:4,atk:7,hp:3,type:"unit",attr:"poison",effect:"SUMMON_COST_OR_LIFE4"},
+"プラーグキング":{cost:4,atk:6,hp:3,type:"unit",attr:"poison",effect:"SUMMON_COST_OR_LIFE4"},
 "コラプトジャイアント":{cost:4,atk:5,hp:5,type:"unit",attr:"poison"},
 "トキシックドラゴン":{cost:5,atk:0,hp:0,type:"unit",attr:"poison",effect:"SUM_A_H_LOST_LIFE"},
 
