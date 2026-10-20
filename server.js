@@ -3154,7 +3154,7 @@ function roomTriggerSummonEffect(room, unit, p, socket){
       break;
     case "SUM_IRON_DES_A+":{ const iu=room.board[p].filter(u=>roomGetAttr(u.name)==="steel"&&u.name!==unit.name); if(iu.length===0){roomAddLog(room,p,`「${unit.name}」召喚時：対象なし`);break;} room.pendingTarget={player:p,effect:"SUM_IRON_DES_A+",card:unit.name}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊する鉄ユニットを選択`}); break; }
     case "SUM_TOKEN_DES_UNIT_DMG2":{ const tk=room.board[p].filter(u=>u.isToken&&roomGetAttr(u.name)==="steel"); if(tk.length===0){roomAddLog(room,p,`「${unit.name}」召喚時：ギアトークンなし`);break;} if(room.board[op].length===0){roomAddLog(room,p,`「${unit.name}」召喚時：相手ユニットなし`);break;} room.pendingTarget={player:p,effect:"SUM_TOKEN_DES_UNIT_DMG2",card:unit.name}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊するギアトークンを選択`}); break; }
-    case "SUM_DES_SUM_C4":{ if(room.board[p].length===0){roomAddLog(room,p,`「${unit.name}」召喚時：ユニットなし`);break;} room.pendingTarget={player:p,effect:"SUM_DES_SUM_C4",card:unit.name,unit:unit}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊するユニットを選択（コスト4以下を手札から召喚）`}); break; }
+        case "SUM_DES_SUM_C4":{ if(room.board[p].length===0){roomAddLog(room,p,`「${unit.name}」召喚時：ユニットなし`);break;} const _vh4=room.hands[p].filter(n=>cards[n]?.type==="unit"&&(cards[n]?.cost||0)<=4); if(_vh4.length===0){roomAddLog(room,p,`「${unit.name}」召喚時：手札にコスト4以下のユニットがないため不発`);break;} room.pendingTarget={player:p,effect:"SUM_DES_SUM_C4",card:unit.name,unit:unit}; socket.emit("selectTarget",{type:"myUnit",message:`「${unit.name}」召喚時：破壊するユニットを選択（コスト4以下を手札から召喚）`}); break; }
     case "SUM_L_SELF-X_A+X": room.pendingTarget={player:p,effect:"SUM_L_SELF-X_A+X",card:unit.name,unit:unit}; socket.emit("selectTarget",{type:"lifeInput",message:`「${unit.name}」：支払うライフを入力（現在:${room.life[p]}）`}); break;
     case "SUM_L_SELF-X_DRAWX": room.pendingTarget={player:p,effect:"SUM_L_SELF-X_DRAWX",card:unit.name}; socket.emit("selectTarget",{type:"lifeInput",message:`「${unit.name}」：支払うライフを入力（現在:${room.life[p]}）`}); break;
     case "DENKOUSEKKA": unit.denko=true; roomAddLog(room,p,`「${unit.name}」：電光石火を持って召喚`); break;
@@ -3854,8 +3854,11 @@ io.on("connection",(socket)=>{
         const _lim=slotLimit(socket.id,room.board[op]);
         if(room.board[socket.id].length>=_lim){socket.emit("message",_lim<3?`相手の効果で場が封鎖されています（${_lim}体まで）`:"場に出せるユニットは3体までです");return;}
       }
-      room.energy[socket.id]-=c.cost;
-      const idx=room.hands[socket.id].indexOf(data.card);room.hands[socket.id].splice(idx,1);
+            room.energy[socket.id]-=c.cost;
+      // ★同名カード対策：クライアントが送った位置を優先（不正・不一致なら名前検索にフォールバック）
+      let idx=(data.handIndex!==undefined&&room.hands[socket.id][data.handIndex]===data.card)?data.handIndex:room.hands[socket.id].indexOf(data.card);
+      if(idx===-1){room.energy[socket.id]+=c.cost;return;}
+      room.hands[socket.id].splice(idx,1);
       if(c.type==="unit"){
         const unit={name:data.card,atk:c.atk,hp:c.hp,attacked:false,attr:c.attr||"neutral",damageReduce:c.effect==="DAMAGE_REDUCE_1"};
         room.board[socket.id].push(unit);
@@ -4316,8 +4319,12 @@ function csTriggerSummon(cs,unit,p){
       }
       break;
     }
-    case "SUM_DES_SUM_C4":{
+        case "SUM_DES_SUM_C4":{
       if(cs.board[p].length===0){csLog(cs,p,`「${unit.name}」召喚時：ユニットなし`);break;}
+      {
+        const _vh4=cs.hands[p].filter(n=>cards[n]?.type==="unit"&&(cards[n]?.cost||0)<=4);
+        if(_vh4.length===0){csLog(cs,p,`「${unit.name}」召喚時：手札にコスト4以下のユニットがないため不発`);break;}
+      }
       if(isCpu){
         const others=cs.board[p].filter(u=>u.name!==unit.name);
         const wk=others.reduce((w,u)=>u.atk<w.atk?u:w,others[0]);
@@ -4822,8 +4829,10 @@ function csPlayerPlayCard(cs,data){
     const _lim=slotLimit(p,cs.board[CPU_ID]);
     if(cs.board[p].length>=_lim){csEmit(cs,"message",_lim<3?`相手の効果で場が封鎖されています（${_lim}体まで）`:"場に出せるユニットは3体までです");return;}
   }
-  cs.energy[p]-=c.cost;
-  const idx=cs.hands[p].indexOf(data.card); if(idx===-1){cs.energy[p]+=c.cost;return;}
+    cs.energy[p]-=c.cost;
+  // ★同名カード対策：クライアントが送った位置を優先（不正・不一致なら名前検索にフォールバック）
+  const idx=(data.handIndex!==undefined&&cs.hands[p][data.handIndex]===data.card)?data.handIndex:cs.hands[p].indexOf(data.card);
+  if(idx===-1){cs.energy[p]+=c.cost;return;}
   cs.hands[p].splice(idx,1);
   if(c.type==="unit"){
     const unit={name:data.card,atk:c.atk,hp:c.hp,attacked:false,attr:c.attr||"neutral",damageReduce:c.effect==="DAMAGE_REDUCE_1"};
