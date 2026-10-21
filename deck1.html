@@ -390,6 +390,23 @@ body{
 
 <div id="toast"></div>
 
+<!-- ===== デッキ共有コード モーダル ===== -->
+<div id="shareModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.82);z-index:2000;justify-content:center;align-items:center;" onclick="if(event.target===this)closeShareModal()">
+  <div style="background:linear-gradient(180deg,#0e1c0e,#121e12);border:1px solid #2a5a2a;border-radius:12px;padding:20px 22px;width:580px;max-width:92vw;max-height:88vh;overflow-y:auto;box-shadow:0 0 30px rgba(0,0,0,0.85);">
+    <div style="color:#88ff88;font-size:15px;font-weight:bold;letter-spacing:3px;margin-bottom:4px;">⇄ DECK CODE</div>
+    <div style="color:#4a8a4a;font-size:11px;margin-bottom:16px;">コードを渡すだけでデッキを共有できます</div>
+    <div style="color:#4a8a4a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">▸ EXPORT 　今のデッキのコード</div>
+    <textarea id="shareOut" readonly placeholder="　" style="width:100%;height:68px;background:#0a140a;color:#aaddaa;border:1px solid #2a5a2a;border-radius:6px;padding:8px 10px;font-size:11px;font-family:Consolas,monospace;line-height:1.6;resize:vertical;word-break:break-all;outline:none;"></textarea>
+    <button onclick="copyShareCode()" style="width:100%;background:linear-gradient(135deg,#0a1a2a,#1a2a4a);color:#88aaff;border:1px solid #2a4a8a;border-radius:6px;padding:9px;font-size:12px;font-weight:bold;letter-spacing:2px;cursor:pointer;margin:7px 0 18px;">⧉ クリップボードにコピー</button>
+    <div style="border-top:1px solid #1a3a1a;margin-bottom:16px;"></div>
+    <div style="color:#4a8a4a;font-size:10px;letter-spacing:2px;margin-bottom:6px;">▸ IMPORT 　もらったコードを読み込む</div>
+    <textarea id="shareIn" placeholder="ELM1-..." style="width:100%;height:68px;background:#0a140a;color:#aaddaa;border:1px solid #2a5a2a;border-radius:6px;padding:8px 10px;font-size:11px;font-family:Consolas,monospace;line-height:1.6;resize:vertical;word-break:break-all;outline:none;"></textarea>
+    <button onclick="applyShareCode()" style="width:100%;background:linear-gradient(135deg,#0d2a0d,#1a4a1a);color:#88ff88;border:1px solid #2a8a2a;border-radius:6px;padding:10px;font-size:12px;font-weight:bold;letter-spacing:2px;cursor:pointer;margin-top:7px;">▶ このコードを読み込む</button>
+    <div id="shareMsg" style="color:#ff8888;font-size:11px;min-height:17px;margin-top:9px;line-height:1.6;"></div>
+    <button onclick="closeShareModal()" style="width:100%;background:rgba(0,0,0,0.5);color:#999;border:1px solid #444;border-radius:6px;padding:8px;font-size:12px;cursor:pointer;margin-top:10px;">閉じる</button>
+  </div>
+</div>
+
 <!-- ヘッダー -->
 <div id="pageHeader">
   <h2>⚔ DECK BUILDER</h2>
@@ -440,6 +457,7 @@ body{
       <button class="btn-primary" onclick="loadSlot()">▶ LOAD SLOT</button>
       <button class="btn-primary" onclick="save()">💾 SAVE DECK</button>
       <button class="btn-copy" onclick="copyDeck()">⧉ COPY TO SLOT</button>
+      <button class="btn-copy" onclick="openShareModal()" style="background:linear-gradient(135deg,#2a1a0a,#4a3010);color:#ffcc66;border-color:#8a6a22;">⇄ DECK CODE</button>
       <button class="btn-danger" onclick="clearDeck()">✕ CLEAR DECK</button>
     </div>
 
@@ -899,6 +917,144 @@ function showToast(msg){
   t.innerText=msg;
   t.style.display="block";
   setTimeout(()=>t.style.display="none",2500);
+}
+
+// ===== デッキ共有コード =====
+// ★★★ 重要 ★★★ CARD_CODE_ORDER の並び順＝共有コードの互換性そのものです。
+// ・並び替え禁止　・削除禁止　・新カードは必ず「一番最後」に追加すること
+// 画面の表示順は上のカード一覧が決めるので、この表の順番は見た目に一切影響しません。
+const CARD_CODE_ORDER=[
+  "フレイムスパーク","ファイアウルフ","ブレイズリザード","マグマウルフ","フレイムナイト","アッシュソルジャー",
+  "フレイムレオン","フレアヘッジホッグ","レッドバイソン","ボルケーノタートル","インフェルノドラゴン","バーンアウト",
+  "フレイムパージャー","ブレイズフェニックス","フレイムエンペラー","メガフレアドラゴン","フレイムバーン","ファイアボール",
+  "フレイムストーム","業火の裁き","バーニングソウル","スカーチングレイン","エンラージ","炎の加護",
+  "フェニックスリバース","灼熱地獄","ウォータードロップ","アクアフィッシュ","アイスウォリアー","エナジーカラパス",
+  "クリスタルシェル","ミストセイレーン","フロストビースト","アイスガーディアン","バーストパファー","トレントサーペント",
+  "アクアドラゴン","オーシャンナイト","テンペストシャーク","アビスホエール","タイダルリヴァイアサン","フローズンキング",
+  "フリーズショット","海の恵み","アクアリターン","激流","アイシクルドレイン","大津波",
+  "ウォーターカーテン","クリスタルバリア","エナジーブースト","深海の神殿","サンダービート","スパークマウス",
+  "ライトニングラプター","ボルトウォリアー","ボルトホーク","サージボア","チャージフォックス","ライトニングウルフ",
+  "スパークレパード","エレキドラゴン","プラズマメイジ","ボルトチェンジャー","サンダーランページ","サンダーロード",
+  "ストームタイタン","ボルトエンペラー","スピードドロー","エレキサーキット","チェインライトニング","サンダーストライク",
+  "稲妻の速攻","エナジーチャージ","ボルトレイジ","プラズマバースト","サンダーボム","ハイボルテージゾーン",
+  "フォレストラビット","グリーンナイト","ウッドゴーレム","グロウコア","スプリングドライアド","アーマードライノス",
+  "フォレストビースト","モスストーン","フォレストエルフ","フォレストスイーパー","エンシェントツリー","ジャングルタイラント",
+  "ワイルドベア","グロウバインダー","グリーンドラゴン","ネイチャーロード","シードバースト","グロウス",
+  "リンカーネーション","森の恵み","ナチュラルアーマー","根の呪縛","大地の力","シードスポーン",
+  "リーフストーム","世界樹の聖域","シャドウバット","ダークスライム","シャドウアサシン","ダークナイト",
+  "ナイトメアビースト","アビスナイト","ナイトリカー","ダークサイフォナー","シャドウイーター","ブラックデーモン",
+  "カースドラゴン","ヘルハウンド","ナイトテラー","ダークロード","シャドウキング","アビスウォール",
+  "ダークブラスト","マインドコントロール","ソウルトレード","エナジーカース","リセット","ソウルドレイン",
+  "ディスカード","カースシャドウ","デスペレーション","瘴気の迷宮","ポイズンインプ","トキシックスライム",
+  "トキシックビースト","プラーグハウンド","ブライトレッチ","ポイズンドレイン","マッドサイエンティスト","ヴェノムアルケミスト",
+  "マイアズマウォーカー","ペインゴーレム","プラーグキング","ヴェノムロード","ベインブリンガー","ポイズンナイト",
+  "コラプトジャイアント","トキシックドラゴン","インジェクション","サクリファイス","劇薬調合","ポイズンスパイク",
+  "解毒剤","ペインシェア","禁断の秘薬","ヴェノムハーベスト","トキシックアポカリプス","薬草の湿地",
+  "ギアスカウト","プロトタイプユニット","メタルブルート","ギアコンバーター","スチールブレイバー","スクラップゴーレム",
+  "スチールビースト","オートマトンファクトリー","メカニカルアーチャー","ヘビィタンク","ギアドレイク","ギアタイタン",
+  "フェルムマスター","アイアンレイダー","メタルナイト","メガコンストラクト","リサイクル","緊急生産",
+  "スクラップ&ビルド","自爆装置","装甲強化","ギアリペア","チェーンリアクション","メガギアフュージョン",
+  "オーバーロード","機甲要塞都市","ダブルドロー","解放の光","リバース","崩壊",
+];
+const _B36="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+function _e2(n){return _B36[Math.floor(n/36)%36]+_B36[n%36];}
+function _e3(n){return _B36[Math.floor(n/1296)%36]+_B36[Math.floor(n/36)%36]+_B36[n%36];}
+function _d2(s){const a=_B36.indexOf(s[0]),b=_B36.indexOf(s[1]);if(a<0||b<0)return -1;return a*36+b;}
+function _ckSum(b){let s=5381;for(let i=0;i<b.length;i++){s=((s*33)^b.charCodeAt(i))>>>0;}return s%46656;}
+
+function buildDeckCode(cards,deckName){
+  if(!cards||cards.length===0) return {err:"デッキが空です"};
+  let cs="";
+  for(const n of cards){
+    const i=CARD_CODE_ORDER.indexOf(n);
+    if(i<0) return {err:"「"+n+"」はまだ共有コードに対応していません"};
+    cs+=_e2(i);
+  }
+  let nh="";
+  const nm=(deckName||"").trim().slice(0,20);
+  if(nm){ for(const b of new TextEncoder().encode(nm)) nh+=_e2(b); }
+  return {code:"ELM1-"+cs+"-"+nh+"-"+_e3(_ckSum(cs+nh))};
+}
+
+function parseDeckCode(raw){
+  const s=(raw||"").toUpperCase().replace(/[\s　]+/g,"");
+  if(!s) return {err:"コードが入力されていません"};
+  const p=s.split("-");
+  if(p[0]!=="ELM1"){
+    if(p[0]&&p[0].indexOf("ELM")===0) return {err:"このコードは新しい形式です。ゲームの更新が必要です"};
+    return {err:"コードの形式が違います（ELM1- から始まる1行をそのまま貼り付けてください）"};
+  }
+  if(p.length!==4) return {err:"コードが途中で切れているようです（全部コピーできているか確認してください）"};
+  const cs=p[1],nh=p[2],ck=p[3];
+  if(_e3(_ckSum(cs+nh))!==ck) return {err:"コードが壊れています（文字の抜けや余計な文字がないか確認してください）"};
+  if(cs.length%2!==0) return {err:"コードが壊れています（カード部分）"};
+  const n=cs.length/2;
+  if(n!==20) return {err:"このコードのカードは"+n+"枚です（20枚必要です）"};
+  const out=[];
+  for(let i=0;i<n;i++){
+    const idx=_d2(cs.substr(i*2,2));
+    if(idx<0||idx>=CARD_CODE_ORDER.length) return {err:"このコードには未対応のカードが含まれています（新しいカードのコードかもしれません）"};
+    out.push(CARD_CODE_ORDER[idx]);
+  }
+  let name="";
+  if(nh.length>0){
+    if(nh.length%2!==0) return {err:"コードが壊れています（デッキ名部分）"};
+    const by=[];
+    for(let i=0;i<nh.length/2;i++){const b=_d2(nh.substr(i*2,2));if(b<0||b>255)return {err:"コードが壊れています（デッキ名部分）"};by.push(b);}
+    try{ name=new TextDecoder().decode(new Uint8Array(by)); }catch(e){ name=""; }
+  }
+  return {cards:out,name:name};
+}
+
+function checkDeckRules(cards){
+  const w=[],at=new Set(),ct={};
+  cards.forEach(n=>{
+    const c=cardDataList.find(x=>x.name===n);
+    if(c&&c.attr!=="neutral") at.add(c.attr);
+    ct[n]=(ct[n]||0)+1;
+  });
+  if(at.size>1) w.push("属性が複数混ざっています");
+  const ov=Object.keys(ct).filter(n=>ct[n]>(limitedCards.includes(n)?1:2));
+  if(ov.length) w.push("枚数オーバー："+ov.join("、"));
+  return w;
+}
+
+function openShareModal(){
+  const msg=document.getElementById("shareMsg");
+  msg.style.color="#ff8888"; msg.innerText="";
+  document.getElementById("shareIn").value="";
+  const out=document.getElementById("shareOut");
+  const r=buildDeckCode(deck,document.getElementById("deckNameInput").value);
+  if(r.err){ out.value=""; out.placeholder=r.err; } else { out.value=r.code; }
+  document.getElementById("shareModal").style.display="flex";
+}
+function closeShareModal(){ document.getElementById("shareModal").style.display="none"; }
+function _copyFallback(ta){
+  try{
+    const ro=ta.readOnly; ta.readOnly=false;
+    ta.focus(); ta.setSelectionRange(0,ta.value.length);
+    const ok=document.execCommand("copy"); ta.readOnly=ro;
+    showToast(ok?"コードをコピーしました":"コピーできません。選択してコピーしてください");
+  }catch(e){ showToast("コピーできません。選択してコピーしてください"); }
+}
+function copyShareCode(){
+  const ta=document.getElementById("shareOut");
+  if(!ta.value){ showToast("コードを作れませんでした"); return; }
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(()=>showToast("コードをコピーしました")).catch(()=>_copyFallback(ta));
+  }else _copyFallback(ta);
+}
+function applyShareCode(){
+  const msg=document.getElementById("shareMsg");
+  const r=parseDeckCode(document.getElementById("shareIn").value);
+  if(r.err){ msg.style.color="#ff8888"; msg.innerText="✕ "+r.err; return; }
+  deck=r.cards.slice();
+  if(r.name) document.getElementById("deckNameInput").value=r.name;
+  render(); renderCards();
+  closeShareModal();
+  const w=checkDeckRules(deck);
+  if(w.length) showToast("読み込みました（注意："+w.join(" / ")+"）");
+  else showToast("デッキ「"+(r.name||"名称なし")+"」を読み込みました");
 }
 
 render();
