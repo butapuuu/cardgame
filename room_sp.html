@@ -389,9 +389,10 @@ socket.on("rejoinFailed",(data)=>{
   document.body.appendChild(box);
 });
 function _spTryResync(){const f=document.getElementById("spFreezeHelp");if(f)f.remove();if(!socket.connected)socket.connect();_spDoRejoin();_spShowConnBanner("🔄 再接続を試みています…","rgba(180,120,0,0.95)");setTimeout(_spHideConnBanner,2000);}
+socket.on("serverPing",()=>{ _spLastUpdateTime=Date.now(); });
 setInterval(()=>{
   if(!_spGameStarted||_spDisconnected)return;
-  if(Date.now()-_spLastUpdateTime>30000){
+  if(Date.now()-_spLastUpdateTime>180000){
     let f=document.getElementById("spFreezeHelp");
     if(!f){
       f=document.createElement("div");f.id="spFreezeHelp";
@@ -1229,7 +1230,7 @@ function _spRenderHand(handCards,g){
       if(spSelectTargetMode&&spSelectTargetMode.type==="handAny"){const hi2=g.myHand.indexOf(card);spConfirm(card+" を捨てますか？").then(ok=>{if(ok){socket.emit("roomAction",{type:"select_target",targetSide:"hand",handIndex:hi2,card:card});spSelectTargetMode=null;document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";}});return;}
       if(spSelectTargetMode&&(spSelectTargetMode.type==="handUnit_steel_cost3"||spSelectTargetMode.type==="handUnit_cost2"||spSelectTargetMode.type==="handUnit_cost3"||spSelectTargetMode.type==="handUnit_cost4"||spSelectTargetMode.type==="handUnit_steel")){const hi2=g.myHand.indexOf(card);socket.emit("roomAction",{type:"select_target",targetIndex:hi2,targetSide:"hand",handIndex:hi2});spSelectTargetMode=null;document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";return;}
       if(spSelectTargetMode&&spSelectTargetMode.type==="soulTrade"){spConfirm(card+" を捨てますか？").then(ok=>{if(ok){const hi2=g.myHand.indexOf(card);socket.emit("roomAction",{type:"select_target",targetSide:"soulTrade",handIndex:hi2,card:card});spSelectTargetMode=null;document.getElementById("spTurnLabel").innerText=g.turn===socket.id?"▶ YOUR TURN":"ENEMY TURN";}});return;}
-      spConfirm(card+" を使用しますか？").then(ok=>{if(ok)socket.emit("roomAction",{type:"play_card",card,handIndex:hi});});
+      spConfirm(card+" を使用しますか？").then(ok=>{if(ok){_spCounterDmgPos=null;socket.emit("roomAction",{type:"play_card",card,handIndex:hi});}});
     };
     div.appendChild(img);hand.appendChild(div);
   });

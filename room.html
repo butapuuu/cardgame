@@ -404,9 +404,10 @@ socket.on("needRejoin",()=>{
 });
 
 // ===== 無応答（フリーズ）検知：30秒応答が無ければリロードを促す =====
+socket.on("serverPing",()=>{ _lastUpdateTime=Date.now(); });
 setInterval(()=>{
   if(!_gameStarted||_disconnected)return;
-  if(Date.now()-_lastUpdateTime>30000){
+  if(Date.now()-_lastUpdateTime>180000){
     let f=document.getElementById("freezeHelp");
     if(!f){
       f=document.createElement("div");f.id="freezeHelp";
@@ -1267,7 +1268,7 @@ function _renderHand(handCards,g){
       if(selectTargetMode&&selectTargetMode.type==="handAny"){const hi2=g.myHand.indexOf(card);if(confirm(card+" を捨てますか？")){socket.emit("roomAction",{type:"select_target",targetSide:"hand",handIndex:hi2,card:card});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";}return;}
       if(selectTargetMode&&(selectTargetMode.type==="handUnit_steel_cost3"||selectTargetMode.type==="handUnit_cost2"||selectTargetMode.type==="handUnit_cost3"||selectTargetMode.type==="handUnit_cost4"||selectTargetMode.type==="handUnit_steel")){const hi2=g.myHand.indexOf(card);socket.emit("roomAction",{type:"select_target",targetIndex:hi2,targetSide:"hand",handIndex:hi2});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";return;}
       if(selectTargetMode&&selectTargetMode.type==="soulTrade"){if(confirm(card+" を捨てますか？")){const hi2=g.myHand.indexOf(card);socket.emit("roomAction",{type:"select_target",targetSide:"soulTrade",handIndex:hi2,card:card});selectTargetMode=null;document.getElementById("turn").innerText="▶ YOUR TURN";}return;}
-      if(confirm(card+" を使用しますか？"))socket.emit("roomAction",{type:"play_card",card,handIndex:hi});
+      if(confirm(card+" を使用しますか？")){_counterDmgPos=null;socket.emit("roomAction",{type:"play_card",card,handIndex:hi});}
     };
     div.appendChild(img);hand.appendChild(div);
   });

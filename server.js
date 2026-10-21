@@ -5700,4 +5700,9 @@ io.on("connection",(socket)=>{
   });
 });
 
+// ★15秒ごとに全接続へ生存信号を送る（長考中の誤検知防止）
+setInterval(()=>{
+  io.emit("serverPing");
+},15000);
+
 http.listen(3000);

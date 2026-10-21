@@ -1617,7 +1617,7 @@ function _spRenderHand(handCards,g){
         });
         return;
       }
-      spConfirm(card+" を使用しますか？").then(ok=>{if(ok)socket.emit("cpuAction",{type:"play_card",card,handIndex:hi});});
+      spConfirm(card+" を使用しますか？").then(ok=>{if(ok){_spCounterDmgPos=null;socket.emit("cpuAction",{type:"play_card",card,handIndex:hi});}});
     };
     div.appendChild(img); hand.appendChild(div);
   });
