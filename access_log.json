@@ -5868,5 +5868,46 @@
         "ip": "::1"
       }
     ]
+  },
+  "2026-10-21": {
+    "total": 4,
+    "hours": {
+      "0": 4
+    },
+    "pages": {
+      "index.html": 1,
+      "room.html": 1,
+      "deck1.html": 2
+    },
+    "visitors": [
+      {
+        "time": "2026-10-21 15:13:21",
+        "page": "index.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-10-21 15:13:24",
+        "page": "room.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-10-21 15:13:28",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      },
+      {
+        "time": "2026-10-21 15:13:56",
+        "page": "deck1.html",
+        "device": "PC",
+        "browser": "Chrome",
+        "ip": "::1"
+      }
+    ]
   }
 }

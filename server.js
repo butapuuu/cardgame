@@ -3733,11 +3733,25 @@ if(!d.isToken)room.graves[op].push(d);roomAddLog(room,p,`→「${d.name}」を�
 }
 
 // ルームソケット処理
+// ★ルームに「今つながっているプレイヤー」が1人でもいるか
+function roomHasLivePlayer(room){
+  return [room.player1,room.player2].some(id=>id&&io.sockets.sockets.get(id));
+}
+// ★ルームを完全に破棄（タイマー・観戦IDも片付ける）
+function roomDestroy(roomId){
+  const room=rooms[roomId]; if(!room) return;
+  if(room._destroyTimer){ clearTimeout(room._destroyTimer); room._destroyTimer=null; }
+  usedSpectateIds.delete(room.spectateId);
+  delete rooms[roomId];
+}
+
 io.on("connection",(socket)=>{
   // ルーム作成
   socket.on("createRoom",(data)=>{
     const roomId=data.roomId;
     if(!roomId||roomId.trim()===""){socket.emit("roomError","ルームIDを入力してください");return;}
+    // ★誰も接続していないルーム（退室済み・再接続待ち）は破棄して、同じIDですぐ作り直せるようにする
+    if(rooms[roomId]&&!roomHasLivePlayer(rooms[roomId])) roomDestroy(roomId);
     if(rooms[roomId]){socket.emit("roomError","そのルームIDはすでに使用されています");return;}
     const spectateId=generateSpectateId();
     rooms[roomId]={
@@ -3760,7 +3774,9 @@ io.on("connection",(socket)=>{
   socket.on("joinRoom",(data)=>{
     const roomId=data.roomId;
     const room=rooms[roomId];
-    if(!room){socket.emit("roomError","ルームが見つかりません");return;}
+        if(!room){socket.emit("roomError","ルームが見つかりません");return;}
+    // ★作成者が既に退室している空のルームには参加させない（破棄する）
+    if(!roomHasLivePlayer(room)){roomDestroy(roomId);socket.emit("roomError","ルームが見つかりません");return;}
     if(room.player2){socket.emit("roomError","そのルームはすでに満員です");return;}
     room.player2=socket.id;
     room.customDeck[socket.id]=data.deck||[];
@@ -3963,6 +3979,8 @@ io.on("connection",(socket)=>{
         if(isP1) room.player1=null; else room.player2=null;
         room._disconnectedSlot=room._disconnectedSlot||{};
         room._disconnectedSlot[isP1?"p1":"p2"]=true;
+        // ★試合が終わっている／まだ始まっていないルームで誰もいなくなったら、再接続を待たず即破棄
+        if(!roomHasLivePlayer(room)&&(room.winner||!room.turn)){ roomDestroy(roomId); break; }
         // 60秒以内に再接続が無ければルーム破棄
         if(room._destroyTimer) clearTimeout(room._destroyTimer);
         room._destroyTimer=setTimeout(()=>{

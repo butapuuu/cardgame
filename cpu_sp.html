@@ -1061,9 +1061,26 @@ socket.on("damagePop",(data)=>{
   if(window._spDpLastTime[key]&&now-window._spDpLastTime[key]<200)return;
   window._spDpLastTime[key]=now;
   const delay=data.isCounter?250:80;
-  setTimeout(()=>_spShowDamagePop(data),delay);
+  data._snap=_dpSnap(data);setTimeout(()=>_spShowDamagePop(data),delay);
 });
+// ★ダメージ表示の位置を「受信した瞬間」に確定させる（倒されたカードが消える前の位置を記録）
+function _dpSnap(data){
+  if((data.isCounter&&!data.isEnemy)||data.isLife||data.unitIdx===undefined||data.unitIdx<0) return null;
+  const c=document.getElementById(data.isEnemy?"spEnemyUnits":"spMyUnits"); if(!c) return null;
+  const cards=Array.from(c.querySelectorAll(".sp-card")); const dl=cards.length; if(dl===0) return null;
+  let tc=null;
+  if(data.isEnemy){ tc=cards[data.unitIdx]||null; }
+  else{ const ml=(spLatestState&&spLatestState.myBoard)?spLatestState.myBoard.length:dl; tc=cards[ml-1-data.unitIdx-(ml-dl)]||null; }
+  if(!tc) return null;
+  const r=tc.getBoundingClientRect();
+  return {x:r.left+r.width/2,y:r.top+r.height/2};
+}
 function _spShowDamagePop(data){
+  if(data._snap){
+    const x=data._snap.x,y=data._snap.y;
+    const pop=document.createElement("div");pop.className="sp-damage-pop dmg-unit"+(data.isEnemy?" dmg-enemy":"");pop.innerText="-"+data.amount;pop.style.left=x+"px";pop.style.top=y+"px";document.body.appendChild(pop);setTimeout(()=>pop.remove(),1300);
+    return;
+  }
   const{amount,isLife,unitIdx,isEnemy}=data;
   let cx,cy;
   if(data.isCounter&&!isEnemy&&_spCounterDmgPos){
